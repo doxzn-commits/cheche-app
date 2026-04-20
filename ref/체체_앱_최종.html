@@ -1,0 +1,2794 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>cheche · MVP v1.0</title>
+<!--
+  ╔══════════════════════════════════════════════════════╗
+  ║  [data-hide] 보관 목록 — 복구 방법                   ║
+  ╠══════════════════════════════════════════════════════╣
+  ║  platform-connect-screen  │ SCR-003D                 ║
+  ║    → <div id="s003d"> style="display:none" 제거      ║
+  ║    → SCREENS 배열에 's003d' 추가                      ║
+  ║                                                      ║
+  ║  platform-link            │ 마이페이지 연동 row       ║
+  ║    → data-hide 속성 제거 + style="display:none" 제거  ║
+  ║                                                      ║
+  ║  platform-manage-screen   │ SCR-009C                 ║
+  ║    → <div id="s009c"> style="display:none" 제거      ║
+  ║    → SCREENS 배열에 's009c' 추가                      ║
+  ║                                                      ║
+  ║  sync-banner              │ 신청현황 연동 배너        ║
+  ║    → data-hide 속성 제거 + style="display:none" 제거  ║
+  ║                                                      ║
+  ║  reconnect-notif          │ 알림센터 재연동 알림      ║
+  ║    → data-hide 속성 제거 + style="display:none" 제거  ║
+  ║                                                      ║
+  ║  my-applications-screen   │ SCR-007 신청현황         ║
+  ║    → <div id="s007"> style="display:none" 제거       ║
+  ║    → SCREENS 배열에 's007' 추가                       ║
+  ║    → makeNav TABS 내 내 신청 항목 주석 해제           ║
+  ║                                                      ║
+  ║  application-detail-screen│ SCR-008 신청 상세        ║
+  ║    → <div id="s008"> style="display:none" 제거       ║
+  ║    → SCREENS 배열에 's008' 추가                       ║
+  ║                                                      ║
+  ║  cal-filter-announce      │ 캘린더 선정발표 칩        ║
+  ║  cal-filter-appdeadline   │ 캘린더 신청마감 칩        ║
+  ║    → data-hide 속성 제거 + style="display:none" 제거  ║
+  ║                                                      ║
+  ║  cal-events-announce      │ CAL_EVENTS b타입 데이터  ║
+  ║  cal-list-announce-row    │ 일정 리스트 선정발표 행   ║
+  ║    → 해당 JS 주석 해제                                ║
+  ╠══════════════════════════════════════════════════════╣
+  ║  [기획 변경 이력]                                     ║
+  ║  F-08 주말방문가능 (2026-04)                          ║
+  ║    기획서 원문: "Yes/No 토글" → 변경: 가능/불가 선택  ║
+  ║    기본값 없음(미선택), 사용자가 직접 설정             ║
+  ║    미입력 시 캘린더 상세 표시값: — (공란)             ║
+  ║    근거: 선택 필드이므로 강제 기본값 불필요            ║
+  ╚══════════════════════════════════════════════════════╝
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* ══════════════════════════════════════
+   DESIGN TOKENS — LIGHT  (체체 TDS v4)
+══════════════════════════════════════ */
+:root,[data-theme="light"]{
+  /* Brand */
+  --brand:         #1C3C82;
+  --brand-dark:    #152D61;
+  --brand-pressed: #0E2048;
+  --brand-mid:     #2750A8;
+  --brand-light:   #E6EBF6;
+  --brand-xlight:  #F0F3FA;
+  --brand-text:    #1C3C82;
+  --brand-shadow:  0 4px 14px rgba(28,60,130,0.28);
+
+  /* Calendar Tab Colors */
+  --tab-red:       #E8394A;
+  --tab-blue:      #2B7FE8;
+  --tab-yellow:    #E8A820;
+
+  /* Surface */
+  --bg-page:       #F2F4F6;
+  --bg-card:       #FFFFFF;
+  --bg-card-inner: #F8F9FB;
+  --bg-input:      #F2F4F6;
+  --bg-chip:       #E8EBED;
+  --bg-overlay:    rgba(25,31,40,0.55);
+
+  /* Border */
+  --border:        rgba(0,0,0,0.06);
+  --border-mid:    rgba(0,0,0,0.10);
+  --border-strong: rgba(0,0,0,0.18);
+
+  /* Text — TDS 명칭 준수 */
+  --text-primary:   #191F28;
+  --text-secondary: #6B7684;
+  --text-muted:     #8B95A1;
+  --text-disabled:  #B0B8C1;
+  --text-inverse:   #FFFFFF;
+
+  /* Shadows */
+  --shadow-xs: 0 1px  4px rgba(0,0,0,0.06);
+  --shadow-sm: 0 2px  8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+
+  /* Status 6-state */
+  --s-applied:      #2B7FE8; --s-applied-bg:   rgba(43,127,232,0.10);
+  --s-selected:     #00B386; --s-selected-bg:  rgba(0,179,134,0.10);
+  --s-not-sel:      #8B95A1; --s-not-sel-bg:   rgba(139,149,161,0.10);
+  --s-completed:    #B0B8C1; --s-completed-bg: rgba(176,184,193,0.10);
+  --s-deadline:     #E8A820; --s-deadline-bg:  rgba(232,168,32,0.10);
+  --s-overdue:      #E8394A; --s-overdue-bg:   rgba(232,57,74,0.10);
+}
+
+/* ══════════════════════════════════════
+   DESIGN TOKENS — DARK
+══════════════════════════════════════ */
+[data-theme="dark"]{
+  --brand:         #4A7AE8;
+  --brand-dark:    #3560CC;
+  --brand-pressed: #2952B3;
+  --brand-mid:     #6494F5;
+  --brand-light:   rgba(74,122,232,0.16);
+  --brand-xlight:  rgba(74,122,232,0.08);
+  --brand-text:    #7AAEFF;
+  --brand-shadow:  0 4px 14px rgba(74,122,232,0.36);
+
+  --tab-red:       #FF5F6D;
+  --tab-blue:      #5B9EFF;
+  --tab-yellow:    #FFB84A;
+
+  --bg-page:       #111111;
+  --bg-card:       #1C1C1E;
+  --bg-card-inner: #2C2C2E;
+  --bg-input:      #2C2C2E;
+  --bg-chip:       #3A3A3C;
+  --bg-overlay:    rgba(0,0,0,0.70);
+
+  --border:        rgba(255,255,255,0.06);
+  --border-mid:    rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.18);
+
+  --text-primary:   #F2F4F6;
+  --text-secondary: #8B95A1;
+  --text-muted:     #6B7684;
+  --text-disabled:  #4E5968;
+  --text-inverse:   #191F28;
+
+  --shadow-xs: 0 1px  4px rgba(0,0,0,0.35);
+  --shadow-sm: 0 2px  8px rgba(0,0,0,0.42);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.52);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.62);
+
+  --s-applied:      #5B9EFF; --s-applied-bg:   rgba(91,158,255,0.13);
+  --s-selected:     #34D4AC; --s-selected-bg:  rgba(52,212,172,0.13);
+  --s-not-sel:      #6B7684; --s-not-sel-bg:   rgba(107,118,132,0.15);
+  --s-completed:    #8892A0; --s-completed-bg: rgba(136,146,160,0.13);
+  --s-deadline:     #FFB84A; --s-deadline-bg:  rgba(255,184,74,0.13);
+  --s-overdue:      #FF5F6D; --s-overdue-bg:   rgba(255,95,109,0.13);
+}
+
+/* ══════════════════════════════════════
+   SHARED TOKENS — TDS v4 완전 적용
+══════════════════════════════════════ */
+:root{
+  /* Border Radius — TDS 기준 */
+  --r-xs:   6px;    /* 인라인 태그·소형 뱃지 */
+  --r-sm:   8px;    /* 소형 인풋·작은 버튼 */
+  --r-md:  14px;    /* 버튼 Primary/Secondary */
+  --r-lg:  18px;    /* 기능 요소 많은 카드 */
+  --r-xl:  22px;    /* 기본 카드 */
+  --r-2xl: 24px;    /* 대형 카드·배너 */
+  --r-sheet:20px;   /* 바텀시트 상단 */
+  --r-full:9999px;  /* 필 버튼·캡슐 뱃지 */
+
+  /* Fonts */
+  --font-logo:'Poppins',sans-serif;
+  --font-body:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
+  --font-mono:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
+
+  /* Type Scale */
+  --text-display:   30px;
+  --text-heading-1: 24px;
+  --text-heading-2: 20px;
+  --text-heading-3: 18px;
+  --text-body-1:    16px;
+  --text-body-2:    14px;
+  --text-caption:   12px;
+
+  /* Spacing — 8pt Grid */
+  --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;
+  --sp-6:24px;--sp-7:28px;--sp-8:32px;--sp-10:40px;--sp-12:48px;
+  --screen-pad:24px;
+
+  /* Motion */
+  --ease-spring:    cubic-bezier(0.34,1.56,0.64,1);
+  --ease-spring-sm: cubic-bezier(0.22,1.2,0.36,1);
+  --ease-out:       cubic-bezier(0.16,1,0.30,1);
+  --ease-in:        cubic-bezier(0.7,0,0.84,0);
+  --ease-in-out:    cubic-bezier(0.45,0,0.55,1);
+  --dur-fast:110ms;--dur-base:200ms;--dur-slow:320ms;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+  background:var(--bg-page);color:var(--text-primary);
+  font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
+  font-size:14px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  transition:background var(--dur-slow) var(--ease-out),color var(--dur-slow) var(--ease-out);
+}
+button,input,select,textarea{font-family:var(--font-body)}
+
+/* ── wrapper ── */
+.wrap{margin:24px 0 48px;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}
+
+/* ── 상단 탭바 ── */
+.top-bar-outer{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;width:100%;max-width:900px;padding:0 8px;
+}
+.top-bar-left{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-mark{
+  width:30px;height:30px;
+  background:linear-gradient(160deg,#2A52B8 0%,#1C3C82 100%);
+  border-radius:8px;display:grid;place-items:center;flex-shrink:0;
+  box-shadow:var(--brand-shadow);
+}
+.logo-mark svg{width:18px;height:18px;}
+.logo-name{
+  font-family:var(--font-logo);font-size:16px;font-weight:800;
+  letter-spacing:-0.3px;color:var(--brand);
+}
+.theme-toggle{
+  display:flex;align-items:center;background:var(--bg-chip);border:1px solid var(--border-mid);
+  border-radius:var(--r-full);padding:3px;cursor:pointer;flex-shrink:0;
+}
+.topt{
+  padding:4px 11px;border-radius:var(--r-full);font-size:11px;font-weight:700;
+  color:var(--text-muted);transition:all var(--dur-base);cursor:pointer;user-select:none;
+}
+.topt.active{background:var(--bg-card);color:var(--text-primary);box-shadow:var(--shadow-xs)}
+
+.scr-tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.scr-btn{
+  font-size:11px;font-family:var(--font-mono);font-weight:500;padding:5px 12px;
+  border-radius:var(--r-full);border:1px solid var(--border-mid);
+  background:var(--bg-card);color:var(--text-secondary);cursor:pointer;
+  transition:all var(--dur-fast);
+}
+.scr-btn.active,.scr-btn:hover{
+  background:var(--brand);color:#fff;border-color:var(--brand);
+  box-shadow:var(--brand-shadow);
+}
+
+/* ── 디바이스 프레임 — iPhone 15 Pro ── */
+.device{
+  width:393px;background:var(--bg-card);border-radius:50px;
+  box-shadow:var(--shadow-lg),0 0 0 1.5px var(--border-mid),0 0 0 10px #1a1a1a,0 0 0 11px #2a2a2a;
+  overflow:hidden;position:relative;
+}
+.notch{height:48px;background:var(--bg-card);display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;position:relative}
+.notch::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:34px;background:#000;border-radius:0 0 20px 20px;z-index:2}
+.notch-pill{width:120px;height:5px;background:var(--text-primary);border-radius:3px;opacity:.15}
+.home-ind{height:34px;display:flex;align-items:center;justify-content:center;background:var(--bg-card)}
+.home-bar{width:134px;height:5px;background:var(--text-primary);border-radius:3px;opacity:.18}
+
+/* ── 화면 기본 ── */
+.scr{display:none;flex-direction:column;height:780px;overflow:hidden;background:var(--bg-card)}
+.scr.active{display:flex}
+.scrollable{flex:1;overflow-y:auto;scrollbar-width:none}
+.scrollable::-webkit-scrollbar{display:none}
+
+/* ══════════════════════════════════════
+   COMMON COMPONENTS
+══════════════════════════════════════ */
+/* 헤더 */
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;background:var(--bg-card);flex-shrink:0;border-bottom:1px solid var(--border)}
+.app-logo{display:flex;align-items:center;gap:8px}
+.app-logo-mark{
+  width:28px;height:28px;
+  background:linear-gradient(160deg,#2A52B8 0%,#1C3C82 100%);
+  border-radius:8px;display:grid;place-items:center;
+  box-shadow:var(--brand-shadow);
+}
+.app-logo-mark svg{width:16px;height:16px;}
+.app-logo-name{
+  font-family:var(--font-logo);font-size:17px;font-weight:800;
+  letter-spacing:-0.3px;color:var(--brand);
+}
+.icon-btn{
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:var(--bg-input);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background var(--dur-fast);position:relative;flex-shrink:0;
+}
+.icon-btn:hover{background:var(--bg-chip)}
+.icon-btn svg{width:18px;height:18px;color:var(--text-secondary)}
+.bdot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--s-overdue);border-radius:50%;border:1.5px solid var(--bg-card)}
+.back-btn{display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--brand-text);font-size:14px;font-weight:600;background:none;border:none;font-family:var(--font-body)}
+.back-btn svg{width:18px;height:18px}
+
+/* 하단 네비 */
+.bnav{display:flex;border-top:1px solid var(--border);background:var(--bg-card);flex-shrink:0}
+.ntab{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 2px;cursor:pointer;gap:3px;position:relative}
+.ntab svg{width:22px;height:22px;color:var(--text-muted)}
+.ntab.active svg{color:var(--brand)}
+.ntab .nl{font-size:10px;color:var(--text-muted);font-weight:600}
+.ntab.active .nl{color:var(--brand-text);font-weight:700}
+.ntab.active::after{content:'';position:absolute;bottom:2px;width:4px;height:4px;border-radius:50%;background:var(--brand)}
+.niw{position:relative}
+.nbadge{position:absolute;top:-2px;right:-4px;width:7px;height:7px;background:var(--s-overdue);border-radius:50%;border:1.5px solid var(--bg-card)}
+
+/* 상태 뱃지 */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:var(--r-full);font-size:11px;font-weight:700;white-space:nowrap}
+.badge-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.b-applied   {background:var(--s-applied-bg);  color:var(--s-applied)}
+.b-selected  {background:var(--s-selected-bg); color:var(--s-selected)}
+.b-not-sel   {background:var(--s-not-sel-bg);  color:var(--s-not-sel)}
+.b-completed {background:var(--s-completed-bg);color:var(--s-completed)}
+.b-deadline  {background:var(--s-deadline-bg); color:var(--s-deadline)}
+.b-overdue   {background:var(--s-overdue-bg);  color:var(--s-overdue)}
+
+/* D-day */
+.dday{font-size:12px;font-family:var(--font-mono);font-weight:600}
+.dday-danger{color:var(--s-overdue)}
+.dday-warn  {color:var(--s-deadline)}
+.dday-normal{color:var(--text-muted)}
+
+/* 카드 */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);transition:all var(--dur-base) var(--ease-out);box-shadow:var(--shadow-xs)}
+.card:hover{border-color:var(--border-mid);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+
+/* 버튼 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:13px 22px;border-radius:var(--r-md);font-size:15px;font-weight:700;font-family:var(--font-body);cursor:pointer;border:none;transition:all var(--dur-base) var(--ease-out);width:100%;letter-spacing:-0.2px}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:var(--brand-shadow)}
+.btn-primary:hover{background:var(--brand-dark);transform:translateY(-1px)}
+.btn-secondary{background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border-mid)}
+.btn-secondary:hover{background:var(--bg-chip)}
+.btn-ghost{background:transparent;color:var(--brand-text);border:1.5px solid var(--brand)}
+.btn-ghost:hover{background:var(--brand-light)}
+
+/* 오버레이 / 시트 */
+.overlay{display:none;position:fixed;inset:0;background:var(--bg-overlay);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.overlay.show{display:flex}
+.sheet{background:var(--bg-card);border-radius:var(--r-sheet) var(--r-sheet) 0 0;padding:12px 20px 32px;width:393px;max-height:88vh;overflow-y:auto;scrollbar-width:none;animation:sup .28s var(--ease-out)}
+.sheet::-webkit-scrollbar{display:none}
+@keyframes sup{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.s-handle{width:36px;height:4px;background:var(--border-strong);border-radius:2px;margin:0 auto 18px}
+.s-title{font-size:17px;font-weight:800;color:var(--text-primary);letter-spacing:-0.4px;margin-bottom:16px}
+
+/* 입력 */
+.inp{width:100%;padding:12px 14px;border:1.5px solid var(--border-mid);border-radius:var(--r-md);font-size:13px;color:var(--text-primary);background:var(--bg-input);outline:none;transition:border var(--dur-fast)}
+.inp:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-xlight)}
+.inp::placeholder{color:var(--text-muted)}
+.inp-label{font-size:11px;font-family:var(--font-mono);color:var(--text-muted);font-weight:600;margin-bottom:8px;display:block;letter-spacing:0.02em}
+.form-group{margin-bottom:16px}
+
+/* 칩 */
+.fc{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r-full);font-size:12px;font-weight:600;border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;transition:all var(--dur-fast);white-space:nowrap;box-shadow:var(--shadow-xs)}
+.fc:hover{border-color:var(--brand);color:var(--brand-text)}
+.fc.active{background:var(--brand-light);border-color:var(--brand);color:var(--brand-text)}
+
+/* 검색바 */
+.search-bar{margin:10px 16px;display:flex;align-items:center;gap:10px;background:var(--bg-input);border:1.5px solid transparent;border-radius:var(--r-lg);padding:12px 16px;transition:all var(--dur-fast)}
+.search-bar:focus-within{border-color:var(--brand);background:var(--bg-card);box-shadow:0 0 0 3px var(--brand-xlight)}
+.search-bar svg{width:16px;height:16px;color:var(--text-muted);flex-shrink:0}
+.search-bar input{background:none;border:none;outline:none;flex:1;font-size:13px;color:var(--text-primary);font-family:var(--font-body)}
+.search-bar input::placeholder{color:var(--text-muted)}
+
+/* 분리선 */
+.divider-section{height:8px;background:var(--bg-page);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.divider-line{height:1px;background:var(--border)}
+
+/* FAB */
+.fab{position:absolute;bottom:72px;right:20px;width:52px;height:52px;background:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(28,60,130,0.38);cursor:pointer;z-index:10;transition:all var(--dur-base) var(--ease-spring)}
+.fab:hover{transform:scale(1.09)}
+.fab svg{width:22px;height:22px;color:#fff}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;padding:48px 24px;text-align:center;gap:10px}
+.empty-icon{font-size:36px;opacity:.45}
+.empty-title{font-size:15px;font-weight:700;color:var(--text-primary)}
+.empty-desc{font-size:12px;color:var(--text-secondary)}
+
+/* 섹션 헤더 */
+.sec-hd{font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);padding:14px 20px 8px;letter-spacing:0.10em;text-transform:uppercase}
+
+/* 리스트 row */
+.row-item{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--dur-fast);min-height:52px}
+.row-item:hover{background:var(--bg-page)}
+.row-label{font-size:14px;color:var(--text-secondary);display:flex;align-items:center;gap:10px}
+.row-label svg{width:18px;height:18px;color:var(--text-muted)}
+.row-val{font-size:13px;color:var(--text-muted);font-family:var(--font-mono)}
+.chev-r{width:16px;height:16px;color:var(--text-disabled)}
+
+/* 타임라인 */
+.tl-item{display:flex;gap:14px;padding-bottom:20px;position:relative}
+.tl-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:2px;z-index:1}
+.tl-dot.done{background:var(--s-selected)}
+.tl-dot.curr{background:var(--brand)}
+.tl-dot.pend{background:var(--bg-chip);border:2px solid var(--border-mid)}
+.tl-line{position:absolute;left:9px;top:22px;bottom:0;width:2px;background:var(--border)}
+.tl-body{flex:1}
+.tl-title{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:2px}
+.tl-title.curr{color:var(--brand)}
+.tl-date{font-size:12px;color:var(--text-muted);font-family:var(--font-mono)}
+
+/* 알림 */
+.notif-date{font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);padding:12px 20px 6px;letter-spacing:0.08em;text-transform:uppercase}
+.notif-row{display:flex;gap:12px;padding:13px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--dur-fast)}
+.notif-row:hover{background:var(--bg-page)}
+.notif-row.unread{background:var(--brand-xlight)}
+.notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ni-red{background:var(--s-overdue-bg)}
+.ni-blue{background:var(--s-applied-bg)}
+.ni-green{background:var(--s-selected-bg)}
+.ni-yellow{background:var(--s-deadline-bg)}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:2px}
+.notif-time{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+
+/* 체험단 카드 */
+.camp-card{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--dur-fast);background:var(--bg-card)}
+.camp-card:hover{background:var(--bg-page)}
+.cc-plat{font-size:10px;font-weight:700;padding:2px 8px;border-radius:var(--r-full);background:var(--brand-light);color:var(--brand-text)}
+.cc-cat{font-size:10px;padding:2px 8px;border-radius:var(--r-full);background:var(--bg-chip);color:var(--text-secondary);border:1px solid var(--border-mid)}
+.cc-name{font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.4;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:-0.2px;margin-top:6px}
+.cc-meta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--text-muted)}
+.cc-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.cc-date{font-size:11px;color:var(--text-muted);font-family:var(--font-mono)}
+.cc-status-open{font-size:11px;font-weight:700;color:var(--s-selected)}
+.cc-status-closed{font-size:11px;color:var(--text-muted)}
+
+/* 신청 카드 */
+.appl-card{margin:0 16px 8px;padding:14px;border:1px solid var(--border);border-radius:var(--r-lg);cursor:pointer;transition:all var(--dur-base);position:relative;overflow:hidden;background:var(--bg-card)}
+.appl-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.appl-card.ac-blue::before{background:var(--s-applied)}
+.appl-card.ac-green::before{background:var(--s-selected)}
+.appl-card.ac-yellow::before{background:var(--s-deadline)}
+.appl-card.ac-red::before{background:var(--s-overdue)}
+.appl-card.ac-gray::before{background:var(--s-not-sel)}
+.appl-card.ac-lgray::before{background:var(--s-completed)}
+.appl-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.ac-name{font-size:14px;font-weight:700;color:var(--text-primary);margin-bottom:4px;letter-spacing:-0.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac-meta{font-size:11px;color:var(--text-muted)}
+
+/* 플랫폼 연동 카드 */
+.plat-card{margin:0 16px 10px;padding:14px;border:1px solid var(--border);border-radius:var(--r-lg);background:var(--bg-card)}
+.plat-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.plat-icon-box{width:38px;height:38px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:18px;background:var(--bg-chip);flex-shrink:0}
+.plat-name{font-size:14px;font-weight:700;color:var(--text-primary)}
+.plat-status{font-size:11px;margin-top:2px;font-family:var(--font-mono)}
+.ps-ok{color:var(--s-selected)}
+.ps-warn{color:var(--s-deadline)}
+.plat-meta{font-size:11px;color:var(--text-muted);margin-bottom:10px;font-family:var(--font-mono)}
+.plat-actions{display:flex;gap:8px}
+.plat-btn{font-size:12px;padding:6px 14px;border-radius:var(--r-full);border:1px solid var(--border-mid);background:var(--bg-card);cursor:pointer;color:var(--text-secondary);transition:all var(--dur-fast);font-family:var(--font-body)}
+.plat-btn:hover{background:var(--bg-chip)}
+.plat-btn.danger{color:var(--s-overdue);border-color:var(--s-overdue);background:var(--s-overdue-bg)}
+.plat-btn.primary-btn{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+/* 통계 행 */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.stat-cell{background:var(--bg-card);display:flex;flex-direction:column;align-items:center;padding:16px 8px;gap:4px}
+.stat-num{font-size:22px;font-weight:800;font-family:var(--font-mono);color:var(--text-primary);letter-spacing:-0.8px}
+.stat-lbl{font-size:10px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.06em}
+
+/* 프로필 */
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--brand-text);font-family:var(--font-mono);flex-shrink:0;border:2px solid var(--brand-light)}
+.edit-btn{font-size:11px;color:var(--brand-text);border:1.5px solid var(--brand);padding:4px 10px;border-radius:var(--r-full);cursor:pointer;margin-left:auto;background:none;font-family:var(--font-body);font-weight:600}
+
+/* ══════════════════════════════════════
+   SCR-001 스플래시
+══════════════════════════════════════ */
+#s001{background:linear-gradient(160deg,#0E1B3E 0%,#1C3C82 60%,#2A52B8 100%);justify-content:center;align-items:center;gap:16px}
+@keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+.sl-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);animation:pulse 1.2s ease-in-out infinite}
+
+/* ══════════════════════════════════════
+   SCR-002 온보딩
+══════════════════════════════════════ */
+.ob-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 32px;gap:20px;opacity:0;transition:opacity .4s}
+.ob-slide.active{opacity:1}
+.ob-dot-row{display:flex;gap:6px;justify-content:center}
+.ob-dot{width:6px;height:6px;border-radius:3px;background:var(--border-mid);transition:all .3s}
+.ob-dot.active{width:20px;background:var(--brand)}
+
+/* ══════════════════════════════════════
+   SCR-003 로그인
+══════════════════════════════════════ */
+.social-btn{width:100%;padding:13px;border-radius:var(--r-md);border:1px solid var(--border-mid);background:var(--bg-card);display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:600;color:var(--text-primary);cursor:pointer;margin-bottom:10px;transition:background var(--dur-fast)}
+.social-btn:hover{background:var(--bg-page)}
+.social-btn.kakao{background:#FEE500;border-color:#FEE500;color:#191919}
+.divider-or{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-muted);font-size:12px}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:var(--border-mid)}
+
+/* ══════════════════════════════════════
+   SCR-004 홈 필터 패널
+══════════════════════════════════════ */
+.filter-panel{border-bottom:1px solid var(--border);background:var(--bg-card);flex-shrink:0}
+.filter-panel-head{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 6px}
+.filter-toggle-btn{display:flex;align-items:center;gap:5px;background:var(--text-primary);border:none;border-radius:var(--r-full);padding:5px 12px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text-inverse);font-family:var(--font-body);transition:all var(--dur-fast)}
+.shortage-btn{display:flex;align-items:center;gap:5px;border:1px solid var(--border-mid);border-radius:var(--r-full);padding:5px 12px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text-secondary);background:var(--bg-card);font-family:var(--font-body);transition:all var(--dur-fast)}
+.shortage-btn.on{background:var(--s-overdue-bg);color:var(--s-overdue);border-color:var(--s-overdue)}
+.filter-body{padding:4px 16px 10px;display:flex;flex-direction:column;gap:10px}
+.filter-group-label{font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px}
+.fchip{font-size:11px;font-weight:600;padding:5px 12px;border-radius:var(--r-full);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;transition:all var(--dur-fast);white-space:nowrap;user-select:none}
+.fchip.active{background:var(--brand-light);color:var(--brand-text);border-color:var(--brand)}
+.fchip:hover:not(.active){background:var(--bg-page);border-color:var(--border-mid)}
+.fchip-site.active{background:var(--bg-chip);color:var(--text-primary);border-color:var(--border-strong)}
+.sort-row{display:flex;align-items:center;justify-content:space-between;padding:6px 16px 8px;flex-shrink:0}
+.sort-count{font-size:12px;color:var(--text-secondary)}
+.sort-btn{font-size:12px;color:var(--brand-text);cursor:pointer;font-family:var(--font-mono);font-weight:500}
+
+/* ══════════════════════════════════════
+   SCR-007 신청현황
+══════════════════════════════════════ */
+.sync-banner{margin:10px 16px;padding:10px 14px;background:var(--s-deadline-bg);border-radius:var(--r-lg);border:1px solid rgba(232,168,32,.25);display:flex;align-items:center;gap:10px;cursor:pointer}
+.sync-banner svg{width:16px;height:16px;color:var(--s-deadline);flex-shrink:0}
+.sync-text{flex:1;font-size:12px;color:var(--s-deadline);line-height:1.4}
+.status-tabs{display:flex;gap:0;padding:0 16px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.status-tabs::-webkit-scrollbar{display:none}
+.stab2{padding:10px 12px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all var(--dur-base)}
+.stab2.active{color:var(--brand-text);border-bottom-color:var(--brand)}
+
+/* ══════════════════════════════════════
+   SCR-012 캘린더
+══════════════════════════════════════ */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 10px;flex-shrink:0}
+.cal-month{font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px}
+.cal-nav-btn{width:30px;height:30px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text-secondary);font-size:14px;cursor:pointer;display:grid;place-items:center;transition:all var(--dur-fast)}
+.cal-nav-btn:hover{background:var(--bg-chip);color:var(--text-primary)}
+.view-tog{border:1.5px solid var(--brand);color:var(--brand-text);background:var(--brand-light);font-size:11px;font-weight:700;padding:5px 12px;border-radius:var(--r-full);cursor:pointer;font-family:var(--font-body)}
+.legend-row{display:flex;gap:10px;padding:0 20px 8px;flex-wrap:wrap;flex-shrink:0}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-muted);font-weight:600}
+.ldot{width:7px;height:7px;border-radius:50%}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;border-bottom:1px solid var(--border);padding-bottom:6px;flex-shrink:0}
+.cal-dow span{text-align:center;font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.04em}
+.cal-dow .su{color:var(--tab-red)}
+.cal-dow .sa{color:var(--tab-blue)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 12px 0;gap:1px;flex-shrink:0}
+.ccell{display:flex;flex-direction:column;align-items:center;padding:4px 2px;cursor:pointer;border-radius:var(--r-sm);transition:background var(--dur-fast);min-height:50px}
+.ccell:hover{background:var(--bg-page)}
+.dnum{width:27px;height:27px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:500;color:var(--text-primary)}
+.ccell.today .dnum{background:var(--brand);color:#fff;box-shadow:var(--brand-shadow)}
+.ccell.om .dnum{color:var(--text-disabled)}
+.ccell.su .dnum{color:var(--tab-red)}
+.ccell.sa .dnum{color:var(--tab-blue)}
+.ev-chip{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;max-width:90%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.ev-r{background:var(--s-overdue-bg);color:var(--s-overdue)}
+.ev-b{background:var(--s-applied-bg);color:var(--s-applied)}
+.ev-g{background:var(--s-selected-bg);color:var(--s-selected)}
+.ev-y{background:var(--s-deadline-bg);color:var(--s-deadline)}
+.cdots{display:flex;gap:3px;margin-top:3px}
+.cdot{width:5px;height:5px;border-radius:50%}
+.sec-div{margin:8px 20px 0;display:flex;align-items:center;gap:10px}
+.sec-div-title{font-size:12px;font-weight:700;color:var(--text-primary);white-space:nowrap}
+.sec-div-line{flex:1;height:1px;background:var(--border)}
+.ev-list{flex:1;overflow-y:auto;padding:6px 16px;display:flex;flex-direction:column;gap:6px;scrollbar-width:none}
+.ev-list::-webkit-scrollbar{display:none}
+.ecard{display:flex;align-items:center;gap:11px;padding:11px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);cursor:pointer;transition:all var(--dur-base);position:relative;overflow:hidden}
+.ecard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px}
+.ecard.ec-r::before{background:var(--tab-red)}
+.ecard.ec-b::before{background:var(--tab-blue)}
+.ecard.ec-g::before{background:var(--s-selected)}
+.ecard.ec-y::before{background:var(--tab-yellow)}
+.ecard:hover{background:var(--bg-page);box-shadow:var(--shadow-sm);transform:translateY(-1px)}
+.eicon{width:32px;height:32px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.ei-r{background:var(--s-overdue-bg)}
+.ei-b{background:var(--s-applied-bg)}
+.ei-g{background:var(--s-selected-bg)}
+.ei-y{background:var(--s-deadline-bg)}
+.ebody{flex:1;min-width:0}
+.etype{font-size:10px;color:var(--text-muted);font-weight:600;margin-bottom:1px;font-family:var(--font-mono);letter-spacing:0.04em;text-transform:uppercase}
+.ename{font-size:13px;font-weight:700;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.emeta{font-size:11px;color:var(--text-muted);margin-top:1px}
+.ddayb{font-size:11px;font-weight:600;font-family:var(--font-mono);padding:3px 9px;border-radius:var(--r-full);flex-shrink:0}
+.dd-r{background:var(--s-overdue-bg);color:var(--s-overdue)}
+.dd-y{background:var(--s-deadline-bg);color:var(--s-deadline)}
+.dd-b{background:var(--s-applied-bg);color:var(--s-applied)}
+.dd-n{background:var(--bg-chip);color:var(--text-muted)}
+
+/* ══════════════════════════════════════
+   SCR-013 지도
+══════════════════════════════════════ */
+.map-chip{font-size:12px;font-weight:600;padding:5px 13px;border-radius:var(--r-full);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all var(--dur-fast)}
+.map-chip.active{background:var(--brand);color:#fff;border-color:var(--brand);box-shadow:var(--brand-shadow)}
+.map-chip:hover:not(.active){background:var(--bg-page)}
+.leaflet-container{font-family:var(--font-body)}
+.leaflet-control-attribution{font-size:10px!important;font-family:var(--font-body)!important}
+.pm-marker{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;border:2.5px solid #fff;box-shadow:var(--shadow-md);cursor:pointer;transition:transform var(--dur-fast);font-family:var(--font-mono)}
+.pm-marker:hover{transform:scale(1.15)}
+.pm-marker.selected{transform:scale(1.2);border-width:3px}
+
+/* SCR-011 에러 */
+.empty-btn{padding:11px 24px;background:var(--brand);color:#fff;border:none;border-radius:var(--r-lg);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-body);margin-top:8px;box-shadow:var(--brand-shadow)}
+@keyframes calSpin{to{transform:rotate(360deg)}}
+
+/* 캘린더 필터 칩 */
+.cal-fchip{font-size:11px;font-weight:600;padding:5px 11px;border-radius:var(--r-full);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all var(--dur-fast);display:inline-flex;align-items:center}
+.cal-fchip.active{background:var(--brand-light);color:var(--brand-text);border-color:var(--brand)}
+.cal-fchip:hover:not(.active){background:var(--bg-page)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── 상단 바 ── -->
+<div class="top-bar-outer">
+  <div class="top-bar-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/>
+        <rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/>
+        <rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/>
+        <rect x="1" y="8.5" width="16" height="2" fill="#1C3C82" opacity="0.25"/>
+        <rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/>
+        <rect x="17.5" y="10" width="3.5" height="4" rx="1" fill="#FFFFFF" opacity="0.7"/>
+        <rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/>
+      </svg>
+    </div>
+    <div class="logo-name">cheche</div>
+    <span style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);background:var(--bg-chip);padding:3px 8px;border-radius:var(--r-xs);border:1px solid var(--border-mid)">v1.0</span>
+  </div>
+  <div class="theme-toggle" id="themeToggle">
+    <div class="topt active" id="lightBtn" onclick="setTheme('light')">☀️ 라이트</div>
+    <div class="topt" id="darkBtn" onclick="setTheme('dark')">🌙 다크</div>
+  </div>
+</div>
+<div class="scr-tabs" id="top-bar"></div>
+
+<!-- ── 디바이스 ── -->
+<div class="device">
+  <div class="notch"><div class="notch-pill"></div></div>
+
+  <!-- ══ SCR-001 스플래시 ══ -->
+  <div class="scr" id="s001" style="justify-content:center;align-items:center;gap:20px;background:linear-gradient(160deg,#0E1B3E 0%,#1C3C82 60%,#2A52B8 100%)">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+      <!-- 아이콘 재현 -->
+      <div style="width:88px;height:88px;background:linear-gradient(160deg,#2A52B8,#1C3C82);border-radius:20px;box-shadow:0 16px 48px rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;position:relative;">
+        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);display:flex;gap:18px;">
+          <div style="width:10px;height:16px;border:2.5px solid #82B0E8;border-radius:4px;"></div>
+          <div style="width:10px;height:16px;border:2.5px solid #82B0E8;border-radius:4px;"></div>
+        </div>
+        <div style="margin-top:6px;width:60px;height:50px;background:white;border-radius:6px;display:flex;align-items:center;justify-content:center;position:relative;overflow:visible;">
+          <span style="font-family:'Poppins',sans-serif;font-size:12px;font-weight:800;color:#1C3C82;letter-spacing:-0.3px;">cheche</span>
+          <div style="position:absolute;right:-6px;top:8px;display:flex;flex-direction:column;gap:3px;">
+            <div style="width:5px;height:10px;background:#E8394A;border-radius:2px;"></div>
+            <div style="width:5px;height:10px;background:#dde4f5;border-radius:2px;"></div>
+            <div style="width:5px;height:10px;background:#E8A820;border-radius:2px;"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <span style="font-family:'Poppins',sans-serif;font-size:30px;font-weight:800;color:#fff;letter-spacing:-1px;line-height:1;">cheche</span>
+        <div style="font-size:12px;color:rgba(255,255,255,.65);text-align:center;line-height:1.6;">체험단을 한 곳에서 놓치지 않게</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:4px">
+      <div class="sl-dot"></div>
+      <div class="sl-dot" style="animation-delay:.2s"></div>
+      <div class="sl-dot" style="animation-delay:.4s"></div>
+    </div>
+  </div>
+
+  <!-- ══ SCR-002 온보딩 ══ -->
+  <div class="scr" id="s002" style="justify-content:space-between">
+    <div style="display:flex;justify-content:flex-end;padding:12px 20px 0">
+      <button onclick="setSlide(2)" style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer;font-family:var(--font-body);font-weight:600">건너뛰기</button>
+    </div>
+    <div style="flex:1;position:relative;overflow:hidden">
+      <div class="ob-slide active" id="ob0">
+        <div style="width:160px;height:160px;background:var(--brand-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:64px">🔍</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text-primary);text-align:center;letter-spacing:-0.6px;line-height:1.35">흩어진 체험단을<br>한 곳에서</div>
+        <div style="font-size:13px;color:var(--text-secondary);text-align:center;line-height:1.7">레뷰·강남맛집·미블 등 18개 플랫폼<br>캠페인을 한 번에 탐색하세요</div>
+      </div>
+      <div class="ob-slide" id="ob1">
+        <div style="width:160px;height:160px;background:var(--s-overdue-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:64px">📅</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text-primary);text-align:center;letter-spacing:-0.6px;line-height:1.35">놓치지 않는<br>마감 관리</div>
+        <div style="font-size:13px;color:var(--text-secondary);text-align:center;line-height:1.7">선정부터 리뷰 마감까지<br>캘린더 하나로 자동 관리</div>
+      </div>
+      <div class="ob-slide" id="ob2">
+        <div style="width:160px;height:160px;background:rgba(0,179,134,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:64px">💰</div>
+        <div style="font-size:22px;font-weight:800;color:var(--text-primary);text-align:center;letter-spacing:-0.6px;line-height:1.35">협찬 수익<br>한눈에</div>
+        <div style="font-size:13px;color:var(--text-secondary);text-align:center;line-height:1.7">체험단 협찬 금액을 자동 집계해<br>이번 달 수익을 확인하세요</div>
+      </div>
+    </div>
+    <div class="ob-dot-row" id="ob-dots">
+      <div class="ob-dot active" id="od0"></div>
+      <div class="ob-dot" id="od1"></div>
+      <div class="ob-dot" id="od2"></div>
+    </div>
+    <div style="padding:0 24px 28px;display:flex;flex-direction:column;gap:10px">
+      <button class="btn btn-primary" id="ob-next-btn" onclick="obNext()">다음</button>
+    </div>
+  </div>
+
+  <!-- ══ SCR-003 로그인 ══ -->
+  <div class="scr" id="s003" style="justify-content:center;padding:0 24px">
+    <div style="margin-bottom:32px;text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
+        <div style="width:38px;height:38px;background:linear-gradient(160deg,#2A52B8,#1C3C82);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:var(--brand-shadow);">
+          <svg viewBox="0 0 22 22" fill="none" width="20" height="20"><rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/><rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/><rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/></svg>
+        </div>
+        <span style="font-family:'Poppins',sans-serif;font-size:26px;font-weight:800;color:var(--brand);letter-spacing:-0.8px;">cheche</span>
+      </div>
+      <div style="font-size:14px;color:var(--text-secondary)">환영해요, 크리에이터님 👋</div>
+    </div>
+    <button class="social-btn kakao" onclick="goto('s012')"><span style="font-size:16px;font-weight:900">K</span> 카카오로 시작하기</button>
+    <button class="social-btn" onclick="goto('s012')" style="background:#fff"><span style="font-size:14px;font-weight:700;color:#EA4335">G</span> 구글로 시작하기</button>
+    <button class="social-btn" onclick="goto('s012')" style="background:#000;color:#fff;border-color:#000"><span style="font-size:14px"> </span> Apple로 시작하기</button>
+    <div class="divider-or">또는</div>
+    <div class="form-group"><label class="inp-label">이메일</label><input class="inp" type="email" placeholder="이메일 주소 입력"></div>
+    <div class="form-group"><label class="inp-label">비밀번호</label><input class="inp" type="password" placeholder="비밀번호 입력"></div>
+    <div style="text-align:right;margin-bottom:16px"><span style="font-size:12px;color:var(--brand-text);cursor:pointer;font-weight:600">비밀번호 찾기</span></div>
+    <button class="btn btn-primary" onclick="goto('s012')">로그인</button>
+    <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--text-muted)">계정이 없으신가요? <span style="color:var(--brand-text);font-weight:700;cursor:pointer" onclick="goto('s012')">가입하기</span></div>
+  </div>
+
+  <!-- ══ SCR-003D 플랫폼 연동 안내 ══ -->
+  <!-- [data-hide="platform-connect-page"] 복구: data-hide 속성 제거 + style display 제거 + SCREENS 배열에 's003d' 추가 -->
+  <div class="scr" id="s003d" data-hide="platform-connect-screen" style="display:none;justify-content:space-between">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px">
+      <div style="width:180px;height:180px;background:var(--brand-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:72px">🔗</div>
+    </div>
+    <div style="padding:0 32px 40px;display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:22px;font-weight:800;color:var(--text-primary);text-align:center;line-height:1.35;letter-spacing:-0.6px">신청한 체험단을<br>자동으로 가져올게요</div>
+      <div style="font-size:13px;color:var(--text-secondary);text-align:center;line-height:1.7">플랫폼을 연동하면 신청 현황을<br>자동으로 추적해 드려요</div>
+      <button class="btn btn-primary" onclick="goto('s004')" style="margin-top:8px">지금 연동하기</button>
+      <button style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;text-align:center;padding:10px;font-family:var(--font-body);font-weight:600" onclick="goto('s004')">나중에 할게요</button>
+    </div>
+  </div>
+
+  <!-- ══ SCR-004 홈(탐색) ══ -->
+  <div class="scr" id="s004">
+    <div class="app-header">
+      <div class="app-logo">
+        <div class="app-logo-mark">
+          <svg viewBox="0 0 22 22" fill="none" width="16" height="16"><rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/><rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/><rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/></svg>
+        </div>
+        <div class="app-logo-name">cheche</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" onclick="goto('s013');setTimeout(initMap,80)" title="체험단 지도">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </button>
+        <button class="icon-btn" onclick="goto('s010')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="bdot"></span>
+        </button>
+      </div>
+    </div>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search-input" placeholder="수원 맛집, 뷰티샵, 밀키트…" oninput="applyFilters()">
+    </div>
+    <div class="filter-panel" id="filter-panel">
+      <div class="filter-panel-head">
+        <button class="filter-toggle-btn" id="filter-toggle-btn" onclick="toggleFilterPanel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          <span id="filter-toggle-label">접기</span>
+          <svg id="filter-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform .2s"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+        <button class="shortage-btn" id="shortage-btn" onclick="toggleShortage()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          인원부족 체험단
+        </button>
+      </div>
+      <div class="filter-body" id="filter-body">
+        <div>
+          <div class="filter-group-label">리뷰 매체</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <div class="fchip active" data-group="media" data-val="all" onclick="chipClick(this,'media')">전체</div>
+            <div class="fchip" data-group="media" data-val="블로그" onclick="chipClick(this,'media')">블로그</div>
+            <div class="fchip" data-group="media" data-val="인스타" onclick="chipClick(this,'media')">인스타</div>
+            <div class="fchip" data-group="media" data-val="유튜브" onclick="chipClick(this,'media')">유튜브</div>
+            <div class="fchip" data-group="media" data-val="블로그클립" onclick="chipClick(this,'media')">블로그 클립</div>
+            <div class="fchip" data-group="media" data-val="릴스" onclick="chipClick(this,'media')">인스타 릴스</div>
+          </div>
+        </div>
+        <div>
+          <div class="filter-group-label">체험단 타입</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <div class="fchip active" data-group="type" data-val="all" onclick="chipClick(this,'type')">전체</div>
+            <div class="fchip" data-group="type" data-val="방문형" onclick="chipClick(this,'type')">방문형</div>
+            <div class="fchip" data-group="type" data-val="배송형" onclick="chipClick(this,'type')">배송형</div>
+            <div class="fchip" data-group="type" data-val="기자단" onclick="chipClick(this,'type')">기자단</div>
+          </div>
+        </div>
+        <div>
+          <div class="filter-group-label">카테고리</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <div class="fchip active" data-group="cat" data-val="all" onclick="chipClick(this,'cat')">전체</div>
+            <div class="fchip" data-group="cat" data-val="맛집" onclick="chipClick(this,'cat')">맛집</div>
+            <div class="fchip" data-group="cat" data-val="카페" onclick="chipClick(this,'cat')">카페</div>
+            <div class="fchip" data-group="cat" data-val="뷰티" onclick="chipClick(this,'cat')">뷰티</div>
+            <div class="fchip" data-group="cat" data-val="숙박" onclick="chipClick(this,'cat')">숙박</div>
+            <div class="fchip" data-group="cat" data-val="생활" onclick="chipClick(this,'cat')">생활</div>
+            <div class="fchip" data-group="cat" data-val="패션" onclick="chipClick(this,'cat')">패션</div>
+          </div>
+        </div>
+        <div>
+          <div class="filter-group-label">체험단 사이트</div>
+          <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">
+            <div class="fchip fchip-site active" data-group="site" data-val="all" onclick="chipClick(this,'site')" style="flex-shrink:0">전체</div>
+            <div class="fchip fchip-site" data-group="site" data-val="레뷰" onclick="chipClick(this,'site')" style="flex-shrink:0">레뷰</div>
+            <div class="fchip fchip-site" data-group="site" data-val="미블" onclick="chipClick(this,'site')" style="flex-shrink:0">미블</div>
+            <div class="fchip fchip-site" data-group="site" data-val="리뷰노트" onclick="chipClick(this,'site')" style="flex-shrink:0">리뷰노트</div>
+            <div class="fchip fchip-site" data-group="site" data-val="강남맛집" onclick="chipClick(this,'site')" style="flex-shrink:0">강남맛집</div>
+            <div class="fchip fchip-site" data-group="site" data-val="서울오빠" onclick="chipClick(this,'site')" style="flex-shrink:0">서울오빠</div>
+            <div class="fchip fchip-site" data-group="site" data-val="디너의여왕" onclick="chipClick(this,'site')" style="flex-shrink:0">디너의여왕</div>
+            <div class="fchip fchip-site" data-group="site" data-val="티블" onclick="chipClick(this,'site')" style="flex-shrink:0">티블</div>
+            <div class="fchip fchip-site" data-group="site" data-val="링블" onclick="chipClick(this,'site')" style="flex-shrink:0">링블</div>
+            <div class="fchip fchip-site" data-group="site" data-val="놀러와" onclick="chipClick(this,'site')" style="flex-shrink:0">놀러와</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sort-row">
+      <span class="sort-count">총 <b id="result-count" style="color:var(--text-primary);font-weight:700">0</b>개</span>
+      <span class="sort-btn">마감일순 ▾</span>
+    </div>
+    <div class="scrollable" id="home-list"></div>
+    <div class="bnav" id="bnav-home"></div>
+  </div>
+
+  <!-- ══ SCR-013 체험단 지도 ══ -->
+  <div class="scr" id="s013" style="position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;background:var(--bg-card);flex-shrink:0;border-bottom:1px solid var(--border)">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        내 주변 체험단
+      </button>
+      <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">서울 · 현재 위치</span>
+    </div>
+    <div style="display:flex;gap:6px;padding:10px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;background:var(--bg-card)">
+      <div class="map-chip active" data-cat="all" onclick="mapChip(this,'all')">전체</div>
+      <div class="map-chip" data-cat="맛집" onclick="mapChip(this,'맛집')">맛집</div>
+      <div class="map-chip" data-cat="카페" onclick="mapChip(this,'카페')">카페</div>
+      <div class="map-chip" data-cat="뷰티" onclick="mapChip(this,'뷰티')">뷰티</div>
+      <div class="map-chip" data-cat="숙박" onclick="mapChip(this,'숙박')">숙박</div>
+      <div class="map-chip" data-cat="생활" onclick="mapChip(this,'생활')">생활</div>
+    </div>
+    <div id="leaflet-map" style="flex:1;position:relative;z-index:1"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;z-index:20;pointer-events:none">
+      <div id="map-card" style="display:none;pointer-events:auto;margin:0 14px 14px;background:var(--bg-card);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);padding:14px 16px;border:1px solid var(--border-mid)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap" id="mc-badges"></div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-primary);line-height:1.4;margin-bottom:4px;letter-spacing:-0.2px" id="mc-name"></div>
+            <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)" id="mc-meta"></div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:600;font-family:var(--font-mono)" id="mc-dday"></div>
+            <div style="font-size:11px;font-weight:700;color:var(--s-selected);margin-top:2px" id="mc-status"></div>
+          </div>
+        </div>
+        <button onclick="goto('s006')" style="width:100%;margin-top:10px;padding:11px;background:var(--brand);color:#fff;border:none;border-radius:var(--r-lg);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);box-shadow:var(--brand-shadow)">상세 보기</button>
+      </div>
+      <div id="map-hint" style="pointer-events:auto;margin:0 14px 14px;background:var(--bg-card);border-radius:var(--r-xl);box-shadow:var(--shadow-md);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text-primary)">내 주변 <span id="map-count" style="color:var(--brand-text)">18</span>개 체험단</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">마커를 탭해서 상세 정보를 확인하세요</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text-muted);font-family:var(--font-mono)"><div style="width:7px;height:7px;border-radius:50%;background:#00B386"></div>레뷰</div>
+          <div style="display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text-muted);font-family:var(--font-mono)"><div style="width:7px;height:7px;border-radius:50%;background:#E8394A"></div>강남맛집</div>
+        </div>
+      </div>
+    </div>
+    <div class="bnav" id="bnav-map"></div>
+  </div>
+
+  <!-- ══ SCR-006 체험단 상세 ══ -->
+  <div class="scr" id="s006">
+    <div class="app-header">
+      <button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>뒤로</button>
+      <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+    </div>
+    <div class="scrollable">
+      <div style="height:200px;background:var(--s-applied-bg);display:flex;align-items:center;justify-content:center;font-size:56px">☕</div>
+      <div style="padding:16px 20px">
+        <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
+          <span class="cc-plat">레뷰</span>
+          <span class="cc-cat">카페</span>
+          <span class="badge b-overdue" style="margin-left:auto"><span class="badge-dot" style="background:var(--s-overdue)"></span>D-3</span>
+        </div>
+        <div style="font-size:18px;font-weight:800;color:var(--text-primary);line-height:1.4;margin-bottom:16px;letter-spacing:-0.5px">카페투어 강남점 체험단<br>블로그+인스타 동시 모집</div>
+      </div>
+      <div style="background:var(--bg-card-inner);margin:0 20px;border-radius:var(--r-lg);padding:14px;margin-bottom:16px;border:1px solid var(--border)">
+        <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);margin-bottom:10px;letter-spacing:0.08em;text-transform:uppercase">체험 정보</div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-muted)">지역</span><span style="font-size:13px;font-weight:600;color:var(--text-primary)">서울 강남구</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-muted)">채널</span><span style="font-size:13px;font-weight:600;color:var(--text-primary)">블로그, 인스타그램</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-muted)">모집 인원</span><span style="font-size:13px;font-weight:600;color:var(--text-primary)">10명</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-muted)">신청 기간</span><span style="font-size:13px;font-weight:600;color:var(--text-primary)">3/25 ~ 4/6</span></div>
+        <div style="display:flex;justify-content:space-between;padding:9px 0"><span style="font-size:13px;color:var(--text-muted)">리뷰 마감</span><span style="font-size:13px;font-weight:700;color:var(--s-overdue);font-family:var(--font-mono)">4/9 · D-3</span></div>
+      </div>
+      <div style="padding:0 20px 12px">
+        <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:8px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">혜택 내용</div>
+        <div style="font-size:13px;color:var(--text-primary);line-height:1.7;background:var(--bg-card-inner);padding:12px;border-radius:var(--r-md);border:1px solid var(--border)">음료 2잔 + 디저트 1개 무료 제공<br>영수증 처리 (본인 결제 없음)<br>포스팅 후 소정의 추가 혜택</div>
+      </div>
+      <div style="height:72px"></div>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 20px;background:var(--bg-card);border-top:1px solid var(--border)">
+      <button class="btn btn-primary" onclick="alert('외부 플랫폼으로 이동합니다')">체험단 신청하기 →</button>
+    </div>
+  </div>
+
+  <!-- ══ SCR-007 신청현황 ══ -->
+  <!-- [data-hide="apply-status-page"] 복구: data-hide 속성 제거 + style display 제거 + SCREENS 배열에 's007','s008' 추가 + bnav-apply-tab 복구 -->
+  <div class="scr" id="s007" data-hide="apply-status-page" style="display:none!important">
+    <div class="app-header"><div style="font-size:17px;font-weight:800;color:var(--text-primary);letter-spacing:-0.4px">내 신청</div></div>
+    <!-- [data-hide="sync-banner"] 복구: data-hide 속성 제거 + style display 제거 -->
+    <div class="sync-banner" data-hide="sync-banner" style="display:none" onclick="goto('s009c')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      <div class="sync-text">플랫폼 연동 시 신청 내역 자동 수집 <b>→ 연동하기</b></div>
+    </div>
+    <div class="status-tabs">
+      <div class="stab2 active" onclick="filterStatus('all',this)">전체</div>
+      <div class="stab2" onclick="filterStatus('applied',this)">신청완료</div>
+      <div class="stab2" onclick="filterStatus('selected',this)">선정됨</div>
+      <div class="stab2" onclick="filterStatus('deadline',this)">마감임박</div>
+      <div class="stab2" onclick="filterStatus('completed',this)">완료</div>
+      <div class="stab2" onclick="filterStatus('not_selected',this)">미선정</div>
+    </div>
+    <div class="scrollable" id="appl-list" style="padding-top:8px"></div>
+    <div class="fab" onclick="showSheet('addSheet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    <div class="bnav" id="bnav-appl"></div>
+  </div>
+
+  <!-- ══ SCR-008 신청 상세 ══ -->
+  <!-- [data-hide="apply-detail-page"] 복구: data-hide 속성 제거 + style display 제거 -->
+  <div class="scr" id="s008" data-hide="apply-detail-page" style="display:none!important">
+    <div class="app-header"><button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>뒤로</button></div>
+    <div class="scrollable">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div class="badge b-applied"><span class="badge-dot" style="background:var(--s-applied)"></span>신청완료</div>
+          <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono)">발표 D-6</span>
+        </div>
+        <div style="font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px;margin-bottom:4px">레뷰 뷰티 체험단</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono)">레뷰 · 인스타그램</div>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:12px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">진행 상태</div>
+        <div style="display:flex;flex-direction:column">
+          <div class="tl-item">
+            <div style="display:flex;flex-direction:column;align-items:center;margin-right:14px">
+              <div class="tl-dot done">✓</div>
+              <div class="tl-line"></div>
+            </div>
+            <div style="padding-bottom:20px"><div class="tl-title">신청 완료</div><div class="tl-date">3월 18일</div></div>
+          </div>
+          <div class="tl-item">
+            <div style="display:flex;flex-direction:column;align-items:center;margin-right:14px">
+              <div class="tl-dot curr">●</div>
+              <div class="tl-line"></div>
+            </div>
+            <div style="padding-bottom:20px"><div class="tl-title curr">선정 발표 대기 중</div><div class="tl-date">4월 3일 예정</div></div>
+          </div>
+          <div class="tl-item">
+            <div style="margin-right:14px"><div class="tl-dot pend"></div></div>
+            <div><div class="tl-title" style="color:var(--text-muted)">리뷰 마감</div><div class="tl-date">4월 20일</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="divider-section"></div>
+      <div style="padding:14px 20px">
+        <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:10px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">주요 일정</div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-muted)">신청일</span><span style="font-size:13px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono)">3월 18일</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;color:var(--text-muted)">발표 예정일</span><span style="font-size:13px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono)">4월 3일</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0"><span style="font-size:13px;color:var(--text-muted)">리뷰 마감일</span><span style="font-size:13px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono)">4월 20일</span></div>
+      </div>
+      <div class="divider-section"></div>
+      <div style="padding:14px 20px">
+        <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:8px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600">메모</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:1.7;background:var(--bg-card-inner);padding:12px;border-radius:var(--r-md);border:1px solid var(--border)">인스타 피드 + 스토리 2장 이상 필수<br>#레뷰뷰티 #체험단 해시태그 포함</div>
+      </div>
+      <div style="height:72px"></div>
+    </div>
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 20px;background:var(--bg-card);border-top:1px solid var(--border);display:flex;gap:10px">
+      <button class="btn btn-secondary" style="flex:1" onclick="alert('플랫폼 이동')">플랫폼 확인</button>
+      <button class="btn btn-primary" style="flex:1" onclick="showSheet('statusSheet')">상태 변경</button>
+    </div>
+  </div>
+
+  <!-- ══ SCR-012 캘린더 월간 ══ -->
+  <div class="scr" id="s012" style="flex-direction:column;height:760px;overflow:hidden;background:var(--bg-card)">
+
+    <!-- 고정 헤더 -->
+    <div class="app-header" style="flex-shrink:0">
+      <div class="app-logo">
+        <div class="app-logo-mark"><svg viewBox="0 0 22 22" fill="none" width="16" height="16"><rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/><rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/><rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/></svg></div>
+        <div class="app-logo-name">cheche</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="icon-btn" onclick="goto('s010')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><span class="bdot"></span></button>
+        <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg></button>
+      </div>
+    </div>
+
+    <!-- 월 네비 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px 4px;flex-shrink:0">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+      <div class="cal-month" id="cal-month-lbl" style="font-size:17px">2026. 4</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="view-tog" onclick="goto('s012a')">주간</button>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+
+    <!-- 필터 칩 -->
+    <div style="display:flex;gap:5px;padding:2px 14px 6px;overflow-x:auto;scrollbar-width:none;flex-shrink:0">
+      <div class="cal-fchip active" data-ctype="all" onclick="calFilterClick(this,'all')">전체</div>
+      <div class="cal-fchip" data-ctype="r" onclick="calFilterClick(this,'r')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--tab-red);margin-right:4px;vertical-align:middle"></span>리뷰마감</div>
+      <div class="cal-fchip" data-ctype="g" onclick="calFilterClick(this,'g')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--s-selected);margin-right:4px;vertical-align:middle"></span>체험일자</div>
+      <!-- 선정발표(b)·신청마감(y) 칩 — Phase1 제외, data 삭제 완료 -->
+    </div>
+
+    <!-- 요일 헤더 -->
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px 0;flex-shrink:0">
+      <span style="text-align:center;font-size:11px;font-weight:700;color:var(--tab-red)">일</span>
+      <span style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted)">월</span>
+      <span style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted)">화</span>
+      <span style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted)">수</span>
+      <span style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted)">목</span>
+      <span style="text-align:center;font-size:11px;font-weight:700;color:var(--text-muted)">금</span>
+      <span style="text-align:center;font-size:11px;font-weight:700;color:var(--tab-blue)">토</span>
+    </div>
+
+    <!-- 캘린더 그리드 — flex:1로 남은 공간 전부, 내부 스크롤 -->
+    <div style="flex:1;overflow-y:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">
+      <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-left:1px solid var(--border);width:100%"></div>
+    </div>
+
+    <div class="fab" onclick="showSheet('addCalSheet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    <div class="bnav" id="bnav-cal"></div>
+  </div>
+
+  <!-- ══ SCR-012A 캘린더 주간 — TDS v4 완전 재작성 ══ -->
+  <div class="scr" id="s012a" style="background:var(--bg-page)">
+
+    <!-- 헤더 -->
+    <div class="app-header" style="background:var(--bg-card)">
+      <div class="app-logo">
+        <div class="app-logo-mark"><svg viewBox="0 0 22 22" fill="none" width="16" height="16"><rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/><rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/><rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/></svg></div>
+        <div class="app-logo-name">cheche</div>
+      </div>
+      <button class="view-tog" onclick="goto('s012')">월간 보기</button>
+    </div>
+
+    <!-- 주 네비게이션 -->
+    <div style="background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 6px">
+        <button class="cal-nav-btn" style="width:32px;height:32px">‹</button>
+        <div style="text-align:center">
+          <div style="font-size:16px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px">4월 7일 – 13일</div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);margin-top:1px">2026년 15주차</div>
+        </div>
+        <button class="cal-nav-btn" style="width:32px;height:32px">›</button>
+      </div>
+
+      <!-- 7일 미니 스트립 -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);padding:4px 10px 12px;gap:2px">
+        <!-- 월(오늘) -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:700;color:var(--brand-text);letter-spacing:0.04em">월</span>
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:var(--brand-shadow)">7</div>
+          <div style="width:5px;height:5px;border-radius:50%;background:transparent"></div>
+        </div>
+        <!-- 화 -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.04em">화</span>
+          <div style="width:30px;height:30px;border-radius:50%;font-size:13px;color:var(--text-primary);font-weight:500;display:flex;align-items:center;justify-content:center">8</div>
+          <div style="width:5px;height:5px;border-radius:50%;background:transparent"></div>
+        </div>
+        <!-- 수 (이벤트: 리뷰마감) -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.04em">수</span>
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--s-overdue-bg);font-size:13px;color:var(--s-overdue);font-weight:700;display:flex;align-items:center;justify-content:center">9</div>
+          <div class="cdots"><div class="cdot" style="background:var(--tab-red)"></div></div>
+        </div>
+        <!-- 목 -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.04em">목</span>
+          <div style="width:30px;height:30px;border-radius:50%;font-size:13px;color:var(--text-primary);font-weight:500;display:flex;align-items:center;justify-content:center">10</div>
+          <div style="width:5px;height:5px;border-radius:50%;background:transparent"></div>
+        </div>
+        <!-- 금 -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:0.04em">금</span>
+          <div style="width:30px;height:30px;border-radius:50%;font-size:13px;color:var(--text-primary);font-weight:500;display:flex;align-items:center;justify-content:center">11</div>
+          <div style="width:5px;height:5px;border-radius:50%;background:transparent"></div>
+        </div>
+        <!-- 토 (이벤트: 체험일자) -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:700;color:var(--tab-blue);letter-spacing:0.04em">토</span>
+          <div style="width:30px;height:30px;border-radius:50%;background:var(--s-selected-bg);font-size:13px;color:var(--s-selected);font-weight:700;display:flex;align-items:center;justify-content:center">12</div>
+          <div class="cdots"><div class="cdot" style="background:var(--s-selected)"></div></div>
+        </div>
+        <!-- 일 -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <span style="font-size:10px;font-weight:700;color:var(--tab-red);letter-spacing:0.04em">일</span>
+          <div style="width:30px;height:30px;border-radius:50%;font-size:13px;color:var(--tab-red);font-weight:500;display:flex;align-items:center;justify-content:center">13</div>
+          <div style="width:5px;height:5px;border-radius:50%;background:transparent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이벤트 리스트 — scrollable -->
+    <div class="scrollable" style="padding:0 14px 16px">
+
+      <!-- 4월 7일 (월) 오늘 -->
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 2px 8px">
+        <div style="width:4px;height:4px;border-radius:50%;background:var(--brand)"></div>
+        <span style="font-size:12px;font-weight:700;color:var(--brand-text);font-family:var(--font-mono);letter-spacing:0.04em">4월 7일 (월)</span>
+        <span style="font-size:10px;font-weight:700;color:var(--brand);background:var(--brand-light);border-radius:var(--r-full);padding:1px 8px;letter-spacing:0.04em">오늘</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <!-- 빈 일 안내 -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:14px 16px;display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:var(--r-sm);background:var(--bg-page);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">✅</div>
+        <span style="font-size:13px;color:var(--text-muted)">오늘 예정된 일정이 없어요</span>
+      </div>
+
+      <!-- 4월 9일 (수) -->
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 2px 8px">
+        <div style="width:4px;height:4px;border-radius:50%;background:var(--tab-red)"></div>
+        <span style="font-size:12px;font-weight:700;color:var(--text-primary);font-family:var(--font-mono);letter-spacing:0.04em">4월 9일 (수)</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <!-- 이벤트 카드: 리뷰 마감 — ec-r -->
+      <div class="ecard ec-r" onclick="showCalSheet('e2')" style="margin-bottom:8px">
+        <div class="eicon ei-r">🔴</div>
+        <div class="ebody">
+          <div class="etype">리뷰 마감</div>
+          <div class="ename">카페투어 강남점 체험</div>
+          <div class="emeta">레뷰 · 📍 서울 강남구</div>
+        </div>
+        <div class="ddayb dd-r" style="font-size:11px;font-weight:700;letter-spacing:-0.5px">D-3</div>
+      </div>
+
+      <!-- 4월 12일 (토) -->
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 2px 8px">
+        <div style="width:4px;height:4px;border-radius:50%;background:var(--s-selected)"></div>
+        <span style="font-size:12px;font-weight:700;color:var(--tab-blue);font-family:var(--font-mono);letter-spacing:0.04em">4월 12일 (토)</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+      <!-- 이벤트 카드: 체험 기간 — ec-g -->
+      <div class="ecard ec-g" onclick="showCalSheet('e3')" style="margin-bottom:8px">
+        <div class="eicon ei-g">🏨</div>
+        <div class="ebody">
+          <div class="etype">체험 기간</div>
+          <div class="ename">한강뷰 호텔 숙박 체험</div>
+          <div class="emeta">미블 · 📍 서울 영등포구</div>
+        </div>
+        <div class="ddayb dd-n" style="font-size:11px;font-weight:700;letter-spacing:-0.5px">+2일</div>
+      </div>
+
+      <!-- 이번 주 요약 배너 -->
+      <div style="margin-top:8px;background:var(--brand-xlight);border:1px solid var(--brand-light);border-radius:var(--r-xl);padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11px;color:var(--brand-text);font-weight:700;font-family:var(--font-mono);letter-spacing:0.04em;text-transform:uppercase;margin-bottom:4px">이번 주 일정 요약</div>
+          <div style="font-size:13px;color:var(--text-primary);font-weight:600">총 <span style="color:var(--brand-text);font-weight:800">2</span>개 · 리뷰마감 <span style="color:var(--s-overdue);font-weight:800">1</span> · 체험 <span style="color:var(--s-selected);font-weight:800">1</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <div style="display:flex;align-items:center;gap:4px"><div style="width:7px;height:7px;border-radius:50%;background:var(--tab-red)"></div><span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">리뷰마감</span></div>
+          <div style="display:flex;align-items:center;gap:4px"><div style="width:7px;height:7px;border-radius:50%;background:var(--s-selected)"></div><span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">체험일자</span></div>
+        </div>
+      </div>
+
+      <!-- 다음 주 예고 -->
+      <div style="margin-top:16px;padding:2px 2px 8px">
+        <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">다음 주 (4/14~20)</div>
+        <div class="ecard ec-r" onclick="showCalSheet('e4')" style="margin-bottom:8px;opacity:0.72">
+          <div class="eicon ei-r">💄</div>
+          <div class="ebody">
+            <div class="etype">리뷰 마감</div>
+            <div class="ename">뷰티 파우더 체험단</div>
+            <div class="emeta">레뷰 · 전국</div>
+          </div>
+          <div class="ddayb dd-r" style="font-size:11px;font-weight:700;letter-spacing:-0.5px">D-8</div>
+        </div>
+        <div class="ecard ec-g" onclick="showCalSheet('e5')" style="opacity:0.72">
+          <div class="eicon ei-g">💆</div>
+          <div class="ebody">
+            <div class="etype">체험 기간</div>
+            <div class="ename">강남 피부과 시술 체험</div>
+            <div class="emeta">레뷰 · 📍 서울 강남구</div>
+          </div>
+          <div class="ddayb dd-n" style="font-size:11px;font-weight:700;letter-spacing:-0.5px">D-13</div>
+        </div>
+      </div>
+
+      <div style="height:80px"></div>
+    </div>
+
+    <div class="fab" onclick="showSheet('addCalSheet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+    <div class="bnav" id="bnav-cal2"></div>
+  </div>
+
+  <!-- ══ SCR-009 마이페이지 — TDS v4 완전 재작성 ══ -->
+  <div class="scr" id="s009" style="background:var(--bg-page)">
+
+    <!-- ① 프로필 히어로 섹션 — 네이비 그라디언트 -->
+    <div style="background:linear-gradient(155deg,#0E2048 0%,#1C3C82 60%,#2750A8 100%);position:relative;overflow:hidden;padding:20px 24px 0;flex-shrink:0">
+      <!-- 배경 장식 -->
+      <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
+      <div style="position:absolute;bottom:0;left:30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.04)"></div>
+
+      <!-- 상단 바 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;position:relative">
+        <span style="font-size:17px;font-weight:800;color:#fff;letter-spacing:-0.4px">마이페이지</span>
+        <button onclick="goto('s010')" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="bdot" style="border-color:transparent;top:5px;right:5px"></span>
+        </button>
+      </div>
+
+      <!-- 프로필 -->
+      <div style="display:flex;align-items:center;gap:14px;position:relative;margin-bottom:20px">
+        <!-- 아바타 -->
+        <div style="width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,0.18);border:2.5px solid rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;flex-shrink:0">유</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:3px">유진님</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.55);font-family:var(--font-mono)">creator@cheche.co.kr</div>
+        </div>
+        <button onclick="alert('프로필 편집')" style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.25);padding:7px 16px;border-radius:var(--r-full);cursor:pointer;font-family:var(--font-body);flex-shrink:0;transition:all var(--dur-fast);-webkit-tap-highlight-color:transparent;min-height:34px">편집</button>
+      </div>
+
+      <!-- 3분할 통계 — 히어로 카드 내 -->
+      <div style="display:flex;background:rgba(255,255,255,0.10);border-radius:var(--r-lg) var(--r-lg) 0 0;overflow:hidden;border:1px solid rgba(255,255,255,0.12);border-bottom:none">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:14px 8px 16px;border-right:1px solid rgba(255,255,255,0.12)">
+          <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.8px;line-height:1;margin-bottom:5px" id="my-stat-upcoming">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);letter-spacing:0.06em;text-align:center">체험 예정</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:14px 8px 16px;border-right:1px solid rgba(255,255,255,0.12)">
+          <div style="font-size:20px;font-weight:800;color:#7AFFD4;letter-spacing:-0.8px;line-height:1;margin-bottom:5px" id="my-stat-revenue">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);letter-spacing:0.06em;text-align:center">수익 금액</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:14px 8px 16px">
+          <div style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.6);letter-spacing:-0.8px;line-height:1;margin-bottom:5px" id="my-stat-done">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);letter-spacing:0.06em;text-align:center">리뷰 완료</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scrollable">
+
+      <!-- ② 계정 설정 — 알림 설정만 표시 (채널설정·연동관리 Phase1 제외) -->
+      <div class="divider-section" style="margin-top:12px"></div>
+      <div class="sec-hd">계정 설정</div>
+      <div style="background:var(--bg-card)">
+        <div class="row-item" onclick="alert('알림 설정')">
+          <div class="row-label">
+            <div style="width:32px;height:32px;border-radius:var(--r-sm);background:var(--s-overdue-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--s-overdue)" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+            </div>
+            알림 설정
+          </div>
+          <svg class="chev-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+
+      <!-- ③ 앱 정보 -->
+      <div class="divider-section"></div>
+      <div class="sec-hd">앱 정보</div>
+      <div style="background:var(--bg-card)">
+        <div class="row-item" onclick="alert('이용약관')">
+          <div class="row-label">
+            <div style="width:32px;height:32px;border-radius:var(--r-sm);background:var(--bg-page);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            이용약관
+          </div>
+          <svg class="chev-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="row-item" onclick="alert('개인정보 처리방침')">
+          <div class="row-label">
+            <div style="width:32px;height:32px;border-radius:var(--r-sm);background:var(--bg-page);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            개인정보 처리방침
+          </div>
+          <svg class="chev-r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+        <div class="row-item">
+          <div class="row-label">
+            <div style="width:32px;height:32px;border-radius:var(--r-sm);background:var(--bg-page);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            버전 정보
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;font-weight:700;background:var(--brand-light);color:var(--brand-text);padding:2px 8px;border-radius:var(--r-full);font-family:var(--font-mono)">v1.0.0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ 로그아웃 / 탈퇴 — 해요체 CTA -->
+      <div class="divider-section"></div>
+      <div style="padding:16px 20px 8px;display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-secondary" onclick="goto('s003')" style="color:var(--text-primary);font-weight:700">
+          로그아웃할게요
+        </button>
+        <button style="background:none;border:none;cursor:pointer;color:var(--s-overdue);font-size:13px;font-weight:600;padding:10px 0;font-family:var(--font-body);opacity:0.7;transition:opacity var(--dur-fast)" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0.7">
+          회원 탈퇴
+        </button>
+      </div>
+
+      <div style="height:80px"></div>
+    </div>
+    <div class="bnav" id="bnav-my"></div>
+  </div>
+
+  <!-- ══ SCR-009C 연동관리 ══ -->
+  <!-- [data-hide="platform-manage-page"] 복구: data-hide 속성 제거 + style display 제거 + SCREENS 배열에 's009c' 추가 + 마이페이지 platform-row 복구 -->
+  <div class="scr" id="s009c" data-hide="platform-manage-page" style="display:none!important">
+    <div class="app-header"><button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>연동 플랫폼 관리</button></div>
+    <div class="scrollable">
+      <div class="sec-hd">연동된 플랫폼</div>
+      <div class="plat-card">
+        <div class="plat-top"><div class="plat-icon-box">🟢</div><div><div class="plat-name">레뷰</div><div class="plat-status ps-ok">✓ 연동됨</div></div></div>
+        <div class="plat-meta">마지막 동기화 · 오늘 14:30</div>
+        <div class="plat-actions"><button class="plat-btn" onclick="alert('동기화 중...')">지금 동기화</button><button class="plat-btn danger">연동 해제</button></div>
+      </div>
+      <div class="plat-card">
+        <div class="plat-top"><div class="plat-icon-box">🟠</div><div><div class="plat-name">강남맛집</div><div class="plat-status ps-warn">⚠ 재연동 필요</div></div></div>
+        <div class="plat-meta">세션 만료 · 4월 1일</div>
+        <div class="plat-actions"><button class="plat-btn" style="background:var(--s-deadline-bg);color:var(--s-deadline);border-color:var(--s-deadline)">재연동하기</button><button class="plat-btn danger">연동 해제</button></div>
+      </div>
+      <div class="sec-hd" style="margin-top:8px">연동 가능한 플랫폼</div>
+      <div class="plat-card">
+        <div class="plat-top"><div class="plat-icon-box">🔵</div><div><div class="plat-name">미블</div><div class="plat-status" style="color:var(--text-muted)">미연동</div></div><button class="btn btn-primary" style="width:auto;padding:7px 16px;font-size:12px;margin-left:auto">연동하기</button></div>
+      </div>
+      <div class="plat-card">
+        <div class="plat-top"><div class="plat-icon-box">🔴</div><div><div class="plat-name">서울오빠</div><div class="plat-status" style="color:var(--text-muted)">미연동</div></div><button class="btn btn-primary" style="width:auto;padding:7px 16px;font-size:12px;margin-left:auto">연동하기</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCR-010 알림센터 ══ -->
+  <div class="scr" id="s010">
+    <div class="app-header"><button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>알림</button><button style="font-size:11px;color:var(--brand-text);background:none;border:none;cursor:pointer;font-family:var(--font-mono);font-weight:600">전체 읽음</button></div>
+    <div class="scrollable">
+      <div class="notif-date">오늘</div>
+      <div class="notif-row unread" onclick="goto('s008')"><div class="notif-icon ni-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--s-overdue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="notif-body"><div class="notif-title">카페투어 강남점 리뷰 마감 <span style="font-family:var(--font-mono);color:var(--s-overdue);font-weight:700">D-3</span></div><div class="notif-time">09:00</div></div></div>
+      <div class="notif-row unread" onclick="goto('s008')"><div class="notif-icon ni-red"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--s-overdue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="notif-body"><div class="notif-title">뷰티 파우더 체험단 리뷰 마감 <span style="font-family:var(--font-mono);color:var(--s-overdue);font-weight:700">D-1</span></div><div class="notif-time">09:00</div></div></div>
+      <!-- [data-hide="notif-relink"] 복구: data-hide 속성 제거 + style display 제거 -->
+      <div class="notif-row" data-hide="notif-relink" style="display:none" onclick="goto('s009c')"><div class="notif-icon ni-yellow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--s-deadline)" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg></div><div class="notif-body"><div class="notif-title">강남맛집 플랫폼 재연동이 필요해요</div><div class="notif-time">08:00</div></div></div>
+      <div class="notif-date">어제</div>
+      <div class="notif-row" onclick="goto('s008')"><div class="notif-icon ni-green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--s-selected)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="notif-body"><div class="notif-title">레뷰 뷰티 체험단 선정 결과 발표</div><div class="notif-time">18:00</div></div></div>
+      <div class="notif-row" onclick="goto('s008')"><div class="notif-icon ni-blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--s-applied)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="notif-body"><div class="notif-title">한강뷰 호텔 선정 발표 <span style="font-family:var(--font-mono);color:var(--s-applied);font-weight:700">D-3</span></div><div class="notif-time">09:00</div></div></div>
+    </div>
+  </div>
+
+  <!-- ══ SCR-014 수익 — TDS v4 완전 재작성 ══ -->
+  <div class="scr" id="s014" style="background:var(--bg-page)">
+
+    <!-- 헤더 -->
+    <div class="app-header" style="background:var(--bg-card)">
+      <div class="app-logo">
+        <div class="app-logo-mark"><svg viewBox="0 0 22 22" fill="none" width="16" height="16"><rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/><rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/><rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/></svg></div>
+        <div class="app-logo-name">cheche</div>
+      </div>
+      <!-- 월 선택 -->
+      <div style="display:flex;align-items:center;gap:6px;background:var(--bg-input);border:1.5px solid var(--border-mid);border-radius:var(--r-full);padding:5px 13px;cursor:pointer" onclick="revMonthToggle()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="rev-month-lbl" style="font-size:12px;font-weight:700;color:var(--text-primary);font-family:var(--font-mono)">2026. 4</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <div class="scrollable">
+
+      <!-- ① 총 수익 히어로 카드 -->
+      <div style="padding:14px 14px 0">
+        <div style="background:linear-gradient(135deg,#0E2048 0%,#1C3C82 55%,#2750A8 100%);border-radius:var(--r-2xl);padding:20px 22px 18px;position:relative;overflow:hidden;box-shadow:var(--brand-shadow)">
+          <!-- 배경 장식 원 -->
+          <div style="position:absolute;top:-30px;right:-30px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
+          <div style="position:absolute;bottom:-20px;left:60px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.04)"></div>
+          <!-- 월 라벨 -->
+          <div style="font-size:11px;color:rgba(255,255,255,0.55);font-family:var(--font-mono);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">4월 총 수익</div>
+          <!-- 금액 — text-display(30px) + Pretendard 800 + letter-spacing -0.5px -->
+          <div style="font-size:30px;font-weight:800;color:#fff;letter-spacing:-0.5px;line-height:1;margin-bottom:4px" id="rev-total">238,000<span style="font-size:16px;font-weight:600;margin-left:4px;opacity:0.8">원</span></div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:16px">전월 대비 <span style="color:#7AFFD4;font-weight:700">+42,000원 ↑</span></div>
+          <!-- 2분할 stat -->
+          <div style="display:flex;gap:0;background:rgba(255,255,255,0.1);border-radius:var(--r-md);overflow:hidden">
+            <div style="flex:1;padding:11px 14px;border-right:1px solid rgba(255,255,255,0.12)">
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);letter-spacing:0.06em;margin-bottom:4px">협찬 상품가</div>
+              <div style="font-size:15px;font-weight:700;color:#fff;letter-spacing:-0.3px" id="rev-goods">198,000원</div>
+            </div>
+            <div style="flex:1;padding:11px 14px">
+              <div style="font-size:10px;color:rgba(255,255,255,0.5);font-family:var(--font-mono);letter-spacing:0.06em;margin-bottom:4px">광고비</div>
+              <div style="font-size:15px;font-weight:700;color:#7AFFD4;letter-spacing:-0.3px" id="rev-ad">40,000원</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② 3분할 통계 카드 — r-xl(22px) -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px 0">
+        <!-- 완료 캠페인 -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:14px 12px;box-shadow:var(--shadow-xs)">
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">완료</div>
+          <div style="font-size:22px;font-weight:800;color:var(--s-selected);letter-spacing:-0.8px;line-height:1" id="rev-count">3</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">캠페인</div>
+        </div>
+        <!-- 평균 단가 -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:14px 12px;box-shadow:var(--shadow-xs)">
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">평균 단가</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text-primary);letter-spacing:-0.8px;line-height:1" id="rev-avg">79.3k</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">원 / 건</div>
+        </div>
+        <!-- 누적 -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:14px 12px;box-shadow:var(--shadow-xs)">
+          <div style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px">누적</div>
+          <div style="font-size:18px;font-weight:800;color:var(--brand);letter-spacing:-0.8px;line-height:1">1.2M</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:4px">올해 총 합</div>
+        </div>
+      </div>
+
+      <!-- ③ 채널별 분포 — 시각화 바 -->
+      <div style="margin:10px 14px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:16px 16px 14px;box-shadow:var(--shadow-xs)">
+        <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px">채널별 수익 분포</div>
+        <!-- 스택 바 -->
+        <div style="display:flex;height:8px;border-radius:var(--r-full);overflow:hidden;gap:2px;margin-bottom:12px">
+          <div style="flex:5.8;background:var(--brand);border-radius:var(--r-full) 0 0 var(--r-full)"></div>
+          <div style="flex:2.7;background:var(--tab-blue)"></div>
+          <div style="flex:1.5;background:var(--s-selected);border-radius:0 var(--r-full) var(--r-full) 0"></div>
+        </div>
+        <!-- 범례 -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:2px;background:var(--brand);flex-shrink:0"></div>
+            <div>
+              <div style="font-size:10px;color:var(--text-muted)">블로그</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-primary);letter-spacing:-0.3px">138,000원</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:2px;background:var(--tab-blue);flex-shrink:0"></div>
+            <div>
+              <div style="font-size:10px;color:var(--text-muted)">인스타</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-primary);letter-spacing:-0.3px">60,000원</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:2px;background:var(--s-selected);flex-shrink:0"></div>
+            <div>
+              <div style="font-size:10px;color:var(--text-muted)">유튜브</div>
+              <div style="font-size:12px;font-weight:700;color:var(--text-primary);letter-spacing:-0.3px">40,000원</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ 월별 트렌드 미니 바 차트 -->
+      <div style="margin:10px 14px 0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:16px 16px 14px;box-shadow:var(--shadow-xs)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase">월별 수익 추이</div>
+          <span style="font-size:10px;color:var(--brand-text);font-family:var(--font-mono);font-weight:600">2026 상반기</span>
+        </div>
+        <!-- 바 차트 -->
+        <div style="display:flex;align-items:flex-end;gap:6px;height:60px">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;background:var(--bg-page);border-radius:4px 4px 0 0;height:20px"></div>
+            <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">1월</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;background:var(--bg-page);border-radius:4px 4px 0 0;height:35px"></div>
+            <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">2월</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;background:var(--brand-light);border-radius:4px 4px 0 0;height:28px"></div>
+            <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">3월</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;background:var(--brand);border-radius:4px 4px 0 0;height:48px;box-shadow:var(--brand-shadow)"></div>
+            <span style="font-size:10px;color:var(--brand-text);font-family:var(--font-mono);font-weight:700">4월</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;border:1.5px dashed var(--border-mid);border-radius:4px 4px 0 0;height:20px;background:var(--bg-page)"></div>
+            <span style="font-size:10px;color:var(--text-disabled);font-family:var(--font-mono)">5월</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;border:1.5px dashed var(--border-mid);border-radius:4px 4px 0 0;height:20px;background:var(--bg-page)"></div>
+            <span style="font-size:10px;color:var(--text-disabled);font-family:var(--font-mono)">6월</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ 수익 내역 리스트 -->
+      <div style="padding:16px 14px 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:800;color:var(--text-primary);letter-spacing:-0.3px">4월 수익 내역</div>
+          <div style="display:flex;align-items:center;gap:4px;cursor:pointer">
+            <span style="font-size:11px;color:var(--brand-text);font-family:var(--font-mono);font-weight:600">전체 <span id="rev-list-count">3</span>건</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+        <!-- 수익 리스트 컨테이너 — renderRev() 로 채워짐 -->
+        <div id="rev-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+
+      <div style="height:90px"></div>
+    </div>
+
+    <!-- FAB + 하단 네비 -->
+    <div class="fab" onclick="showSheet('addRevSheet')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <div class="bnav" id="bnav-rev"></div>
+  </div>
+  <div class="scr" id="s011">
+    <div class="app-header"><button class="back-btn" onclick="goBack()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>뒤로</button></div>
+    <div style="flex:1;display:flex;flex-direction:column">
+      <div class="empty-state">
+        <div class="empty-icon" id="e-icon">😵</div>
+        <div class="empty-title" id="e-title">연결이 끊겼어요</div>
+        <div class="empty-desc" id="e-desc">인터넷 연결을 확인하고 다시 시도해 주세요</div>
+        <button class="empty-btn" id="e-btn" onclick="goBack()">다시 시도</button>
+      </div>
+      <div style="padding:16px 20px">
+        <div style="font-size:10px;font-family:var(--font-mono);color:var(--text-muted);text-align:center;margin-bottom:10px;letter-spacing:0.06em;font-weight:600">빈 화면 유형 전환</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+          <button class="fc" onclick="showEmpty('net')">네트워크 오류</button>
+          <button class="fc" onclick="showEmpty('search')">검색 없음</button>
+          <button class="fc" onclick="showEmpty('appl')">신청 없음</button>
+          <button class="fc" onclick="showEmpty('server')">서버 오류</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /device -->
+<div class="home-ind"><div class="home-bar"></div></div>
+</div><!-- /device wrapper -->
+</div><!-- /wrap -->
+
+<!-- ═══ 오버레이 시트 ═══ -->
+<div class="overlay" id="ov" onclick="closeSheet(event)">
+  <!-- 날짜 이벤트 목록 선택 시트 -->
+  <div class="sheet" id="calDaySheet" onclick="event.stopPropagation()" style="display:none">
+    <div class="s-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="s-title" id="calDayListTitle" style="margin:0">일정 선택</div>
+      <button style="width:32px;height:32px;background:var(--bg-chip);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="closeSheet()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div id="calDayListItems"></div>
+  </div>
+  <!-- 상태 변경 -->
+  <div class="sheet" id="statusSheet" onclick="event.stopPropagation()" style="display:none">
+    <div class="s-handle"></div>
+    <div class="s-title">상태 변경</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div class="card" style="padding:14px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1px solid var(--border)" onclick="closeSheet()"><div class="badge b-selected"><span class="badge-dot" style="background:var(--s-selected)"></span>선정됨</div><span style="font-size:14px;color:var(--text-primary);font-weight:500">선정됐어요</span></div>
+      <div class="card" style="padding:14px;cursor:pointer;display:flex;align-items:center;gap:12px;border:1px solid var(--border)" onclick="closeSheet()"><div class="badge b-not-sel"><span class="badge-dot" style="background:var(--s-not-sel)"></span>미선정</div><span style="font-size:14px;color:var(--text-primary);font-weight:500">미선정이에요</span></div>
+      <div class="card" style="padding:14px;cursor:pointer;display:flex;align-items:center;gap:12px;border-color:var(--s-overdue-bg)" onclick="closeSheet()"><div class="badge b-overdue"><span class="badge-dot" style="background:var(--s-overdue)"></span>취소</div><span style="font-size:14px;color:var(--s-overdue);font-weight:500">신청 취소할게요</span></div>
+    </div>
+  </div>
+  <!-- 직접 등록 -->
+  <div class="sheet" id="addSheet" onclick="event.stopPropagation()" style="display:none">
+    <div class="s-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div class="s-title" style="margin:0">캠페인 직접 등록</div><button style="font-size:20px;color:var(--text-muted);background:none;border:none;cursor:pointer" onclick="closeSheet()">×</button></div>
+    <div class="form-group"><label class="inp-label">캠페인명 *</label><input class="inp" placeholder="캠페인명 입력"></div>
+    <div class="form-group"><label class="inp-label">플랫폼 *</label><select class="inp"><option>플랫폼 선택</option><option>레뷰</option><option>강남맛집</option><option>미블</option></select></div>
+    <div class="form-group"><label class="inp-label">채널 타입</label><div style="display:flex;gap:6px;flex-wrap:wrap"><div class="fc active">블로그</div><div class="fc">인스타</div><div class="fc">유튜브</div><div class="fc">릴스</div></div></div>
+    <div class="form-group"><label class="inp-label">신청일</label><input class="inp" type="date" value="2026-04-06"></div>
+    <div class="form-group"><label class="inp-label">리뷰 마감일</label><input class="inp" type="date"></div>
+    <div class="form-group"><label class="inp-label">메모</label><textarea class="inp" rows="3" placeholder="가이드라인 메모" style="resize:none"></textarea></div>
+    <button class="btn btn-primary" onclick="closeSheet()">등록하기</button>
+  </div>
+  <!-- 수익 등록 -->
+  <div class="sheet" id="addRevSheet" onclick="event.stopPropagation()" style="display:none">
+    <div class="s-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="s-title" style="margin:0">수익 등록</div>
+      <button style="font-size:20px;color:var(--text-muted);background:none;border:none;cursor:pointer" onclick="closeSheet()">×</button>
+    </div>
+    <div class="form-group">
+      <label class="inp-label">캠페인명 *</label>
+      <input class="inp" placeholder="캠페인명 입력">
+    </div>
+    <div class="form-group">
+      <label class="inp-label">플랫폼</label>
+      <select class="inp"><option>플랫폼 선택</option><option>레뷰</option><option>강남맛집</option><option>미블</option><option>서울오빠</option><option>티블</option><option>링블</option><option>기타</option></select>
+    </div>
+    <div class="form-group">
+      <label class="inp-label">협찬 상품가 *</label>
+      <div style="position:relative">
+        <input class="inp" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="예) 30,000" style="padding-right:36px;letter-spacing:-0.3px" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);pointer-events:none">원</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="inp-label">광고비 (별도 지급 시)</label>
+      <div style="position:relative">
+        <input class="inp" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="예) 30,000" style="padding-right:36px;letter-spacing:-0.3px" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--text-muted);pointer-events:none">원</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="inp-label">완료일</label>
+      <input class="inp" type="date" value="2026-04-09">
+    </div>
+    <div class="form-group">
+      <label class="inp-label">채널</label>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        <div class="fchip active" onclick="this.classList.toggle('active')">블로그</div>
+        <div class="fchip" onclick="this.classList.toggle('active')">인스타</div>
+        <div class="fchip" onclick="this.classList.toggle('active')">유튜브</div>
+        <div class="fchip" onclick="this.classList.toggle('active')">블로그 클립</div>
+        <div class="fchip" onclick="this.classList.toggle('active')">인스타 릴스</div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="closeSheet()">등록하기</button>
+    <div style="height:8px"></div>
+  </div>
+  <div class="sheet" id="calSheet" onclick="event.stopPropagation()" style="display:none">
+    <div class="s-handle"></div>
+
+    <!-- 상단 액션바: 휴지통(좌) / 편집(중) / X(우) -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <button style="width:32px;height:32px;background:var(--bg-chip);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="calDeleteEvent()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--s-overdue)" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+      <button id="cs-edit-btn" style="display:flex;align-items:center;gap:5px;background:var(--bg-chip);border:none;border-radius:var(--r-full);padding:6px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--brand-text);font-family:var(--font-body)" onclick="calToggleEdit()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        편집
+      </button>
+      <button style="width:32px;height:32px;background:var(--bg-chip);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="closeSheet()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- 헤더 -->
+    <div style="margin-bottom:12px">
+      <div style="display:flex;gap:5px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+        <div class="badge b-overdue"><span class="badge-dot" style="background:var(--s-overdue)"></span>리뷰 마감</div>
+        <div class="ddayb dd-r">D-3</div>
+      </div>
+      <!-- 캠페인명: 읽기/편집 -->
+      <div id="cs-name-view" style="font-size:17px;font-weight:800;color:var(--text-primary);letter-spacing:-0.4px;margin-bottom:3px">카페투어 강남점 체험단</div>
+      <input id="cs-name-edit" class="inp" value="카페투어 강남점 체험단" style="display:none;font-size:15px;font-weight:700;margin-bottom:3px;padding:6px 10px">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;font-weight:700;color:var(--brand-text)">레뷰</span>
+        <span style="font-size:11px;color:var(--text-muted)">·</span>
+        <span id="cs-channel-view" style="font-size:11px;color:var(--text-muted)">블로그, 인스타그램</span>
+        <input id="cs-channel-edit" class="inp" value="블로그, 인스타그램" style="display:none;font-size:11px;padding:4px 8px;height:auto;flex:1">
+      </div>
+    </div>
+
+    <div style="height:1px;background:var(--border);margin-bottom:12px"></div>
+
+    <!-- 일정 정보 -->
+    <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">일정 정보</div>
+    <div style="background:var(--bg-card-inner);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text-muted)">리뷰 마감일</span>
+        <div id="cs-deadline-view" style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--s-overdue);font-family:var(--font-mono)">4월 9일</span>
+          <span style="font-size:10px;font-weight:700;color:var(--s-overdue);font-family:var(--font-mono);background:var(--s-overdue-bg);padding:2px 6px;border-radius:var(--r-full)">D-3</span>
+        </div>
+        <input id="cs-deadline-edit" class="inp" type="date" value="2026-04-09" style="display:none;font-size:12px;padding:5px 8px;height:auto;width:140px">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text-muted)">체험일자</span>
+        <div id="cs-expdate-view" style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:12px;font-weight:600;color:var(--s-selected);font-family:var(--font-mono)">4월 15일</span>
+          <span style="font-size:10px;font-weight:700;color:var(--s-selected);font-family:var(--font-mono);background:var(--s-selected-bg);padding:2px 6px;border-radius:var(--r-full)">D+6</span>
+        </div>
+        <input id="cs-expdate-edit" class="inp" type="date" value="2026-04-15" style="display:none;font-size:12px;padding:5px 8px;height:auto;width:140px">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px">
+        <span style="font-size:12px;color:var(--text-muted)">위치</span>
+        <span id="cs-loc-view" style="font-size:12px;font-weight:600;color:var(--text-primary)">서울 강남구</span>
+        <input id="cs-loc-edit" class="inp" value="서울 강남구" style="display:none;font-size:12px;padding:5px 8px;height:auto;width:140px">
+      </div>
+    </div>
+
+    <!-- 협찬 정보 -->
+    <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">협찬 정보</div>
+    <div style="background:var(--bg-card-inner);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text-muted)">협찬 품목</span>
+        <span id="cs-product-view" style="font-size:12px;font-weight:600;color:var(--text-primary);text-align:right;max-width:55%">음료 2잔 + 디저트 1개</span>
+        <input id="cs-product-edit" class="inp" value="음료 2잔 + 디저트 1개" style="display:none;font-size:12px;padding:5px 8px;height:auto;width:160px;text-align:right">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px">
+        <span style="font-size:12px;color:var(--text-muted)">협찬 금액</span>
+        <div id="cs-amount-view" style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:13px;font-weight:800;color:var(--s-selected);font-family:var(--font-mono)">28,000</span>
+          <span style="font-size:11px;color:var(--s-selected);font-weight:600">원</span>
+        </div>
+        <div id="cs-amount-edit" style="display:none;display:none;align-items:center;gap:4px">
+          <input class="inp" type="text" inputmode="numeric" pattern="[0-9]*" id="cs-amount-input" value="28000" style="font-size:12px;padding:5px 8px;height:auto;width:100px;text-align:right;letter-spacing:-0.3px" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <span style="font-size:12px;color:var(--text-muted)">원</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 방문 정보 -->
+    <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">방문 정보</div>
+    <div style="background:var(--bg-card-inner);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text-muted)">예약 여부</span>
+        <span id="cs-res-view" style="font-size:12px;font-weight:700;color:var(--s-applied)">예정</span>
+        <div id="cs-res-edit" style="display:none;gap:5px">
+          <div onclick="csToggle('res','예정')" id="cs-res-0" style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--r-full);background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand-text);cursor:pointer">예정</div>
+          <div onclick="csToggle('res','완료')" id="cs-res-1" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--r-full);background:var(--bg-card);border:1px solid var(--border-mid);color:var(--text-secondary);cursor:pointer">완료</div>
+          <div onclick="csToggle('res','불필요')" id="cs-res-2" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--r-full);background:var(--bg-card);border:1px solid var(--border-mid);color:var(--text-secondary);cursor:pointer">불필요</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-bottom:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--text-muted)">주말 방문</span>
+        <span id="cs-wknd-view" style="font-size:12px;font-weight:600;color:var(--text-muted)">—</span>
+        <div id="cs-wknd-edit" style="display:none;gap:6px">
+          <div onclick="csToggle('wknd','가능')" id="cs-wknd-yes" style="font-size:11px;font-weight:700;padding:4px 12px;border-radius:var(--r-full);background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand-text);cursor:pointer">가능</div>
+          <div onclick="csToggle('wknd','불가')" id="cs-wknd-no" style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:var(--r-full);background:var(--bg-card);border:1px solid var(--border-mid);color:var(--text-secondary);cursor:pointer">불가</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px">
+        <span style="font-size:12px;color:var(--text-muted)">업주 전화번호</span>
+        <a id="cs-tel-view" href="tel:02-1234-5678" style="font-size:12px;font-weight:700;color:var(--brand-text);font-family:var(--font-mono);text-decoration:none;display:flex;align-items:center;gap:4px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.1 2.2 2 2 0 012.08 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.46-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+          02-1234-5678
+        </a>
+        <input id="cs-tel-edit" class="inp" type="tel" value="02-1234-5678" style="display:none;font-size:12px;padding:5px 8px;height:auto;width:140px;font-family:var(--font-mono)">
+      </div>
+    </div>
+
+    <!-- 가이드라인 -->
+    <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">가이드라인</div>
+    <div id="cs-guide-view" style="background:var(--bg-card-inner);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 12px;font-size:12px;color:var(--text-primary);line-height:1.7;margin-bottom:14px">
+      음료 2잔 + 디저트 1개 무료 제공<br>#체체 #카페투어 해시태그 필수<br>포스팅 후 URL 제출
+    </div>
+    <textarea id="cs-guide-edit" class="inp" rows="3" style="display:none;font-size:12px;resize:none;margin-bottom:14px;line-height:1.7">음료 2잔 + 디저트 1개 무료 제공
+#체체 #카페투어 해시태그 필수
+포스팅 후 URL 제출</textarea>
+
+    <!-- 메모 — 항상 편집 가능 -->
+    <div style="font-size:10px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">메모</div>
+    <textarea id="cs-memo" class="inp" rows="3" placeholder="주차 가능 여부, 사전 예약 필요 등 자유 입력" style="resize:none;font-size:12px;margin-bottom:16px;line-height:1.7">주차 가능 · 사전 예약 필수 · 음료 선택 가능</textarea>
+
+    <!-- 편집 모드 저장 버튼 (편집 시에만 표시) -->
+    <div id="cs-save-bar" style="display:none;margin-bottom:8px">
+      <button class="btn btn-primary" onclick="calSaveEdit()" style="background:var(--brand)">저장하기</button>
+    </div>
+
+    <!-- 기본 하단 버튼 -->
+    <div id="cs-default-bar" style="display:flex;gap:8px">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeSheet()">플랫폼에서 확인하기</button>
+      <button id="cal-done-btn" class="btn btn-primary" style="flex:1" onclick="calToggleDone()">리뷰 완료</button>
+    </div>
+    <div style="height:8px"></div>
+  </div>
+  <!-- 캘린더 일정 등록 — TDS v4 완전 재작성 -->
+  <div class="sheet" id="addCalSheet" onclick="event.stopPropagation()" style="display:none">
+    <div class="s-handle"></div>
+    <!-- 시트 헤더 — SVG 닫기 버튼 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div class="s-title" style="margin:0;font-size:18px">일정 등록</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">선정된 체험단 공고를 등록해요</div>
+      </div>
+      <button onclick="closeSheet()" style="width:36px;height:36px;border-radius:50%;background:var(--bg-chip);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- ① 공고 URL 입력 -->
+    <div class="form-group" style="margin-bottom:16px">
+      <label class="inp-label">공고 URL <span style="color:var(--s-overdue)">*</span></label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="flex:1;position:relative">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          <input class="inp" id="cal-url-input" placeholder="선정된 체험단 공고 URL 붙여넣기" style="padding-left:34px;height:44px" oninput="calUrlChanged()">
+        </div>
+        <button id="cal-fetch-btn" onclick="calFetchInfo()" style="height:44px;padding:0 16px;background:var(--brand);color:#fff;border:none;border-radius:var(--r-md);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--font-body);opacity:0.35;pointer-events:none;transition:all var(--dur-base);flex-shrink:0;box-shadow:var(--brand-shadow)">불러오기</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:4px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        레뷰·강남맛집·미블 등 18개 플랫폼 URL 지원해요
+      </div>
+    </div>
+    <button id="cal-manual-btn" onclick="calManualMode()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--brand-text);font-family:var(--font-body);font-weight:700;padding:0 0 16px;display:flex;align-items:center;gap:4px">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      직접 입력할게요
+    </button>
+
+    <!-- ② 로딩 스피너 -->
+    <div id="cal-loading" style="display:none;padding:20px 0;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+      <div style="width:20px;height:20px;border:2.5px solid var(--brand-light);border-top-color:var(--brand);border-radius:50%;animation:calSpin .7s linear infinite"></div>
+      <span style="font-size:13px;color:var(--text-muted)">공고 정보 불러오는 중…</span>
+    </div>
+
+    <!-- ③ 자동 크롤링 결과 / 수기 입력 공용 블록 -->
+    <div id="cal-auto-fields" style="display:none;margin-bottom:16px">
+      <!-- 상태 배너: 자동/수기 모드에 따라 JS로 교체 -->
+      <div id="cal-fields-banner" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 14px;background:var(--s-selected-bg);border-radius:var(--r-lg);border:1px solid rgba(0,179,134,.2)">
+        <div style="display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--s-selected)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="cal-banner-txt" style="font-size:12px;color:var(--s-selected);font-weight:600">공고 정보를 불러왔어요</span>
+        </div>
+      </div>
+      <!-- 필드 행들 -->
+      <div style="background:var(--bg-card-inner);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+        <!-- 캠페인명 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);gap:12px">
+          <span style="font-size:12px;color:var(--text-muted);flex-shrink:0">캠페인명</span>
+          <span id="af-name-view" style="font-size:12px;font-weight:600;color:var(--text-primary);text-align:right">카페투어 강남점 체험단</span>
+          <input id="af-name-edit" class="inp" value="카페투어 강남점 체험단" style="display:none;font-size:12px;padding:5px 8px;height:auto;text-align:right;flex:1;min-width:0">
+        </div>
+        <!-- 마감일자 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);gap:12px">
+          <span style="font-size:12px;color:var(--text-muted);flex-shrink:0">마감일자</span>
+          <span id="af-deadline-view" style="font-size:12px;font-weight:700;color:var(--s-overdue);font-family:var(--font-mono)">2026.04.09</span>
+          <input id="af-deadline-edit" class="inp" type="date" value="2026-04-09" style="display:none;font-size:12px;padding:5px 8px;height:auto;flex:1;min-width:0">
+        </div>
+        <!-- 제공 상품 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);gap:12px">
+          <span style="font-size:12px;color:var(--text-muted);flex-shrink:0">제공 상품</span>
+          <span id="af-product-view" style="font-size:12px;font-weight:600;color:var(--text-primary);text-align:right">음료 2잔 + 디저트 1개</span>
+          <input id="af-product-edit" class="inp" value="음료 2잔 + 디저트 1개" style="display:none;font-size:12px;padding:5px 8px;height:auto;text-align:right;flex:1;min-width:0">
+        </div>
+        <!-- 위치 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);gap:12px">
+          <span style="font-size:12px;color:var(--text-muted);flex-shrink:0">위치</span>
+          <span id="af-location-view" style="font-size:12px;font-weight:600;color:var(--text-primary)">서울 강남구</span>
+          <input id="af-location-edit" class="inp" value="서울 강남구" style="display:none;font-size:12px;padding:5px 8px;height:auto;text-align:right;flex:1;min-width:0">
+        </div>
+        <!-- 채널 -->
+        <div style="padding:9px 12px;border-bottom:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">채널</div>
+          <div id="af-channel-chips" style="display:flex;gap:5px;flex-wrap:wrap">
+            <div class="fchip af-ch active" data-ch="블로그" onclick="calChipToggle(this)">블로그</div>
+            <div class="fchip af-ch" data-ch="인스타" onclick="calChipToggle(this)">인스타</div>
+            <div class="fchip af-ch" data-ch="유튜브" onclick="calChipToggle(this)">유튜브</div>
+            <div class="fchip af-ch" data-ch="블로그 클립" onclick="calChipToggle(this)">블로그 클립</div>
+            <div class="fchip af-ch" data-ch="인스타 릴스" onclick="calChipToggle(this)">인스타 릴스</div>
+          </div>
+        </div>
+        <!-- 가이드라인 -->
+        <div style="padding:9px 12px;gap:8px;display:flex;flex-direction:column">
+          <span style="font-size:12px;color:var(--text-muted);flex-shrink:0">가이드라인</span>
+          <div id="af-guide-view" style="font-size:12px;font-weight:600;color:var(--text-primary);line-height:1.6;white-space:pre-wrap">음료 2잔 + 디저트 1개 무료 제공&#13;&#10;#체체 #카페투어 해시태그 필수&#13;&#10;포스팅 후 URL 제출</div>
+          <textarea id="af-guide-edit" class="inp" rows="3" style="display:none;font-size:12px;padding:6px 8px;height:auto;resize:none;line-height:1.6">음료 2잔 + 디저트 1개 무료 제공
+#체체 #카페투어 해시태그 필수
+포스팅 후 URL 제출</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 운영 정보 수기 입력 — TDS v4 완전 재작성 -->
+    <div id="cal-manual-fields" style="display:none">
+
+      <!-- 섹션 구분 — divider-section 8px -->
+      <div class="divider-section" style="margin:4px -20px 20px"></div>
+
+      <!-- 섹션 헤더 -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+        <div style="width:3px;height:14px;background:var(--brand);border-radius:2px;flex-shrink:0"></div>
+        <span style="font-size:11px;font-family:var(--font-mono);font-weight:600;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase">운영 정보 입력</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:10px;color:var(--text-muted)">* 필수</span>
+      </div>
+
+      <!-- F-10: 체험일자 -->
+      <div class="form-group">
+        <label class="inp-label">체험일자</label>
+        <div style="position:relative">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <input class="inp" type="date" id="cal-exp-date" style="height:44px;padding-left:36px">
+        </div>
+      </div>
+
+      <!-- F-05: 협찬 금액 (필수) -->
+      <div class="form-group">
+        <label class="inp-label">협찬 금액 <span style="color:var(--s-overdue);font-family:var(--font-body);letter-spacing:0;text-transform:none">*</span></label>
+        <div style="position:relative">
+          <input class="inp" type="text" inputmode="numeric" pattern="[0-9]*"
+                 id="cal-amount"
+                 placeholder="예) 50,000"
+                 style="height:44px;padding-right:36px;letter-spacing:-0.3px"
+                 oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:500;color:var(--text-muted);pointer-events:none">원</span>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:5px">협찬 상품 시가 기준으로 입력해요</div>
+      </div>
+
+      <!-- F-09: 업주 전화번호 (선택) -->
+      <div class="form-group">
+        <label class="inp-label">업주 전화번호 <span style="font-size:10px;color:var(--text-disabled);font-weight:400;font-family:var(--font-body);letter-spacing:0;text-transform:none">(선택)</span></label>
+        <div style="position:relative">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.1 2.2 2 2 0 012.08 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.46-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+          <input class="inp" type="tel" id="cal-owner-tel"
+                 placeholder="예약·방문 문의용"
+                 style="height:44px;padding-left:36px">
+        </div>
+      </div>
+
+      <!-- F-08A: 예약 여부 — 3-state 토글, 44px, gap:8px -->
+      <div class="form-group">
+        <label class="inp-label">예약 여부</label>
+        <div style="display:flex;gap:8px">
+          <div id="res-0" onclick="addCalToggle('res','예정')"
+               style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1.5px solid var(--brand);background:var(--brand-light);color:var(--brand-text);font-size:13px;font-weight:700;cursor:pointer;transition:all var(--dur-base) var(--ease-out)">
+            예정
+          </div>
+          <div id="res-1" onclick="addCalToggle('res','완료')"
+               style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--dur-base) var(--ease-out)">
+            완료
+          </div>
+          <div id="res-2" onclick="addCalToggle('res','불필요')"
+               style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--dur-base) var(--ease-out)">
+            불필요
+          </div>
+        </div>
+      </div>
+
+      <!-- F-08: 주말 방문 — 2-state 토글, 44px, gap:8px -->
+      <div class="form-group">
+        <label class="inp-label">주말 방문 <span style="font-size:10px;color:var(--text-disabled);font-weight:400;font-family:var(--font-body);letter-spacing:0;text-transform:none">(선택)</span></label>
+        <div style="display:flex;gap:8px">
+          <div id="wknd-yes" onclick="addCalToggle('wknd','가능')"
+               style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--dur-base) var(--ease-out)">
+            가능
+          </div>
+          <div id="wknd-no" onclick="addCalToggle('wknd','불가')"
+               style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--dur-base) var(--ease-out)">
+            불가
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:5px">미선택 시 캘린더에 — 으로 표시돼요</div>
+      </div>
+
+      <!-- F-12: 메모 — 선택, textarea -->
+      <div class="form-group">
+        <label class="inp-label">메모 <span style="font-size:10px;color:var(--text-disabled);font-weight:400;font-family:var(--font-body);letter-spacing:0;text-transform:none">(선택)</span></label>
+        <textarea class="inp" rows="3" id="cal-memo"
+                  placeholder="주차 가능 여부, 사전 예약 방법, 유의사항 등 자유롭게 입력해요 (최대 200자)"
+                  style="resize:none;min-height:88px;line-height:1.7"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px">
+          <span style="font-size:11px;color:var(--text-muted)" id="memo-count">0 / 200</span>
+        </div>
+      </div>
+
+      <!-- CTA — 1 Page 1 CTA, 해요체 동사형 -->
+      <button class="btn btn-primary" onclick="closeSheet()" style="margin-top:4px">등록할게요</button>
+      <div style="height:8px"></div>
+    </div>
+
+    <!-- 빈 상태 — Empty State 규격 (이모지 36px / 제목 15px 700 / 설명 12px) -->
+    <div id="cal-empty-hint" style="padding:32px 0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div style="font-size:36px;opacity:0.35;margin-bottom:2px">🔗</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text-primary)">URL을 붙여넣어 보세요</div>
+      <div style="font-size:12px;color:var(--text-muted);line-height:1.7;max-width:240px">선정된 공고 URL을 입력하면<br>마감일·캠페인명·제공상품·위치<br>채널·가이드라인을 자동으로 채워드려요</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   화면 전환
+══════════════════════════════════════ */
+// [data-hide] 복구 시 아래 배열에 해당 id 추가
+// platform-connect-page → 's003d'
+// apply-status-page     → 's007', 's008'
+// platform-manage-page  → 's009c'
+const SCREENS=['s001','s002','s003','s004','s013','s006','s009','s010','s011','s012','s012a','s014'];
+const SCREEN_LABELS={s001:'스플래시',s002:'온보딩',s003:'로그인',s004:'홈(탐색)',s013:'체험단 지도',s006:'체험단 상세',s009:'마이페이지',s010:'알림 센터',s011:'에러/빈화면',s012:'캘린더(월)',s012a:'캘린더(주)',s014:'수익'};
+let navHistory=[];let curScreen='s001';
+
+function buildTabs(){
+  const tb=document.getElementById('top-bar');tb.innerHTML='';
+  SCREENS.forEach(id=>{const b=document.createElement('button');b.className='scr-btn'+(id===curScreen?' active':'');b.textContent=SCREEN_LABELS[id];b.id='tb-'+id;b.onclick=()=>goto(id);tb.appendChild(b);});
+}
+
+function goto(id){
+  const target=document.getElementById(id);
+  if(target&&target.dataset.hide){return;}/* hide 처리된 화면 — 접근 차단 */
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('active'));
+  target.classList.add('active');
+  document.querySelectorAll('.scr-btn').forEach(b=>b.classList.remove('active'));
+  const tb=document.getElementById('tb-'+id);
+  if(tb){tb.classList.add('active');tb.scrollIntoView({block:'nearest',inline:'center'});}
+  navHistory.push(curScreen);curScreen=id;closeSheet();
+  if(id==='s013')setTimeout(initMap,80);
+  if(id==='s012')requestAnimationFrame(()=>renderCal());
+}
+
+function goBack(){if(navHistory.length>0){const prev=navHistory.pop();goto(prev);}}
+
+/* ══════════════════════════════════════
+   다크/라이트
+══════════════════════════════════════ */
+function setTheme(mode){
+  document.documentElement.setAttribute('data-theme',mode);
+  document.getElementById('lightBtn').classList.toggle('active',mode==='light');
+  document.getElementById('darkBtn').classList.toggle('active',mode==='dark');
+}
+
+/* ══════════════════════════════════════
+   하단 네비
+══════════════════════════════════════ */
+function makeNav(containerId,active){
+  // [data-hide="bnav-apply-tab"] 복구: 아래 TABS 배열에 내 신청 항목 주석 해제
+  const TABS=[
+    {id:'s004',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',label:'탐색'},
+    // {id:'s007',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>',label:'내 신청',badge:true},
+    {id:'s014',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',label:'수익'},
+    {id:'s012',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',label:'캘린더'},
+    {id:'s009',svg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',label:'마이'}
+  ];
+  const nav=document.getElementById(containerId);if(!nav)return;
+  nav.innerHTML=TABS.map(t=>`<div class="ntab${t.label===active?' active':''}" onclick="goto('${t.id}')"><div class="niw">${t.svg}${t.badge?'<span class="nbadge"></span>':''}</div><div class="nl">${t.label}</div></div>`).join('');
+}
+
+/* ══════════════════════════════════════
+   온보딩
+══════════════════════════════════════ */
+let obIdx=0;
+function setSlide(n){
+  document.getElementById('ob'+obIdx).style.opacity='0';obIdx=n;document.getElementById('ob'+obIdx).style.opacity='1';
+  ['od0','od1','od2'].forEach((id,i)=>{const el=document.getElementById(id);el.style.width=i===n?'20px':'6px';el.style.background=i===n?'var(--brand)':'var(--border-mid)';});
+  document.getElementById('ob-next-btn').textContent=n===2?'시작하기':'다음';
+}
+function obNext(){if(obIdx<2)setSlide(obIdx+1);else goto('s003');}
+
+/* ══════════════════════════════════════
+   필터
+══════════════════════════════════════ */
+const F={media:'all',type:'all',cat:'all',site:'all',shortage:false,keyword:''};
+let filterOpen=true;
+
+function toggleFilterPanel(){
+  filterOpen=!filterOpen;
+  document.getElementById('filter-body').style.display=filterOpen?'':'none';
+  document.getElementById('filter-toggle-label').textContent=filterOpen?'접기':'필터';
+  document.getElementById('filter-chevron').style.transform=filterOpen?'':'rotate(180deg)';
+}
+
+function chipClick(el,group){
+  document.querySelectorAll(`.fchip[data-group="${group}"]`).forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');F[group]=el.dataset.val;applyFilters();
+}
+
+function toggleShortage(){
+  F.shortage=!F.shortage;document.getElementById('shortage-btn').classList.toggle('on',F.shortage);applyFilters();
+}
+
+/* ══════════════════════════════════════
+   체험단 데이터
+══════════════════════════════════════ */
+const CAMPS=[
+  {plat:'레뷰',cat:'카페',name:'카페투어 강남점 신메뉴 체험단 · 블로그+인스타',area:'서울 강남구',media:['블로그','인스타'],type:'방문형',total:10,applied:9,date:'4/9',dday:'D-3',ddayCls:'var(--s-overdue)',open:true,emoji:'☕'},
+  {plat:'강남맛집',cat:'맛집',name:'홍대 이자카야 신메뉴 체험 · 블로거 모집',area:'서울 마포구',media:['블로그'],type:'방문형',total:5,applied:3,date:'4/12',dday:'D-6',ddayCls:'var(--s-deadline)',open:true,emoji:'🍶'},
+  {plat:'레뷰',cat:'뷰티',name:'봄 신상 파우더 체험단 · 인스타 전용',area:'전국',media:['인스타'],type:'배송형',total:20,applied:7,date:'4/14',dday:'D-8',ddayCls:'var(--s-deadline)',open:true,emoji:'💄'},
+  {plat:'미블',cat:'숙박',name:'한강뷰 프리미엄 호텔 숙박 체험단',area:'서울 영등포',media:['유튜브'],type:'방문형',total:3,applied:3,date:'4/18',dday:'D-12',ddayCls:'var(--text-muted)',open:true,emoji:'🏨'},
+  {plat:'서울오빠',cat:'패션',name:'여름 신상 원피스 스타일링 체험 모집',area:'전국',media:['인스타','릴스'],type:'배송형',total:15,applied:12,date:'4/20',dday:'D-14',ddayCls:'var(--text-muted)',open:true,emoji:'👗'},
+  {plat:'강남맛집',cat:'맛집',name:'강남 파인다이닝 런치 코스 체험단',area:'서울 강남구',media:['블로그'],type:'방문형',total:6,applied:6,date:'3/31',dday:'마감',ddayCls:'var(--text-muted)',open:false,emoji:'🍽️'},
+  {plat:'레뷰',cat:'생활',name:'공기청정기 장기 체험단 · 블로그 전용',area:'전국',media:['블로그'],type:'배송형',total:10,applied:10,date:'4/25',dday:'D-19',ddayCls:'var(--text-muted)',open:true,emoji:'🌬️'},
+  {plat:'미블',cat:'카페',name:'성수 브런치 카페 신메뉴 체험단',area:'서울 성동구',media:['인스타'],type:'방문형',total:8,applied:6,date:'4/22',dday:'D-16',ddayCls:'var(--text-muted)',open:true,emoji:'🥞'},
+  {plat:'티블',cat:'맛집',name:'경리단길 타코 맛집 블로그 클립 체험',area:'서울 용산구',media:['블로그클립'],type:'방문형',total:4,applied:1,date:'4/15',dday:'D-9',ddayCls:'var(--s-deadline)',open:true,emoji:'🌮'},
+  {plat:'리뷰노트',cat:'뷰티',name:'여름 선크림 SPF50+ 배송 체험단',area:'전국',media:['블로그','인스타'],type:'배송형',total:30,applied:18,date:'4/26',dday:'D-20',ddayCls:'var(--text-muted)',open:true,emoji:'🧴'},
+  {plat:'디너의여왕',cat:'맛집',name:'판교 오마카세 신메뉴 체험 블로거 모집',area:'경기 성남',media:['블로그'],type:'방문형',total:5,applied:4,date:'4/11',dday:'D-5',ddayCls:'var(--s-deadline)',open:true,emoji:'🍣'},
+  {plat:'서울오빠',cat:'숙박',name:'제주 감성 펜션 1박 2일 체험단',area:'제주',media:['유튜브'],type:'방문형',total:2,applied:1,date:'4/17',dday:'D-11',ddayCls:'var(--text-muted)',open:true,emoji:'🌴'},
+  {plat:'레뷰',cat:'육아',name:'유아동 유기농 이유식 배송 체험단',area:'전국',media:['블로그','인스타'],type:'배송형',total:25,applied:10,date:'4/28',dday:'D-22',ddayCls:'var(--text-muted)',open:true,emoji:'🍼'},
+  {plat:'링블',cat:'생활',name:'스마트홈 IoT 조명 장기 체험단',area:'전국',media:['유튜브'],type:'배송형',total:8,applied:7,date:'4/24',dday:'D-18',ddayCls:'var(--text-muted)',open:true,emoji:'💡'},
+  {plat:'리뷰노트',cat:'뷰티',name:'색조 메이크업 키트 기자단 모집',area:'전국',media:['블로그'],type:'기자단',total:5,applied:2,date:'4/16',dday:'D-10',ddayCls:'var(--s-deadline)',open:true,emoji:'💋'},
+  {plat:'놀러와',cat:'맛집',name:'합정 디저트 카페 포토 체험단',area:'서울 마포구',media:['인스타','릴스'],type:'방문형',total:6,applied:5,date:'4/13',dday:'D-7',ddayCls:'var(--s-deadline)',open:true,emoji:'🎂'},
+];
+
+function applyFilters(){
+  F.keyword=(document.getElementById('search-input')||{}).value||'';
+  const list=CAMPS.filter(c=>{
+    if(!c.open&&F.shortage)return false;
+    if(F.media!=='all'&&!c.media.includes(F.media))return false;
+    if(F.type!=='all'&&c.type!==F.type)return false;
+    if(F.cat!=='all'&&c.cat!==F.cat)return false;
+    if(F.site!=='all'&&c.plat!==F.site)return false;
+    if(F.shortage&&c.total-c.applied>2)return false;
+    if(F.keyword&&!c.name.includes(F.keyword)&&!c.area.includes(F.keyword))return false;
+    return true;
+  });
+  renderCamps(list);
+}
+
+function renderCamps(list){
+  const el=document.getElementById('home-list');
+  const cnt=document.getElementById('result-count');
+  if(cnt)cnt.textContent=list.length;
+  if(!el)return;
+  if(!list.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">조건에 맞는 체험단이 없어요</div><div class="empty-desc">필터를 조정해 보세요</div></div>`;return;}
+  el.innerHTML=list.map(c=>{
+    const rem=c.total-c.applied;const shortage=c.open&&rem<=2;
+    const typeBg=c.type==='방문형'?'var(--s-applied-bg)':c.type==='배송형'?'var(--s-selected-bg)':'var(--s-not-sel-bg)';
+    const typeColor=c.type==='방문형'?'var(--s-applied)':c.type==='배송형'?'var(--s-selected)':'var(--s-not-sel)';
+    const mediaTags=c.media.map(m=>`<span style="font-size:10px;padding:2px 7px;border-radius:var(--r-full);background:var(--bg-chip);color:var(--text-secondary);border:1px solid var(--border-mid)">${m}</span>`).join('');
+    return `<div class="camp-card" onclick="goto('s006')">
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+        <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+          <span class="cc-plat">${c.plat}</span>
+          <span class="cc-cat">${c.cat}</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:var(--r-full);background:${typeBg};color:${typeColor};font-weight:700">${c.type}</span>
+          ${mediaTags}
+          ${shortage?`<span style="font-size:10px;padding:2px 7px;border-radius:var(--r-full);background:var(--s-overdue-bg);color:var(--s-overdue);font-weight:700">인원부족</span>`:''}
+        </div>
+        <span style="font-size:11px;font-weight:700;color:${c.ddayCls};font-family:var(--font-mono)">${c.dday}</span>
+      </div>
+      <div class="cc-name">${c.emoji} ${c.name}</div>
+      <div class="cc-meta"><span>📍 ${c.area}</span><span>👥 ${c.applied}/${c.total}명 신청</span></div>
+      <div class="cc-footer">
+        <span class="cc-date">마감 ${c.date}</span>
+        <span class="${c.open?'cc-status-open':'cc-status-closed'}">${c.open?(shortage?`잔여 ${rem}명`:'신청 가능'):'마감'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   신청 데이터
+══════════════════════════════════════ */
+const APPLS=[
+  {status:'applied',  cls:'ac-blue',  badge:'b-applied',  lbl:'신청완료', name:'레뷰 뷰티 체험단',      plat:'레뷰 · 인스타',    dday:'발표 D-6', dc:'var(--s-applied)'},
+  {status:'selected', cls:'ac-green', badge:'b-selected', lbl:'선정됨',   name:'카페투어 강남점 체험',   plat:'레뷰 · 블로그',    dday:'마감 D-3', dc:'var(--s-overdue)'},
+  {status:'deadline', cls:'ac-yellow',badge:'b-deadline', lbl:'마감임박', name:'뷰티 파우더 체험단',     plat:'레뷰 · 인스타',    dday:'마감 D-1', dc:'var(--s-overdue)'},
+  {status:'applied',  cls:'ac-blue',  badge:'b-applied',  lbl:'신청완료', name:'강남맛집 카페투어',      plat:'강남맛집 · 블로그', dday:'발표 D-8', dc:'var(--s-applied)'},
+  {status:'completed',cls:'ac-lgray', badge:'b-completed',lbl:'완료',    name:'홍대 이자카야 체험',     plat:'강남맛집 · 블로그', dday:'완료',    dc:'var(--s-completed)'},
+  {status:'not_selected',cls:'ac-gray',badge:'b-not-sel', lbl:'미선정',  name:'한강뷰 호텔 숙박',       plat:'미블 · 유튜브',    dday:'—',       dc:'var(--text-muted)'},
+  {status:'applied',  cls:'ac-blue',  badge:'b-applied',  lbl:'신청완료', name:'공기청정기 장기 체험단', plat:'레뷰 · 블로그',    dday:'발표 D-14',dc:'var(--s-applied)'},
+  {status:'completed',cls:'ac-lgray', badge:'b-completed',lbl:'완료',    name:'봄 선크림 체험단',       plat:'레뷰 · 인스타',    dday:'완료',    dc:'var(--s-completed)'},
+];
+
+let curStatus='all';
+function filterStatus(s,el){curStatus=s;document.querySelectorAll('.stab2').forEach(t=>t.classList.remove('active'));el.classList.add('active');buildApplList();}
+function buildApplList(){
+  const el=document.getElementById('appl-list');if(!el)return;
+  const list=curStatus==='all'?APPLS:APPLS.filter(a=>a.status===curStatus);
+  if(!list.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">해당 상태의 신청이 없어요</div></div>`;return;}
+  el.innerHTML=list.map(a=>`<div class="appl-card ${a.cls}" onclick="goto('s008')"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div class="badge ${a.badge}"><span class="badge-dot" style="background:${a.dc}"></span>${a.lbl}</div><span style="font-size:12px;font-weight:600;font-family:var(--font-mono);color:${a.dc}">${a.dday}</span></div><div class="ac-name">${a.name}</div><div class="ac-meta">${a.plat}</div></div>`).join('');
+}
+
+/* ══════════════════════════════════════
+   캘린더
+══════════════════════════════════════ */
+/* Phase 1 활성 타입: r(리뷰마감) · g(체험기간) 만 포함
+   y(신청마감) · b(선정발표) → data-hide Phase1 제외, 데이터에서 완전 삭제 */
+const CAL_EVENTS=[
+  {id:'e2',date:'2026-04-09',type:'r',label:'리뷰 마감',name:'카페투어 강남점 체험',plat:'레뷰',location:'서울 강남구',dday:'D-3'},
+  {id:'e3',date:'2026-04-12',type:'g',label:'체험 기간',name:'한강뷰 호텔 숙박 체험',plat:'미블',location:'서울 영등포구',dday:'+2'},
+  {id:'e4',date:'2026-04-14',type:'r',label:'리뷰 마감',name:'뷰티 파우더 체험단',plat:'레뷰',location:'전국',dday:'D-1'},
+  {id:'e5',date:'2026-04-20',type:'g',label:'체험 기간',name:'강남 피부과 시술 체험',plat:'레뷰',location:'서울 강남구',dday:'D-13'},
+  {id:'e7',date:'2026-04-25',type:'r',label:'리뷰 마감',name:'한강뷰 호텔 숙박',plat:'미블',location:'서울 영등포구',dday:'D-18'},
+  {id:'e8',date:'2026-04-25',type:'g',label:'체험 기간',name:'패션 여름 신상 체험',plat:'레뷰',location:'전국',dday:'D-18'},
+];
+const calDoneSet=new Set(); /* done 처리된 이벤트 id 집합 */
+let calSheetEventId=null;   /* 현재 열린 calSheet 이벤트 id */
+const KO_MONTH=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+let calY=2026,calM=3,calSel=null,calFilter='all';
+/* Phase 1 활성 타입: r(리뷰마감) · g(체험기간) */
+const TYPE_COLOR={r:'var(--s-overdue)',  g:'var(--s-selected)'};
+const TYPE_BG   ={r:'var(--s-overdue-bg)',g:'var(--s-selected-bg)'};
+
+function ds(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+
+/* Phase 1 활성 타입 — r·g 만 */
+const ACTIVE_TYPES=new Set(['r','g']);
+
+function calFilterClick(el,type){
+  document.querySelectorAll('.cal-fchip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');calFilter=type;
+  calSel=null;document.getElementById('cal-sec-title').textContent=`${KO_MONTH[calM]} 일정`;
+  renderCal();
+}
+
+/* type 필터 + Phase1 활성 타입만 */
+function getFilteredEvents(dateStr){
+  const src=dateStr?CAL_EVENTS.filter(e=>e.date===dateStr):CAL_EVENTS;
+  return src.filter(e=>ACTIVE_TYPES.has(e.type)&&(calFilter==='all'||e.type===calFilter));
+}
+
+/* addCalSheet 전용 예약여부/주말방문 토글 */
+function addCalToggle(group,val){
+  const on='flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1.5px solid var(--brand);background:var(--brand-light);color:var(--brand-text);font-size:13px;font-weight:700;cursor:pointer;transition:all var(--dur-base)';
+  const off='flex:1;height:44px;display:flex;align-items:center;justify-content:center;border-radius:var(--r-md);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;transition:all var(--dur-base)';
+  if(group==='res'){
+    ['res-0','res-1','res-2'].forEach((id,i)=>{
+      const el=document.getElementById(id);
+      if(el)el.style.cssText=['예정','완료','불필요'][i]===val?on:off;
+    });
+  } else {
+    /* wknd: 가능/불가 — 같은 값 재클릭 시 해제(미선택) */
+    const yEl=document.getElementById('wknd-yes');
+    const nEl=document.getElementById('wknd-no');
+    const cur=yEl&&yEl.style.cssText.includes('var(--brand-light)')?'가능':nEl&&nEl.style.cssText.includes('var(--brand-light)')?'불가':'';
+    const next=cur===val?'':val;
+    if(yEl)yEl.style.cssText=next==='가능'?on:off;
+    if(nEl)nEl.style.cssText=next==='불가'?on:off;
+  }
+}
+
+function renderCal(){
+  document.getElementById('cal-month-lbl').textContent=`${calY}. ${calM+1}`;
+  const first=new Date(calY,calM,1).getDay();
+  const dim=new Date(calY,calM+1,0).getDate();
+  const prev=new Date(calY,calM,0).getDate();
+  /* 날짜별 이벤트 맵: Phase1 활성 타입(r·g) + 현재 필터 적용 */
+  const eMap={};
+  CAL_EVENTS.forEach(e=>{
+    if(!ACTIVE_TYPES.has(e.type))return;
+    if(calFilter!=='all'&&e.type!==calFilter)return;
+    if(!eMap[e.date])eMap[e.date]=[];
+    eMap[e.date].push(e);
+  });
+  /* 셀 높이 동적 계산 */
+  const gridWrap=document.querySelector('#s012 [style*="flex:1"]');
+  const availH=gridWrap?gridWrap.clientHeight:400;
+  const weeks=Math.ceil((first+dim)/7);
+  const rowH=Math.max(52,Math.floor(availH/weeks));
+
+  let html='';
+  for(let i=0;i<42;i++){
+    let d,mo=calM,yr=calY,om=false;
+    if(i<first){d=prev-first+i+1;mo=calM-1;if(mo<0){mo=11;yr--;}om=true;}
+    else if(i-first+1>dim){d=i-first+1-dim;mo=calM+1;if(mo>11){mo=0;yr++;}om=true;}
+    else d=i-first+1;
+    const dStr=ds(yr,mo,d);
+    const isToday=yr===2026&&mo===3&&d===7;
+    const isSel=calSel===dStr;
+    const dow=i%7;
+    let cls='ccell';
+    if(om)cls+=' om';if(isToday)cls+=' today';if(isSel)cls+=' sel';
+    if(dow===0&&!om)cls+=' su';if(dow===6&&!om)cls+=' sa';
+    const evs=eMap[dStr]||[];
+    /* 셀 내 이벤트 칩 전체 표시 */
+    let stampHtml='';
+    const chipsHtml=evs.map(ev=>{
+      const col=TYPE_COLOR[ev.type]||'var(--text-muted)';
+      const bg=TYPE_BG[ev.type]||'var(--bg-chip)';
+      const isDone=calDoneSet.has(ev.id);
+      if(isDone){
+        stampHtml=`<div style="position:absolute;top:2px;right:2px;width:14px;height:14px;background:var(--s-selected);border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2"><svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="white" stroke-width="2"><polyline points="2 6 5 9 10 3"/></svg></div>`;
+        return `<div style="font-size:10px;font-weight:700;color:${col};background:${bg};border-radius:3px;padding:1px 3px;margin-top:2px;opacity:0.38;line-height:1.3;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box">${ev.name}</div>`;
+      }
+      return `<div style="font-size:10px;font-weight:700;color:${col};background:${bg};border-radius:3px;padding:1px 3px;margin-top:2px;line-height:1.3;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box">${ev.name}</div>`;
+    }).join('');
+    /* 날짜 숫자 색 */
+    let dnumStyle='font-size:12px;font-weight:500;line-height:1;margin-bottom:2px;';
+    if(!om){
+      if(dow===0)dnumStyle+='color:var(--tab-red);';
+      else if(dow===6)dnumStyle+='color:var(--tab-blue);';
+      else dnumStyle+='color:var(--text-primary);';
+    } else {
+      dnumStyle+='color:var(--text-disabled);';
+    }
+    const todayCircle=isToday?`style="width:22px;height:22px;background:var(--brand);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:var(--brand-shadow);margin-bottom:2px;"`:`style="${dnumStyle}"`;
+    const selBg=isSel?'background:var(--brand-xlight);':'';
+    html+=`<div style="border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:4px 2px 4px;min-height:${rowH}px;cursor:pointer;position:relative;${selBg}box-sizing:border-box;min-width:0;overflow:hidden;" onclick="calDayClick('${dStr}')">
+      <div ${todayCircle}>${d}</div>
+      ${stampHtml}
+      ${chipsHtml}
+    </div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+  if(!calSel&&document.getElementById('cal-ev-list'))renderCalList(null);
+}
+
+function renderCalList(dStr){
+  const el=document.getElementById('cal-ev-list');if(!el)return;
+  const filtered=getFilteredEvents(dStr);
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty-state" style="padding:20px"><div class="empty-icon" style="font-size:28px">📅</div><div class="empty-title" style="font-size:13px">해당 유형의 일정이 없어요</div></div>`;return;
+  }
+  /* 캠페인명 기준 그룹핑 — r(리뷰마감)·g(체험기간) 2종 */
+  const groups={};
+  filtered.forEach(e=>{
+    if(!groups[e.name])groups[e.name]={name:e.name,plat:e.plat,location:e.location,exp:null,deadline:null};
+    if(e.type==='g')groups[e.name].exp={date:e.date,dday:e.dday};
+    if(e.type==='r')groups[e.name].deadline={date:e.date,dday:e.dday};
+  });
+  const ddColor=dday=>{
+    if(!dday||!dday.startsWith('D-'))return'var(--text-muted)';
+    const n=parseInt(dday.slice(2));
+    return n<=3?'var(--s-overdue)':n<=7?'var(--s-deadline)':'var(--text-muted)';
+  };
+  const fmtDate=dateStr=>{
+    if(!dateStr)return'';
+    const[,m,d]=dateStr.split('-');return`${parseInt(m)}월 ${parseInt(d)}일`;
+  };
+  el.innerHTML=Object.values(groups).map(g=>{
+    /* 날짜 행 조합 */
+    let dateRows='';
+    if(g.exp){
+      const col=ddColor(g.exp.dday);
+      dateRows+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--s-selected);flex-shrink:0"></div>
+          <span style="font-size:11px;color:var(--text-muted)">체험일자</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-primary);font-weight:600">${fmtDate(g.exp.date)}</span>
+          <span style="font-size:10px;font-weight:700;font-family:var(--font-mono);color:var(--s-selected)">${g.exp.dday}</span>
+        </div>
+      </div>`;
+    }
+    if(g.deadline){
+      const col=ddColor(g.deadline.dday);
+      dateRows+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--s-overdue);flex-shrink:0"></div>
+          <span style="font-size:11px;color:var(--text-muted)">리뷰 마감</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:11px;font-family:var(--font-mono);color:var(--text-primary);font-weight:600">${fmtDate(g.deadline.date)}</span>
+          <span style="font-size:10px;font-weight:700;font-family:var(--font-mono);color:${col}">${g.deadline.dday}</span>
+        </div>
+      </div>`;
+    }
+
+    /* done 여부: 같은 캠페인의 모든 이벤트 완료 기준 */
+    const campEvs=CAL_EVENTS.filter(e=>e.name===g.name);
+    const firstId=(campEvs.find(e=>e.type==='r')||campEvs.find(e=>e.type==='g')||campEvs[0])?.id;
+    const isDone=campEvs.length>0&&campEvs.every(e=>calDoneSet.has(e.id));
+    const flagHtml=isDone?`<svg width="13" height="13" viewBox="0 0 24 24" fill="var(--s-selected)" stroke="none"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15" stroke="var(--s-selected)" stroke-width="2"/></svg>`:'';
+    return `<div style="background:var(--bg-card);border:1px solid ${isDone?'var(--s-selected-bg)':'var(--border)'};border-radius:var(--r-lg);padding:12px 14px;cursor:pointer;transition:all var(--dur-base);opacity:${isDone?'0.55':'1'}" onclick="showCalSheet('${firstId}')">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+        <div style="min-width:0;flex:1">
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px">
+            <div style="font-size:13px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px">${g.name}</div>
+            ${flagHtml}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--brand-text);font-weight:600">${g.plat}</span>
+            <span style="font-size:11px;color:var(--text-muted)">·</span>
+            <span style="font-size:11px;color:var(--text-muted)">📍 ${g.location}</span>
+          </div>
+        </div>
+        ${isDone?`<span style="font-size:10px;font-weight:700;color:var(--s-selected);background:var(--s-selected-bg);padding:3px 8px;border-radius:var(--r-full);flex-shrink:0;margin-left:8px">완료</span>`:''}
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:6px">${dateRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function changeMonth(d){
+  calM+=d;if(calM>11){calM=0;calY++;}if(calM<0){calM=11;calY--;}
+  calSel=null;document.getElementById('cal-sec-title').textContent=`${KO_MONTH[calM]} 일정`;renderCal();
+}
+
+/* 날짜 셀 클릭 — ACTIVE_TYPES(r·g)만, 1개면 calSheet, 복수면 선택 시트 */
+function calDayClick(dStr){
+  calSel=dStr;
+  renderCal();
+  const evs=getFilteredEvents(dStr); /* ACTIVE_TYPES + 현재 필터 적용 */
+  if(!evs.length)return;
+  if(evs.length===1){showCalSheet(evs[0].id);return;}
+  const names=[...new Set(evs.map(e=>e.name))];
+  if(names.length===1){showCalSheet(evs[0].id);return;}
+  /* 복수 캠페인 → 선택 시트 */
+  const listEl=document.getElementById('calDayListItems');
+  if(listEl){
+    const [,m,d]=dStr.split('-');
+    listEl.innerHTML=names.map(name=>{
+      const ev=evs.find(e=>e.name===name);
+      const col=TYPE_COLOR[ev.type]||'var(--text-muted)';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="closeSheet();setTimeout(()=>showCalSheet('${ev.id}'),50)">
+        <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${ev.label} · ${ev.plat}</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-disabled)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>`;
+    }).join('');
+    document.getElementById('calDayListTitle').textContent=`${parseInt(m)}월 ${parseInt(d)}일 일정`;
+    showSheet('calDaySheet');
+  }
+}
+
+/* ══════════════════════════════════════
+   calSheet 편집 모드
+══════════════════════════════════════ */
+let csEditMode=false;
+const CS_PAIRS=[
+  ['cs-name-view','cs-name-edit'],
+  ['cs-channel-view','cs-channel-edit'],
+  ['cs-deadline-view','cs-deadline-edit'],
+  ['cs-expdate-view','cs-expdate-edit'],
+  ['cs-loc-view','cs-loc-edit'],
+  ['cs-product-view','cs-product-edit'],
+  ['cs-amount-view','cs-amount-edit'],
+  ['cs-res-view','cs-res-edit'],
+  ['cs-wknd-view','cs-wknd-edit'],
+  ['cs-tel-view','cs-tel-edit'],
+  ['cs-guide-view','cs-guide-edit'],
+];
+
+function calToggleEdit(){
+  csEditMode=!csEditMode;
+  CS_PAIRS.forEach(([v,e])=>{
+    const ve=document.getElementById(v);const ee=document.getElementById(e);
+    if(ve)ve.style.display=csEditMode?'none':'';
+    if(ee)ee.style.display=csEditMode?'flex':'none';
+  });
+  /* 편집 버튼 스타일 */
+  const btn=document.getElementById('cs-edit-btn');
+  if(btn){
+    btn.style.background=csEditMode?'var(--brand-light)':'var(--bg-chip)';
+    btn.style.color=csEditMode?'var(--brand-text)':'var(--brand-text)';
+    btn.style.border=csEditMode?'1.5px solid var(--brand)':'none';
+    btn.innerHTML=csEditMode
+      ?`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg> 편집 중`
+      :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> 편집`;
+  }
+  document.getElementById('cs-save-bar').style.display=csEditMode?'block':'none';
+  document.getElementById('cs-default-bar').style.display=csEditMode?'none':'flex';
+}
+
+function calSaveEdit(){
+  /* view 값 업데이트 */
+  const name=document.getElementById('cs-name-edit')?.value;
+  if(name){document.getElementById('cs-name-view').textContent=name;}
+  const loc=document.getElementById('cs-loc-edit')?.value;
+  if(loc){document.getElementById('cs-loc-view').textContent=loc;}
+  const product=document.getElementById('cs-product-edit')?.value;
+  if(product){document.getElementById('cs-product-view').textContent=product;}
+  const amount=document.getElementById('cs-amount-input')?.value;
+  if(amount){document.getElementById('cs-amount-view').innerHTML=`<span style="font-size:13px;font-weight:800;color:var(--s-selected);font-family:var(--font-mono)">${parseInt(amount).toLocaleString()}</span><span style="font-size:11px;color:var(--s-selected);font-weight:600">원</span>`;}
+  const tel=document.getElementById('cs-tel-edit')?.value;
+  if(tel){const a=document.getElementById('cs-tel-view');if(a){a.href='tel:'+tel;a.childNodes[a.childNodes.length-1].textContent=tel;}}
+  /* 편집 모드 종료 */
+  csEditMode=true;calToggleEdit();
+}
+
+function csToggle(group,val){
+  const onStyle='font-size:11px;font-weight:700;padding:4px 10px;border-radius:var(--r-full);background:var(--brand-light);border:1.5px solid var(--brand);color:var(--brand-text);cursor:pointer';
+  const offStyle='font-size:11px;font-weight:600;padding:4px 10px;border-radius:var(--r-full);background:var(--bg-card);border:1px solid var(--border-mid);color:var(--text-secondary);cursor:pointer';
+  if(group==='res'){
+    const ids=['cs-res-0','cs-res-1','cs-res-2'];
+    const vals=['예정','완료','불필요'];
+    ids.forEach((id,i)=>{const el=document.getElementById(id);if(el)el.style.cssText=vals[i]===val?onStyle:offStyle;});
+    const view=document.getElementById('cs-res-view');
+    if(view){
+      view.textContent=val;
+      view.style.color=val==='완료'?'var(--s-selected)':val==='예정'?'var(--s-applied)':'var(--text-muted)';
+    }
+  } else {
+    document.getElementById('cs-wknd-yes').style.cssText=val==='가능'?onStyle:offStyle;
+    document.getElementById('cs-wknd-no').style.cssText=val==='불가'?onStyle:offStyle;
+    const view=document.getElementById('cs-wknd-view');
+    if(view){view.textContent=val;view.style.color=val==='가능'?'var(--s-selected)':'var(--text-muted)';}
+  }
+}
+
+function showCalSheet(eventId){
+  /* 편집 모드 초기화 */
+  if(csEditMode){csEditMode=true;calToggleEdit();}
+  csEditMode=false;
+  calSheetEventId=eventId;
+  const curEv=CAL_EVENTS.find(e=>e.id===eventId);
+  const campName=curEv?curEv.name:'';
+  const allIds=CAL_EVENTS.filter(e=>e.name===campName).map(e=>e.id);
+  const isDone=allIds.length>0&&allIds.every(id=>calDoneSet.has(id));
+  const btn=document.getElementById('cal-done-btn');
+  if(btn){
+    btn.textContent=isDone?'리뷰 등록 완료 ✓':'리뷰 완료';
+    btn.style.background=isDone?'var(--s-selected)':'var(--brand)';
+    btn.style.color='#fff';
+    btn.style.boxShadow=isDone?'0 4px 14px rgba(0,179,134,0.3)':'var(--brand-shadow)';
+    btn.style.opacity=isDone?'0.85':'1';
+  }
+  showSheet('calSheet');
+}
+
+function calToggleDone(){
+  if(!calSheetEventId)return;
+  /* 현재 이벤트의 캠페인명 찾기 */
+  const curEv=CAL_EVENTS.find(e=>e.id===calSheetEventId);
+  if(!curEv)return;
+  const campName=curEv.name;
+  /* 동일 캠페인명의 모든 이벤트 id 수집 */
+  const allIds=CAL_EVENTS.filter(e=>e.name===campName).map(e=>e.id);
+  /* 현재 상태가 done이면 전체 취소, 아니면 전체 완료 */
+  const isCurrentlyDone=calDoneSet.has(calSheetEventId);
+  allIds.forEach(id=>{
+    if(isCurrentlyDone)calDoneSet.delete(id);
+    else calDoneSet.add(id);
+  });
+  closeSheet();
+  setTimeout(()=>{
+    renderCal();
+    if(calSel)renderCalList(calSel);else renderCalList(null);
+    updateMyStats();
+  },80);
+}
+
+function calDeleteEvent(){
+  if(!calSheetEventId)return;
+  const idx=CAL_EVENTS.findIndex(e=>e.id===calSheetEventId);
+  if(idx>-1)CAL_EVENTS.splice(idx,1);
+  calDoneSet.delete(calSheetEventId);
+  closeSheet();
+  renderCal();
+  if(calSel)renderCalList(calSel);else renderCalList(null);
+}
+
+/* ══════════════════════════════════════
+   에러 화면
+══════════════════════════════════════ */
+const EMPTY_TYPES={
+  net:{icon:'😵',title:'연결이 끊겼어요',desc:'인터넷 연결을 확인해 주세요',btn:'다시 시도'},
+  search:{icon:'🔍',title:'검색 결과가 없어요',desc:'다른 키워드로 시도해 보세요',btn:'검색 초기화'},
+  appl:{icon:'📭',title:'신청한 체험단이 없어요',desc:'탐색 탭에서 체험단을 찾아보세요',btn:'탐색하러 가기'},
+  server:{icon:'🔧',title:'일시적인 오류가 발생했어요',desc:'잠시 후 다시 시도해 주세요',btn:'다시 시도'},
+};
+function showEmpty(k){const t=EMPTY_TYPES[k];document.getElementById('e-icon').textContent=t.icon;document.getElementById('e-title').textContent=t.title;document.getElementById('e-desc').textContent=t.desc;document.getElementById('e-btn').textContent=t.btn;}
+
+/* ══════════════════════════════════════
+   시트
+══════════════════════════════════════ */
+function showSheet(id){document.querySelectorAll('.sheet').forEach(s=>s.style.display='none');document.getElementById(id).style.display='block';document.getElementById('ov').classList.add('show');}
+function closeSheet(e){if(!e||e.target===document.getElementById('ov')){document.getElementById('ov').classList.remove('show');document.querySelectorAll('.sheet').forEach(s=>s.style.display='none');}}
+
+/* ══════════════════════════════════════
+   지도 (Leaflet)
+══════════════════════════════════════ */
+const MAP_PLAT_COLOR={
+  '레뷰':'#00B386','강남맛집':'#E8394A','미블':'#2B7FE8',
+  '서울오빠':'#E8A820','디너의여왕':'#8B95A1','티블':'#1C3C82',
+  '리뷰노트':'#B0B8C1','링블':'#2750A8','놀러와':'#00B386','리뷰플레이스':'#E8394A',
+};
+const MAP_PINS=[
+  {id:'p1',plat:'레뷰',cat:'카페',name:'카페투어 강남점 체험단',area:'강남구 역삼동',lat:37.5000,lng:127.0360,total:10,applied:9,dday:'D-3',open:true,type:'방문형'},
+  {id:'p2',plat:'강남맛집',cat:'맛집',name:'청담 파스타 레스토랑 체험',area:'강남구 청담동',lat:37.5240,lng:127.0430,total:6,applied:2,dday:'D-9',open:true,type:'방문형'},
+  {id:'p3',plat:'레뷰',cat:'뷰티',name:'강남 피부과 시술 체험단',area:'강남구 신사동',lat:37.5150,lng:127.0200,total:8,applied:3,dday:'D-8',open:true,type:'방문형'},
+  {id:'p4',plat:'미블',cat:'숙박',name:'한강뷰 호텔 1박 2일 체험',area:'영등포구 여의도',lat:37.5280,lng:126.9241,total:3,applied:3,dday:'D-12',open:true,type:'방문형'},
+  {id:'p5',plat:'서울오빠',cat:'맛집',name:'이태원 브런치 카페 체험',area:'용산구 이태원',lat:37.5344,lng:126.9938,total:8,applied:4,dday:'D-5',open:true,type:'방문형'},
+  {id:'p6',plat:'디너의여왕',cat:'맛집',name:'판교 오마카세 신메뉴 체험',area:'분당구 삼평동',lat:37.4010,lng:127.1108,total:5,applied:4,dday:'D-5',open:true,type:'방문형'},
+  {id:'p7',plat:'레뷰',cat:'카페',name:'성수 스페셜티 커피 체험단',area:'성동구 성수동',lat:37.5447,lng:127.0564,total:12,applied:11,dday:'D-7',open:true,type:'방문형'},
+  {id:'p8',plat:'강남맛집',cat:'뷰티',name:'청담 에스테틱 체험단',area:'강남구 청담동',lat:37.5246,lng:127.0430,total:6,applied:2,dday:'D-9',open:true,type:'방문형'},
+  {id:'p9',plat:'티블',cat:'맛집',name:'경리단길 타코 맛집 체험',area:'용산구 이태원',lat:37.5354,lng:126.9862,total:4,applied:1,dday:'D-9',open:true,type:'방문형'},
+  {id:'p10',plat:'미블',cat:'카페',name:'망원동 브런치 카페 신메뉴',area:'마포구 망원동',lat:37.5571,lng:126.9041,total:8,applied:6,dday:'D-16',open:true,type:'방문형'},
+  {id:'p11',plat:'서울오빠',cat:'숙박',name:'연남동 감성 호텔 숙박',area:'마포구 연남동',lat:37.5600,lng:126.9226,total:3,applied:1,dday:'D-11',open:true,type:'방문형'},
+  {id:'p12',plat:'강남맛집',cat:'맛집',name:'잠실 한우 정육식당 체험',area:'송파구 잠실동',lat:37.5123,lng:127.1000,total:6,applied:5,dday:'D-4',open:true,type:'방문형'},
+  {id:'p13',plat:'레뷰',cat:'뷰티',name:'강남 왁싱샵 뷰티 체험단',area:'강남구 역삼동',lat:37.5031,lng:127.0190,total:15,applied:14,dday:'D-3',open:true,type:'방문형'},
+  {id:'p14',plat:'디너의여왕',cat:'맛집',name:'서촌 한식 정식 체험단',area:'종로구 체부동',lat:37.5793,lng:126.9696,total:5,applied:2,dday:'D-14',open:true,type:'방문형'},
+  {id:'p15',plat:'레뷰',cat:'맛집',name:'종로 한정식 점심 체험단',area:'종로구 관훈동',lat:37.5730,lng:126.9890,total:4,applied:1,dday:'D-6',open:true,type:'방문형'},
+  {id:'p16',plat:'미블',cat:'숙박',name:'남산 뷰 호텔 숙박 체험단',area:'중구 명동',lat:37.5511,lng:126.9882,total:2,applied:1,dday:'D-10',open:true,type:'방문형'},
+  {id:'p17',plat:'링블',cat:'카페',name:'합정 디저트 카페 포토',area:'마포구 합정동',lat:37.5491,lng:126.9143,total:6,applied:4,dday:'D-7',open:true,type:'방문형'},
+  {id:'p18',plat:'놀러와',cat:'맛집',name:'신촌 맛집 투어 블로그 체험',area:'서대문구 창천동',lat:37.5570,lng:126.9370,total:5,applied:2,dday:'D-9',open:true,type:'방문형'},
+];
+
+let leafletMap=null,mapMarkerLayers=[],mapCurCat='all',selectedMapId=null;
+
+function initMap(){
+  if(leafletMap){leafletMap.invalidateSize();return;}
+  const L=window.L;if(!L){setTimeout(initMap,300);return;}
+  leafletMap=L.map('leaflet-map',{center:[37.5326,127.0246],zoom:12,zoomControl:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:18}).addTo(leafletMap);
+  L.control.zoom({position:'topright'}).addTo(leafletMap);
+  renderMapMarkers();
+}
+
+function renderMapMarkers(){
+  if(!leafletMap)return;
+  const L=window.L;
+  mapMarkerLayers.forEach(m=>m.remove());mapMarkerLayers=[];
+  const filtered=MAP_PINS.filter(c=>mapCurCat==='all'||c.cat===mapCurCat);
+  document.getElementById('map-count').textContent=filtered.length;
+  filtered.forEach(c=>{
+    const color=MAP_PLAT_COLOR[c.plat]||'#1C3C82';
+    const rem=c.total-c.applied;const shortage=rem<=2&&c.open;
+    const icon=L.divIcon({className:'',html:`<div class="pm-marker${selectedMapId===c.id?' selected':''}" style="background:${color};${shortage?'border-color:gold;box-shadow:0 0 0 2px gold,0 3px 12px rgba(0,0,0,.3)':''}">${c.plat.slice(0,1)}</div>`,iconSize:[34,34],iconAnchor:[17,17]});
+    const marker=L.marker([c.lat,c.lng],{icon}).addTo(leafletMap);
+    marker.on('click',()=>showMapCard(c));
+    mapMarkerLayers.push(marker);
+  });
+}
+
+function showMapCard(c){
+  selectedMapId=c.id;renderMapMarkers();
+  document.getElementById('map-hint').style.display='none';document.getElementById('map-card').style.display='block';
+  const rem=c.total-c.applied;const shortage=rem<=2&&c.open;
+  document.getElementById('mc-badges').innerHTML=`<span class="cc-plat">${c.plat}</span><span class="cc-cat">${c.cat}</span><span style="font-size:10px;padding:2px 7px;border-radius:var(--r-full);background:var(--s-applied-bg);color:var(--s-applied);font-weight:700">${c.type}</span>${shortage?`<span style="font-size:10px;padding:2px 7px;border-radius:var(--r-full);background:var(--s-overdue-bg);color:var(--s-overdue);font-weight:700">인원부족</span>`:''}`;
+  document.getElementById('mc-name').textContent=c.name;
+  document.getElementById('mc-meta').textContent=`📍 ${c.area}  ·  👥 ${c.applied}/${c.total}명`;
+  const ddEl=document.getElementById('mc-dday');ddEl.textContent=c.dday;
+  const n=parseInt(c.dday.slice(2));ddEl.style.color=c.dday.startsWith('D-')&&n<=3?'var(--s-overdue)':c.dday.startsWith('D-')&&n<=7?'var(--s-deadline)':'var(--text-muted)';
+  document.getElementById('mc-status').textContent=shortage?`잔여 ${rem}명`:'신청 가능';
+  leafletMap.panTo([c.lat,c.lng],{animate:true,duration:.4});
+}
+
+function mapChip(el,cat){
+  document.querySelectorAll('.map-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');mapCurCat=cat;selectedMapId=null;
+  document.getElementById('map-hint').style.display='';document.getElementById('map-card').style.display='none';
+  renderMapMarkers();
+}
+
+/* ══════════════════════════════════════
+   캘린더 일정 등록 시트
+══════════════════════════════════════ */
+function calUrlChanged(){
+  const val=document.getElementById('cal-url-input').value.trim();
+  const btn=document.getElementById('cal-fetch-btn');
+  btn.style.opacity=val?'1':'0.35';
+  btn.style.pointerEvents=val?'auto':'none';
+  if(!val){
+    document.getElementById('cal-auto-fields').style.display='none';
+    document.getElementById('cal-manual-fields').style.display='none';
+    document.getElementById('cal-empty-hint').style.display='block';
+  }
+}
+function calChipToggle(el){el.classList.toggle('active');}
+function calManualMode(){
+  /* URL 입력란 비활성화 */
+  const urlInp=document.getElementById('cal-url-input');
+  urlInp.value='';urlInp.placeholder='직접 입력 모드';urlInp.disabled=true;
+  urlInp.style.opacity='0.4';
+  document.getElementById('cal-fetch-btn').style.display='none';
+  document.getElementById('cal-manual-btn').style.display='none';
+  /* 배너를 직접 입력 모드용으로 교체 */
+  const banner=document.getElementById('cal-fields-banner');
+  banner.style.background='var(--brand-xlight)';
+  banner.style.border='1px solid var(--brand-light)';
+  banner.style.borderRadius='var(--r-lg)';
+  banner.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span style="font-size:12px;color:var(--brand-text);font-weight:700">직접 입력 모드 — 아래 항목을 수정해 주세요</span>`;
+  /* view → edit 전환 */
+  ['name','deadline','product','location','guide'].forEach(k=>{
+    document.getElementById('af-'+k+'-view').style.display='none';
+    document.getElementById('af-'+k+'-edit').style.display='block';
+  });
+  /* 필드 영역 + 운영정보 노출 */
+  document.getElementById('cal-empty-hint').style.display='none';
+  document.getElementById('cal-auto-fields').style.display='block';
+  document.getElementById('cal-manual-fields').style.display='block';
+  /* 메모 카운터 초기화 */
+  const mc=document.getElementById('memo-count');
+  if(mc)mc.textContent='0 / 200';
+  const memoEl=document.getElementById('cal-memo');
+  if(memoEl)memoEl.addEventListener('input',()=>{
+    const len=memoEl.value.length;
+    if(mc)mc.textContent=len+' / 200';
+    mc.style.color=len>180?'var(--s-overdue)':len>150?'var(--s-deadline)':'var(--text-muted)';
+    if(memoEl.value.length>200)memoEl.value=memoEl.value.slice(0,200);
+  });
+}
+function calFetchInfo(){
+  document.getElementById('cal-empty-hint').style.display='none';
+  document.getElementById('cal-auto-fields').style.display='none';
+  document.getElementById('cal-manual-fields').style.display='none';
+  const ld=document.getElementById('cal-loading');
+  ld.style.display='flex';
+  setTimeout(()=>{
+    ld.style.display='none';
+    /* 배너 자동 모드로 초기화 */
+    const banner=document.getElementById('cal-fields-banner');
+    banner.style.background='var(--s-selected-bg)';
+    banner.style.border='1px solid rgba(0,179,134,.2)';
+    banner.innerHTML=`<div style="display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--s-selected)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size:12px;color:var(--s-selected);font-weight:600">공고 정보를 불러왔어요</span></div>`;
+    /* edit 숨기고 view 노출 */
+    ['name','deadline','product','location','guide'].forEach(k=>{
+      document.getElementById('af-'+k+'-view').style.display='';
+      document.getElementById('af-'+k+'-edit').style.display='none';
+    });
+    document.getElementById('cal-auto-fields').style.display='block';
+    document.getElementById('cal-manual-fields').style.display='block';
+  },1400);
+}
+function calToggle(group,val){
+  const on='flex:1;padding:10px;text-align:center;border-radius:var(--r-md);border:1.5px solid var(--brand);background:var(--brand-light);color:var(--brand-text);font-size:13px;font-weight:700;cursor:pointer';
+  const off='flex:1;padding:10px;text-align:center;border-radius:var(--r-md);border:1px solid var(--border-mid);background:var(--bg-card);color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer';
+  document.getElementById(group+'-yes').style.cssText=val==='yes'?on:off;
+  document.getElementById(group+'-no').style.cssText=val==='no'?on:off;
+}
+
+/* ══════════════════════════════════════
+   수익
+══════════════════════════════════════ */
+const REV_DATA=[
+  {name:'카페투어 강남점 체험단',plat:'레뷰',channel:'블로그',date:'2026-04-09',goods:58000,ad:0},
+  {name:'뷰티 파우더 체험단',plat:'레뷰',channel:'인스타',date:'2026-04-14',goods:90000,ad:30000},
+  {name:'한강뷰 호텔 숙박 체험',plat:'미블',channel:'유튜브',date:'2026-04-12',goods:50000,ad:10000},
+];
+const PLAT_COLOR={'레뷰':'#00B386','강남맛집':'#E8394A','미블':'#2B7FE8','서울오빠':'#E8A820','티블':'#1C3C82','링블':'#2750A8'};
+
+function revFmt(n){return n.toLocaleString();}
+function revFmtDate(s){const[,m,d]=s.split('-');return`${parseInt(m)}월 ${parseInt(d)}일`;}
+
+function renderRev(){
+  const total=REV_DATA.reduce((s,r)=>s+r.goods+r.ad,0);
+  const goods=REV_DATA.reduce((s,r)=>s+r.goods,0);
+  const ad=REV_DATA.reduce((s,r)=>s+r.ad,0);
+  const avg=REV_DATA.length?Math.round(total/REV_DATA.length):0;
+  document.getElementById('rev-total').innerHTML=`${revFmt(total)}<span style="font-size:16px;font-weight:600;margin-left:4px;opacity:0.8">원</span>`;
+  document.getElementById('rev-goods').textContent=revFmt(goods)+'원';
+  document.getElementById('rev-ad').textContent=revFmt(ad)+'원';
+  document.getElementById('rev-count').textContent=REV_DATA.length;
+  const avgK=avg>=10000?(avg/10000).toFixed(1)+'k':revFmt(avg);
+  document.getElementById('rev-avg').textContent=avgK;
+  document.getElementById('rev-list-count').textContent=REV_DATA.length;
+  const el=document.getElementById('rev-list');if(!el)return;
+  if(!REV_DATA.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-title">등록된 수익이 없어요</div><div class="empty-desc">+ 버튼으로 수익을 등록해보세요</div></div>`;return;
+  }
+  el.innerHTML=REV_DATA.map(r=>{
+    const tot=r.goods+r.ad;
+    const pc=PLAT_COLOR[r.plat]||'var(--brand)';
+    return `<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:14px 16px;cursor:pointer;transition:all var(--dur-base) var(--ease-out);position:relative;overflow:hidden;box-shadow:var(--shadow-xs)" onclick="showSheet('addRevSheet')" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='var(--shadow-md)'" onmouseleave="this.style.transform='';this.style.boxShadow='var(--shadow-xs)'">
+      <!-- 왼쪽 컬러 스트라이프 — 색상+아이콘 병행(접근성) -->
+      <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:${pc};border-radius:var(--r-xl) 0 0 var(--r-xl)"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+        <div style="min-width:0;padding-left:4px">
+          <!-- 플랫폼 뱃지 + 채널 -->
+          <div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
+            <span style="font-size:10px;font-weight:700;color:${pc};background:${pc}18;border-radius:var(--r-full);padding:2px 8px;border:1px solid ${pc}30">${r.plat}</span>
+            <span style="font-size:10px;color:var(--text-muted)">·</span>
+            <span style="font-size:10px;color:var(--text-muted)">${r.channel}</span>
+          </div>
+          <!-- 캠페인명 — 14px 700 -->
+          <div style="font-size:14px;font-weight:700;color:var(--text-primary);letter-spacing:-0.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px">${r.name}</div>
+        </div>
+        <!-- 총액 — 16px 800 + letter-spacing -0.5px -->
+        <div style="text-align:right;flex-shrink:0;margin-left:12px">
+          <div style="font-size:16px;font-weight:800;color:var(--text-primary);letter-spacing:-0.5px;line-height:1">${revFmt(tot)}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">원</div>
+        </div>
+      </div>
+      <!-- 분리선 -->
+      <div style="height:1px;background:var(--border);margin:0 -16px 10px;position:relative;left:-16px;width:calc(100% + 32px)"></div>
+      <!-- 상품가 / 광고비 -->
+      <div style="display:flex;gap:8px;padding-left:4px">
+        <div style="flex:1;background:var(--bg-page);border-radius:var(--r-sm);padding:6px 10px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/></svg>협찬가</span>
+          <span style="font-size:11px;font-weight:700;color:var(--text-primary);letter-spacing:-0.3px">${revFmt(r.goods)}원</span>
+        </div>
+        <div style="flex:1;background:var(--bg-page);border-radius:var(--r-sm);padding:6px 10px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>광고비</span>
+          <span style="font-size:11px;font-weight:700;color:${r.ad?'var(--s-selected)':'var(--text-muted)'};letter-spacing:-0.3px">${r.ad?revFmt(r.ad)+'원':'—'}</span>
+        </div>
+      </div>
+      <!-- 날짜 -->
+      <div style="display:flex;align-items:center;gap:4px;margin-top:8px;padding-left:4px">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono)">${revFmtDate(r.date)} 완료</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function revMonthToggle(){
+  alert('월 선택 기능 — 개발 예정');
+}
+
+function updateMyStats(){
+  /* 체험 예정: CAL_EVENTS 중 완료되지 않은 고유 캠페인 수 */
+  /* ACTIVE_TYPES(r·g) 캠페인만 집계 */
+  const campNames=new Set(CAL_EVENTS.filter(e=>ACTIVE_TYPES.has(e.type)).map(e=>e.name));
+  let upcoming=0;
+  campNames.forEach(name=>{
+    const ids=CAL_EVENTS.filter(e=>e.name===name).map(e=>e.id);
+    const isDone=ids.length>0&&ids.every(id=>calDoneSet.has(id));
+    if(!isDone)upcoming++;
+  });
+  /* 수익 금액: REV_DATA 합계 */
+  const revenue=typeof REV_DATA!=='undefined'?REV_DATA.reduce((s,r)=>s+r.goods+r.ad,0):0;
+  /* 리뷰 완료: 완료된 고유 캠페인 수 */
+  let doneCount=0;
+  campNames.forEach(name=>{
+    const ids=CAL_EVENTS.filter(e=>e.name===name).map(e=>e.id);
+    const isDone=ids.length>0&&ids.every(id=>calDoneSet.has(id));
+    if(isDone)doneCount++;
+  });
+  const u=document.getElementById('my-stat-upcoming');
+  const r=document.getElementById('my-stat-revenue');
+  const d=document.getElementById('my-stat-done');
+  if(u)u.textContent=upcoming;
+  if(r)r.textContent=revenue>=10000?Math.floor(revenue/10000)+'만':revenue.toLocaleString();
+  if(d)d.textContent=doneCount;
+}
+
+/* ══════════════════════════════════════
+   초기화
+══════════════════════════════════════ */
+buildTabs();
+makeNav('bnav-home','탐색');makeNav('bnav-appl','내 신청');makeNav('bnav-cal','캘린더');makeNav('bnav-cal2','캘린더');makeNav('bnav-map','탐색');makeNav('bnav-my','마이');makeNav('bnav-rev','수익');
+buildHomeList=applyFilters;applyFilters();buildApplList();renderRev();updateMyStats();
+requestAnimationFrame(()=>renderCal());
+</script>
+</body>
+</html>

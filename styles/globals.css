@@ -1,0 +1,33 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&display=swap');
+@import 'leaflet/dist/leaflet.css';
+@import './tokens.css';
+
+/* SCR-013 지도 — ref 원본 .pm-marker 재현 */
+.pm-marker {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+  cursor: pointer;
+  transition: transform 110ms;
+  font-family: var(--font-mono);
+}
+.pm-marker:hover { transform: scale(1.15); }
+.pm-marker.selected { transform: scale(1.2); border-width: 3px; }
+.leaflet-container { font-family: var(--font-body); }
+.leaflet-control-attribution { font-size: 10px !important; font-family: var(--font-body) !important; }
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}

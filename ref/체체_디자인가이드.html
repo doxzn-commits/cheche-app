@@ -1,0 +1,2348 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>체체(CheChé) — Design System v2.3</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700;800;900&display=swap');
+
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  체체(CheChé) Design System v2.3                            ║
+   ║  Base: Toss Design System (TDS) v4 + Interaction v18        ║
+   ║  Brand: 확정 로고 (Poppins 800, #1C3C82)                    ║
+   ║  Font:  Pretendard Variable (앱 전체) + Poppins (로고만)    ║
+   ║  Updated: 2026.04                                            ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+/* ══════════════════════════════════════════════════
+   LIGHT MODE TOKENS — PRIMARY
+   TDS 기반, 체체 브랜드 네이비 적용
+══════════════════════════════════════════════════ */
+:root, [data-theme="light"] {
+
+  /* ── Brand Primary (TDS: --color-primary 교체 영역) ── */
+  --color-primary:         #1C3C82;   /* 체체 네이비 (로고 추출) */
+  --color-primary-hover:   #152D61;   /* -10% 어둠 */
+  --color-primary-pressed: #0E2048;   /* -20% 어둠 */
+  --color-primary-subtle:  #E6EBF6;   /* 10% tint — 보조 배경 */
+  --color-primary-on:      #FFFFFF;   /* 브랜드 위 텍스트 */
+
+  /* ── Calendar Tab Colors (로고 3탭 → 앱 도트 1:1) ── */
+  --tab-red:               #E8394A;   /* 리뷰 마감 */
+  --tab-blue:              #2B7FE8;   /* 선정 발표 */
+  --tab-yellow:            #E8A820;   /* 신청 마감 */
+
+  /* ── Surface (TDS 고정) ── */
+  --color-bg-base:         #F2F4F6;   /* 페이지 배경 — 토스 연회색 */
+  --color-bg-surface:      #FFFFFF;   /* 카드·헤더 */
+  --color-bg-card:         #FFFFFF;
+  --color-bg-overlay:      rgba(25,31,40,0.55);
+
+  /* ── Text (TDS 고정) ── */
+  --text-emphasis:         #191F28;   /* 제목·핵심 수치 */
+  --text-primary:          #333D4B;   /* 본문 메인 */
+  --text-secondary:        #6B7684;   /* 보조 설명 */
+  --text-tertiary:         #8B95A1;   /* 캡션·플레이스홀더 */
+  --text-disabled:         #B0B8C1;   /* 비활성 */
+  --text-on-primary:       #FFFFFF;
+  --text-link:             #1C3C82;   /* 체체 브랜드로 교체 */
+
+  /* ── Gray Scale (TDS 고정) ── */
+  --gray-900: #191F28;  --gray-800: #2D3540;  --gray-700: #3D4350;
+  --gray-600: #4E5968;  --gray-500: #6B7684;  --gray-400: #8B95A1;
+  --gray-300: #B0B8C1;  --gray-200: #D1D6DB;
+  --gray-100: #E8EBED;  --gray-050: #F2F4F6;
+
+  /* ── Semantic (TDS 고정) ── */
+  --color-success:        #00B386;   --color-success-subtle: #E6FAF5;
+  --color-warning:        #E8A820;   --color-warning-subtle: #FEF7E6;
+  --color-error:          #E8394A;   --color-error-subtle:   #FDEEF0;
+  --color-info:           #2B7FE8;   --color-info-subtle:    #EAF2FF;
+
+  /* ── Status 6-state (체체 전용) ── */
+  --s-applied:      #2B7FE8;  --s-applied-bg:   rgba(43,127,232,0.10);
+  --s-selected:     #00B386;  --s-selected-bg:  rgba(0,179,134,0.10);
+  --s-not-sel:      #8B95A1;  --s-not-sel-bg:   rgba(139,149,161,0.10);
+  --s-completed:    #B0B8C1;  --s-completed-bg: rgba(176,184,193,0.10);
+  --s-deadline:     #E8A820;  --s-deadline-bg:  rgba(232,168,32,0.10);
+  --s-overdue:      #E8394A;  --s-overdue-bg:   rgba(232,57,74,0.10);
+
+  /* ── Shadow (TDS 기준) ── */
+  --shadow-card: 0 2px 12px 0 rgba(0,0,0,0.04);
+  --shadow-xs:   0 1px  4px 0 rgba(0,0,0,0.06);
+  --shadow-sm:   0 2px  8px 0 rgba(0,0,0,0.08);
+  --shadow-md:   0 4px 16px 0 rgba(0,0,0,0.10);
+  --shadow-lg:   0 8px 24px 0 rgba(0,0,0,0.12);
+  --shadow-brand: 0 4px 14px rgba(28,60,130,0.28);
+}
+
+/* ══════════════════════════════════════════════════
+   DARK MODE TOKENS
+══════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  --color-primary:         #4A7AE8;
+  --color-primary-hover:   #3560CC;
+  --color-primary-pressed: #2952B3;
+  --color-primary-subtle:  rgba(74,122,232,0.16);
+  --color-primary-on:      #FFFFFF;
+
+  --tab-red:    #FF5F6D;
+  --tab-blue:   #5B9EFF;
+  --tab-yellow: #FFB84A;
+
+  --color-bg-base:    #111111;
+  --color-bg-surface: #1C1C1E;
+  --color-bg-card:    #2C2C2E;
+  --color-bg-overlay: rgba(0,0,0,0.70);
+
+  --text-emphasis:   #F2F4F6;
+  --text-primary:    #D1D6DB;
+  --text-secondary:  #8B95A1;
+  --text-tertiary:   #6B7684;
+  --text-disabled:   #4E5968;
+  --text-on-primary: #FFFFFF;
+  --text-link:       #7AAEFF;
+
+  --gray-200: #3A3A3C;
+  --gray-100: #2C2C2E;
+  --gray-050: #1C1C1E;
+
+  --color-success:        #34D4AC;  --color-success-subtle: rgba(52,212,172,0.13);
+  --color-warning:        #FFB84A;  --color-warning-subtle: rgba(255,184,74,0.13);
+  --color-error:          #FF5F6D;  --color-error-subtle:   rgba(255,95,109,0.13);
+  --color-info:           #5B9EFF;  --color-info-subtle:    rgba(91,158,255,0.13);
+
+  --s-applied:      #5B9EFF;  --s-applied-bg:   rgba(91,158,255,0.13);
+  --s-selected:     #34D4AC;  --s-selected-bg:  rgba(52,212,172,0.13);
+  --s-not-sel:      #6B7684;  --s-not-sel-bg:   rgba(107,118,132,0.15);
+  --s-completed:    #8892A0;  --s-completed-bg: rgba(136,146,160,0.13);
+  --s-deadline:     #FFB84A;  --s-deadline-bg:  rgba(255,184,74,0.13);
+  --s-overdue:      #FF5F6D;  --s-overdue-bg:   rgba(255,95,109,0.13);
+
+  --shadow-card: 0 2px 12px 0 rgba(0,0,0,0.30);
+  --shadow-xs:   0 1px  4px 0 rgba(0,0,0,0.35);
+  --shadow-sm:   0 2px  8px 0 rgba(0,0,0,0.40);
+  --shadow-md:   0 4px 16px 0 rgba(0,0,0,0.50);
+  --shadow-lg:   0 8px 24px 0 rgba(0,0,0,0.60);
+  --shadow-brand: 0 4px 14px rgba(74,122,232,0.36);
+}
+
+/* ══════════════════════════════════════════════════
+   SHARED TOKENS (Mode-independent)
+══════════════════════════════════════════════════ */
+:root {
+  /* Font */
+  --font-logo:     'Poppins', sans-serif;                        /* 로고(cheche 워드마크) 전용 */
+  --font-body:     'Pretendard Variable', Pretendard, -apple-system,
+                   BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; /* 앱 전체 */
+  /* --font-num: Pretendard Variable (--font-body와 동일 — 별도 토큰 불필요) */
+
+  --font-light:    300;
+  --font-regular:  400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+  --font-extrabold:800;
+
+  /* Type Scale (TDS 기준) */
+  --text-display:   30px;
+  --text-heading-1: 24px;
+  --text-heading-2: 20px;
+  --text-heading-3: 18px;
+  --text-body-1:    16px;
+  --text-body-2:    14px;
+  --text-caption:   12px;
+
+  /* Spacing — 8pt Grid */
+  --sp-1:  4px;   --sp-2:  8px;   --sp-3:  12px;
+  --sp-4:  16px;  --sp-5:  20px;  --sp-6:  24px;
+  --sp-7:  28px;  --sp-8:  32px;  --sp-10: 40px;
+  --sp-12: 48px;  --sp-16: 64px;
+
+  /* Screen Padding */
+  --screen-pad:  24px;
+  --section-gap: 40px;
+  --card-gap:    12px;
+
+  /* Border Radius (TDS 기준) */
+  --r-xs:     6px;    /* 인라인 태그·소형 뱃지 */
+  --r-sm:     8px;    /* 소형 인풋·작은 버튼 */
+  --r-md:    14px;    /* 버튼 Primary/Secondary */
+  --r-lg:    18px;    /* 기능 요소 많은 카드 */
+  --r-xl:    22px;    /* 기본 카드 */
+  --r-2xl:   24px;    /* 대형 카드·배너 */
+  --r-sheet: 20px;    /* 바텀시트 상단 */
+  --r-full: 9999px;   /* 필 버튼·캡슐 뱃지 */
+
+  /* ── Motion Easing Curves — TDS v4 완전 정의 (6종) ── */
+  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);      /* 진입 — 처음 빠르고 끝 천천히 */
+  --ease-in:        cubic-bezier(0.7, 0, 0.84, 0);       /* 퇴장 — 처음 천천히 끝 빠르게 */
+  --ease-in-out:    cubic-bezier(0.45, 0, 0.55, 1);      /* 이동 — 중간 빠르게 */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);   /* 바텀시트·팝업 — 탄성 등장 */
+  --ease-spring-sm: cubic-bezier(0.22, 1.2, 0.36, 1);    /* 토글·체크박스 — 살짝 탄성 */
+  --ease-instant:   steps(1);                             /* 즉시 — 상태 즉각 변화 */
+
+  /* Legacy aliases (하위 호환) */
+  --tr-fast:   0.15s var(--ease-out);
+  --tr-base:   0.20s var(--ease-out);
+  --tr-slow:   0.30s var(--ease-out);
+  --tr-spring: 0.35s var(--ease-spring);
+}
+
+/* ══════════════════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--color-bg-base);
+  color: var(--text-primary);
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--tr-slow), color var(--tr-slow);
+}
+button, input { font-family: inherit; }
+
+/* ══════════════════════════════════════════════════
+   DOC LAYOUT
+══════════════════════════════════════════════════ */
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px 120px; }
+
+/* Topbar */
+.topbar {
+  position: sticky; top: 0; z-index: 300;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+  backdrop-filter: blur(20px);
+  transition: background var(--tr-slow);
+}
+.tb-logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark {
+  width: 36px; height: 36px;
+  background: var(--color-primary);
+  border-radius: 10px;
+  display: grid; place-items: center;
+  box-shadow: var(--shadow-brand);
+  flex-shrink: 0;
+}
+.logo-mark svg { width: 20px; height: 20px; }
+.logo-word {
+  font-family: var(--font-logo);
+  font-size: 18px; font-weight: 800;
+  letter-spacing: -0.3px;
+  color: var(--color-primary);
+}
+.tb-right { display: flex; align-items: center; gap: 10px; }
+.v-tag {
+  font-family: var(--font-body); font-size: 10px;
+  color: var(--text-tertiary); background: var(--gray-100);
+  padding: 3px 8px; border-radius: var(--r-xs);
+  border: 1px solid var(--gray-200);
+}
+.theme-sw { display: flex; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: var(--r-full); padding: 3px; gap: 2px; }
+.sw-opt { padding: 4px 13px; border-radius: var(--r-full); font-size: 11px; font-weight: 700; color: var(--text-tertiary); cursor: pointer; transition: all var(--tr-base); user-select: none; }
+.sw-opt.on { background: var(--color-bg-surface); color: var(--text-primary); box-shadow: var(--shadow-xs); }
+
+/* Hero */
+.hero { padding: 56px 0 48px; border-bottom: 1px solid var(--gray-200); margin-bottom: 64px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--color-primary-subtle); color: var(--color-primary);
+  font-size: 10px; font-weight: 700; font-family: var(--font-body);
+  letter-spacing: 0.10em; text-transform: uppercase;
+  padding: 5px 12px; border-radius: var(--r-full); margin-bottom: 18px;
+}
+.hero-title { font-size: 36px; font-weight: 800; letter-spacing: -1.5px; line-height: 1.2; margin-bottom: 14px; color: var(--text-emphasis); }
+.hero-title em { font-style:normal; color: var(--color-primary); }
+.hero-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.8; max-width: 560px; }
+
+/* Sections */
+.section { margin-bottom: 80px; }
+.sec-eye { font-size: 10px; font-family: var(--font-body); font-weight: 700; color: var(--color-primary); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 4px; }
+.sec-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-emphasis); margin-bottom: 4px; }
+.sec-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 28px; }
+.divider { height: 1px; background: var(--gray-200); margin: 72px 0; }
+
+/* Cards */
+.card {
+  background: var(--color-bg-surface);
+  border-radius: var(--r-xl);
+  padding: var(--sp-5);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--tr-base);
+}
+.card:hover { box-shadow: var(--shadow-sm); }
+
+/* Grid */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+
+/* Inline label */
+.tag {
+  display: inline-block; font-size: 10px; font-family: var(--font-body); font-weight: 700;
+  padding: 3px 8px; border-radius: var(--r-xs);
+  background: var(--color-primary-subtle); color: var(--color-primary);
+}
+.tag-gray { background: var(--gray-100); color: var(--text-secondary); }
+.tag-green { background: var(--color-success-subtle); color: var(--color-success); }
+.tag-red { background: var(--color-error-subtle); color: var(--color-error); }
+
+
+/* ══════════════════════════════════════════════════
+   SECTION 01 — DESIGN PHILOSOPHY
+══════════════════════════════════════════════════ */
+.philosophy-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.phi-card {
+  background: var(--color-bg-surface);
+  border-radius: var(--r-xl); padding: 22px;
+  box-shadow: var(--shadow-card);
+  border-top: 3px solid var(--color-primary);
+  transition: box-shadow var(--tr-base), transform var(--tr-base);
+}
+.phi-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+.phi-num { font-size: 11px; font-family: var(--font-body); font-weight: 700; color: var(--color-primary); background: var(--color-primary-subtle); padding: 2px 7px; border-radius: var(--r-xs); display: inline-block; margin-bottom: 10px; }
+.phi-title { font-size: 15px; font-weight: 700; color: var(--text-emphasis); margin-bottom: 6px; letter-spacing: -0.2px; }
+.phi-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+
+/* ══════════════════════════════════════════════════
+   SECTION 02 — COLOR TOKENS
+══════════════════════════════════════════════════ */
+.pal-label { font-size: 10px; font-family: var(--font-body); font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; margin: 22px 0 10px; }
+.pal-label:first-child { margin-top: 0; }
+.sw-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.sw {
+  border-radius: var(--r-lg); overflow: hidden;
+  width: 112px; transition: transform var(--tr-fast), box-shadow var(--tr-fast);
+  box-shadow: var(--shadow-card);
+}
+.sw:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm); }
+.sw-chip { height: 58px; }
+.sw-info { background: var(--color-bg-surface); padding: 9px 11px; }
+.sw-n { font-size: 11px; font-weight: 700; display: block; margin-bottom: 1px; color: var(--text-emphasis); }
+.sw-h { font-size: 10px; font-family: var(--font-body); color: var(--text-secondary); display: block; }
+.sw-d { font-size: 10px; color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
+.dual { display: flex; gap: 3px; height: 58px; padding: 8px 8px 0; }
+.dual-c { flex: 1; border-radius: 5px; }
+
+.tds-note {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: var(--color-primary-subtle); border-radius: var(--r-lg);
+  padding: 14px 16px; margin-top: 16px;
+  border-left: 3px solid var(--color-primary);
+}
+.tds-note-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.tds-note-text { font-size: 12px; color: var(--text-secondary); line-height: 1.7; }
+.tds-note-text strong { color: var(--color-primary); }
+
+/* ══════════════════════════════════════════════════
+   SECTION 03 — TYPOGRAPHY
+══════════════════════════════════════════════════ */
+.ty-row {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 20px;
+  padding: 14px 0; border-bottom: 1px solid var(--gray-200);
+}
+.ty-row:last-child { border-bottom: none; }
+.ty-samp { flex: 1; }
+.ty-meta { font-size: 10px; font-family: var(--font-body); color: var(--text-tertiary); text-align: right; white-space: nowrap; line-height: 1.7; flex-shrink: 0; }
+
+.font-card { background: var(--color-bg-surface); border-radius: var(--r-xl); overflow: hidden; box-shadow: var(--shadow-card); }
+.fc-head { background: var(--gray-050); border-bottom: 1px solid var(--gray-200); padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; }
+.fc-name { font-size: 13px; font-weight: 700; color: var(--text-emphasis); }
+.fc-body { padding: 18px; }
+.fc-note { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; line-height: 1.6; }
+
+/* ══════════════════════════════════════════════════
+   SECTION 04 — SPACING & RADIUS
+══════════════════════════════════════════════════ */
+.sp-row { display: flex; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--gray-200); }
+.sp-row:last-child { border-bottom: none; }
+.sp-key { font-size: 11px; font-weight: 600; width: 44px; flex-shrink: 0; color: var(--text-emphasis); }
+.sp-bar { background: var(--color-primary); border-radius: 3px; height: 18px; opacity: 0.7; flex-shrink: 0; }
+.sp-use { font-size: 12px; color: var(--text-secondary); }
+
+.r-grid { display: flex; gap: 16px; flex-wrap: wrap; padding: 4px 0; }
+.r-cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.r-box { background: var(--color-primary-subtle); border: 2px solid var(--color-primary); width: 56px; height: 56px; }
+.r-lbl { font-size: 10px; font-family: var(--font-body); color: var(--text-tertiary); text-align: center; line-height: 1.5; }
+
+/* ══════════════════════════════════════════════════
+   SECTION 05 — STATUS BADGE
+══════════════════════════════════════════════════ */
+.btbl { width: 100%; border-collapse: separate; border-spacing: 0; }
+.btbl th { text-align: left; padding: 10px 14px; font-size: 10px; font-family: var(--font-body); font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; background: var(--gray-050); border-bottom: 1px solid var(--gray-200); }
+.btbl th:first-child { border-radius: var(--r-sm) 0 0 0; }
+.btbl th:last-child  { border-radius: 0 var(--r-sm) 0 0; }
+.btbl td { padding: 12px 14px; border-bottom: 1px solid var(--gray-200); font-size: 12px; vertical-align: middle; }
+.btbl tr:last-child td { border-bottom: none; }
+.btbl td:first-child { font-family: var(--font-body); font-size: 11px; font-weight: 600; color: var(--text-emphasis); }
+
+.bdg { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: var(--r-full); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.bdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.b-ap { background: var(--s-applied-bg);   color: var(--s-applied); }
+.b-sl { background: var(--s-selected-bg);  color: var(--s-selected); }
+.b-ns { background: var(--s-not-sel-bg);   color: var(--s-not-sel); }
+.b-cp { background: var(--s-completed-bg); color: var(--s-completed); }
+.b-dl { background: var(--s-deadline-bg);  color: var(--s-deadline); }
+.b-ov { background: var(--s-overdue-bg);   color: var(--s-overdue); }
+
+.hpill { font-family: var(--font-body); font-size: 10px; padding: 2px 7px; border-radius: var(--r-xs); background: var(--gray-100); color: var(--text-secondary); border: 1px solid var(--gray-200); }
+.td-sm { font-size: 12px; color: var(--text-secondary); }
+
+/* ══════════════════════════════════════════════════
+   SECTION 06 — COMPONENTS (TDS 규격 적용)
+══════════════════════════════════════════════════ */
+
+/* Button — TDS 5-state */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 56px; width: 100%; padding: 0 var(--sp-5);
+  border-radius: var(--r-md); /* TDS: 14px */
+  font-size: 17px; font-weight: var(--font-semibold);
+  font-family: var(--font-body); border: none; cursor: pointer;
+  transition: background var(--tr-fast), transform var(--tr-fast);
+  position: relative; overflow: hidden;
+}
+.btn-p { background: var(--color-primary); color: var(--color-primary-on); box-shadow: var(--shadow-brand); }
+.btn-p:hover    { background: var(--color-primary-hover); }
+.btn-p:active   { background: var(--color-primary-pressed); transform: scale(0.97); }
+.btn-p:disabled { background: var(--gray-200); color: var(--text-disabled); cursor: not-allowed; box-shadow: none; }
+
+.btn-s { background: var(--color-primary-subtle); color: var(--color-primary); }
+.btn-s:hover  { background: var(--color-primary-subtle); filter: brightness(0.96); }
+.btn-s:active { transform: scale(0.97); }
+
+.btn-ghost { background: transparent; color: var(--color-primary); border: 1.5px solid var(--color-primary); }
+.btn-ghost:hover  { background: var(--color-primary-subtle); }
+.btn-ghost:active { transform: scale(0.97); }
+
+.btn-md  { height: 48px; font-size: 15px; }
+.btn-pill { height: 40px; border-radius: var(--r-full); font-size: 14px; font-weight: var(--font-medium); background: var(--gray-100); color: var(--text-primary); width: auto; padding: 0 16px; }
+.btn-pill.on { background: var(--color-primary-subtle); color: var(--color-primary); }
+
+/* Loading state */
+.btn-loading { color: transparent; pointer-events: none; }
+.btn-loading::after {
+  content: ''; position: absolute;
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.30);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* FAB */
+.fab {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--color-primary); color: white; border: none;
+  font-size: 22px; cursor: pointer;
+  box-shadow: var(--shadow-md), var(--shadow-brand);
+  display: grid; place-items: center;
+  transition: transform var(--tr-spring), box-shadow var(--tr-base);
+}
+.fab:hover  { transform: scale(1.08); }
+.fab:active { transform: scale(0.95); }
+
+/* Cards — TDS spec */
+.camp-card {
+  background: var(--color-bg-surface);
+  border-radius: var(--r-xl);          /* 22px */
+  padding: var(--sp-5);               /* 20px */
+  box-shadow: var(--shadow-card);
+  display: flex; align-items: center; gap: 14px;
+  cursor: pointer;
+  transition: box-shadow var(--tr-base), transform var(--tr-base);
+}
+.camp-card:hover  { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.camp-card:active { transform: scale(0.99); }
+
+.cc-thumb { width: 48px; height: 48px; border-radius: var(--r-lg); display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
+.cc-body { flex: 1; min-width: 0; }
+.cc-title { font-size: var(--text-heading-3); font-weight: var(--font-semibold); letter-spacing: -0.3px; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-emphasis); }
+.cc-sub { font-size: var(--text-caption); color: var(--text-tertiary); }
+.cc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.dday { font-size: 12px; font-family: var(--font-body); font-weight: 600; }
+.dd-r { color: var(--color-error); }
+.dd-y { color: var(--color-warning); }
+.dd-g { color: var(--color-success); }
+.dd-m { color: var(--text-tertiary); }
+
+/* Schedule Item */
+.sch-item {
+  background: var(--color-bg-surface); border-radius: var(--r-xl); padding: var(--sp-5);
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--shadow-card); cursor: pointer;
+  transition: box-shadow var(--tr-base), transform var(--tr-base);
+}
+.sch-item:hover  { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+.sch-item:active { transform: scale(0.99); }
+.sch-icon { width: 48px; height: 48px; border-radius: var(--r-lg); display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
+.sch-body { flex: 1; min-width: 0; }
+.sch-bdg { margin-bottom: 4px; }
+.sch-title { font-size: var(--text-body-1); font-weight: var(--font-semibold); letter-spacing: -0.2px; margin-bottom: 2px; color: var(--text-emphasis); }
+.sch-sub { font-size: var(--text-caption); color: var(--text-secondary); }
+.sch-arr { color: var(--gray-300); font-size: 18px; }
+
+/* List Row (TDS spec) */
+.list-row {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 56px; padding: var(--sp-4) var(--screen-pad);
+  border-bottom: 1px solid var(--gray-200); cursor: pointer;
+  transition: background var(--tr-fast);
+}
+.list-row:last-child { border-bottom: none; }
+.list-row:hover { background: var(--gray-050); }
+.list-row:active { background: var(--gray-100); }
+
+/* Stat Card */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--card-gap); }
+.stat-card { background: var(--color-bg-surface); border-radius: var(--r-xl); padding: var(--sp-5); box-shadow: var(--shadow-card); }
+.stat-label { font-size: var(--text-caption); font-weight: var(--font-semibold); color: var(--color-primary); margin-bottom: var(--sp-2); }
+.stat-value { font-size: var(--text-display); font-weight: var(--font-bold); letter-spacing: -1px; color: var(--text-emphasis); line-height: 1.2; }
+
+/* Calendar */
+/* ── Calendar Wrapper ── */
+.cal-wrap {
+  background: var(--color-bg-surface);
+  border-radius: var(--r-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 헤더: 로고 + 아이콘 ── */
+.cal-app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px var(--sp-5) 10px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.cal-logo-area { display: flex; align-items: center; gap: 8px; }
+.cal-logo-icon {
+  width: 32px; height: 32px; background: var(--color-primary);
+  border-radius: 8px; display: grid; place-items: center;
+  box-shadow: 0 2px 6px rgba(28,60,130,0.22);
+}
+.cal-logo-icon svg { width: 18px; height: 18px; }
+.cal-logo-text {
+  font-family: var(--font-logo);
+  font-size: 17px; font-weight: 800;
+  letter-spacing: -0.3px; color: var(--color-primary);
+}
+.cal-header-icons { display: flex; gap: 6px; }
+.cal-icon-btn {
+  width: 36px; height: 36px;
+  background: var(--gray-050); border: none; border-radius: 50%;
+  display: grid; place-items: center; cursor: pointer;
+  transition: background var(--tr-fast); position: relative;
+}
+.cal-icon-btn:hover { background: var(--gray-100); }
+.cal-icon-btn svg { width: 18px; height: 18px; color: var(--text-secondary); }
+.cal-notif-dot {
+  position: absolute; top: 6px; right: 6px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--color-error); border: 1.5px solid var(--color-bg-surface);
+}
+
+/* ── 월 네비게이션 ── */
+.cal-top {
+  padding: 10px var(--sp-5) 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cal-mo { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-emphasis); }
+.cal-top-right { display: flex; align-items: center; gap: 8px; }
+.cal-nav { display: flex; gap: 4px; }
+.cnb {
+  width: 30px; height: 30px; background: transparent; border: none;
+  border-radius: var(--r-sm); color: var(--text-secondary); font-size: 18px;
+  display: grid; place-items: center; cursor: pointer; transition: all var(--tr-fast);
+}
+.cnb:hover { background: var(--gray-100); color: var(--text-emphasis); }
+.cnb:active { transform: scale(0.92); }
+.cal-view-btn {
+  height: 30px; padding: 0 12px;
+  background: var(--color-bg-surface); border: 1.5px solid var(--color-primary);
+  border-radius: var(--r-full); font-size: 12px; font-weight: 700;
+  color: var(--color-primary); cursor: pointer; font-family: var(--font-body);
+  transition: all var(--tr-fast);
+}
+.cal-view-btn:hover { background: var(--color-primary-subtle); }
+
+/* ── 필터 칩 행 ── */
+.cal-filter-row {
+  display: flex; gap: 6px;
+  padding: 0 var(--sp-5) 10px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.cal-filter-row::-webkit-scrollbar { display: none; }
+.cal-fchip {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 30px; padding: 0 12px; border-radius: var(--r-full);
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  background: var(--gray-100); color: var(--text-secondary);
+  border: none; cursor: pointer; flex-shrink: 0;
+  transition: all var(--tr-fast);
+}
+.cal-fchip.on {
+  background: var(--color-primary); color: #fff;
+}
+.cal-fchip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── 요일 헤더 ── */
+.cal-wdays {
+  display: grid; grid-template-columns: repeat(7,1fr);
+  padding: 0 var(--sp-3); margin-bottom: 0;
+  border-top: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--gray-100);
+}
+.cwd {
+  text-align: center; font-size: 11px; font-weight: 700;
+  color: var(--text-tertiary); padding: 7px 0; letter-spacing: 0.02em;
+}
+.cwd.su { color: var(--color-error); }
+.cwd.sa { color: var(--color-info); }
+
+/* ── 그리드: 동적 높이 (v26 핵심) ── */
+.cal-grid-wrap {
+  flex: 1;
+  padding: 0 var(--sp-3);
+  overflow: hidden;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  /* row 높이는 JS로 동적 계산 후 grid-auto-rows에 주입 */
+  grid-auto-rows: var(--cal-row-h, 72px);
+  height: 100%;
+}
+
+/* ── 날짜 셀 ── */
+.cd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;   /* 날짜·이벤트 좌측 정렬 */
+  padding: 5px 4px 4px;
+  border-right: 1px solid var(--gray-100);
+  border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background var(--tr-fast);
+  /* 이벤트 많으면 자연스럽게 늘어남 */
+  min-height: var(--cal-row-h, 72px);
+}
+.cd:nth-child(7n) { border-right: none; }
+.cd:hover { background: var(--gray-050); }
+.cd:active { background: var(--gray-100); }
+
+/* 날짜 숫자 */
+.dn {
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 13px; font-weight: 500;
+  color: var(--text-emphasis); flex-shrink: 0;
+  transition: all var(--tr-fast);
+  margin-bottom: 2px;
+}
+.cd.today .dn {
+  background: var(--color-primary); color: #fff;
+  box-shadow: 0 2px 8px rgba(28,60,130,0.30);
+}
+.cd.oth .dn { color: var(--text-disabled); }
+.cd.su:not(.oth) .dn { color: var(--color-error); }
+.cd.sa:not(.oth) .dn { color: var(--color-info); }
+
+/* ── 이벤트 칩 (도트 → 텍스트 칩 방식) ── */
+.cd-event {
+  width: calc(100% - 2px);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 10px; font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  word-break: keep-all;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.ev-red    { background: var(--s-overdue-bg);   color: var(--s-overdue); }
+.ev-blue   { background: var(--s-applied-bg);   color: var(--s-applied); }
+.ev-green  { background: var(--s-selected-bg);  color: var(--s-selected); }
+.ev-yellow { background: var(--s-deadline-bg);  color: var(--s-deadline); }
+
+/* 기존 도트 방식 유지 (범례용) */
+.cd-dots { display: flex; gap: 3px; margin-top: 2px; justify-content: flex-start; padding-left: 2px; }
+.cd-dot  { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── 범례 ── */
+.cal-legend {
+  padding: var(--sp-3) var(--sp-5);
+  border-top: 1px solid var(--gray-100);
+  display: flex; gap: 14px;
+}
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-secondary); }
+.leg-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── 하단 네비 (캘린더 화면 전용) ── */
+.cal-bnav {
+  display: flex; border-top: 1px solid var(--gray-100);
+  background: var(--color-bg-surface);
+}
+.cal-nav-tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 10px 4px 12px; gap: 4px; cursor: pointer;
+}
+.cal-nav-tab svg { width: 22px; height: 22px; color: var(--text-tertiary); }
+.cal-nav-tab.on svg { color: var(--color-primary); }
+.cal-nav-tab-lbl { font-size: 10px; font-weight: 700; color: var(--text-tertiary); }
+.cal-nav-tab.on .cal-nav-tab-lbl { color: var(--color-primary); }
+.cal-nav-badge {
+  position: relative;
+}
+.cal-nav-badge::after {
+  content: '';
+  position: absolute; top: -1px; right: -3px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--color-error); border: 1px solid var(--color-bg-surface);
+}
+
+/* Skeleton */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: calc(400px + 100%) 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-050) 50%, var(--gray-100) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s linear infinite;
+  border-radius: var(--r-sm);
+}
+
+/* Bottom Sheet */
+.bsheet-demo {
+  background: var(--color-bg-surface);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0; /* 상단만 20px */
+  padding: var(--sp-7) var(--sp-6) var(--sp-8);
+  box-shadow: var(--shadow-lg);
+}
+.bsheet-handle { width: 36px; height: 4px; border-radius: var(--r-full); background: var(--gray-200); margin: 0 auto var(--sp-6); }
+
+/* Input */
+.inp-underline {
+  height: 56px; width: 100%;
+  border: none; border-bottom: 1.5px solid var(--gray-200);
+  background: transparent; font-size: var(--text-body-1); font-weight: var(--font-medium);
+  color: var(--text-primary); padding: 0; font-family: var(--font-body);
+  transition: border-color var(--tr-base); outline: none;
+}
+.inp-underline:focus { border-bottom-color: var(--color-primary); }
+.inp-underline::placeholder { color: var(--text-tertiary); }
+
+/* Filter Chips */
+.fc-row { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+.fc {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 40px; padding: 0 16px; border-radius: var(--r-full);
+  font-size: 14px; font-weight: var(--font-medium);
+  background: var(--gray-100); color: var(--text-primary);
+  border: none; cursor: pointer; transition: all var(--tr-fast);
+}
+.fc:hover  { background: var(--gray-200); }
+.fc:active { transform: scale(0.97); }
+.fc.on     { background: var(--color-primary-subtle); color: var(--color-primary); font-weight: var(--font-semibold); }
+
+/* Search bar */
+.srch {
+  display: flex; align-items: center; gap: var(--sp-3);
+  height: 56px; background: var(--gray-050);
+  border: 1.5px solid transparent; border-radius: var(--r-sm); /* TDS: 8px */
+  padding: 0 var(--sp-4); transition: all var(--tr-base);
+}
+.srch:focus-within { background: var(--color-bg-surface); border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-subtle); }
+.srch-ic { font-size: 16px; color: var(--text-tertiary); flex-shrink: 0; }
+.srch-in { background: none; border: none; outline: none; font-size: var(--text-body-1); font-weight: var(--font-medium); color: var(--text-primary); flex: 1; font-family: var(--font-body); }
+.srch-in::placeholder { color: var(--text-tertiary); }
+
+/* Bottom Nav */
+.bnav { background: var(--color-bg-surface); border-radius: 22px; padding: var(--sp-3) var(--sp-7) var(--sp-4); display: flex; justify-content: space-around; box-shadow: var(--shadow-md); }
+.nav-it { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; min-width: 44px; min-height: 44px; justify-content: center; padding: 4px 0; }
+.nav-ic { font-size: 22px; line-height: 1; }
+.nav-lb { font-size: 10px; font-weight: var(--font-semibold); color: var(--text-tertiary); }
+.nav-it.on .nav-lb { color: var(--color-primary); }
+.nav-pip { width: 4px; height: 4px; border-radius: 50%; background: var(--color-primary); margin-top: 2px; }
+
+/* Empty State */
+.empty { display: flex; flex-direction: column; align-items: center; padding: var(--sp-12) var(--sp-6); background: var(--color-bg-surface); border-radius: var(--r-xl); box-shadow: var(--shadow-card); text-align: center; }
+.em-ic { font-size: 40px; margin-bottom: var(--sp-3); opacity: 0.40; }
+.em-ti { font-size: var(--text-heading-3); font-weight: var(--font-semibold); color: var(--text-emphasis); margin-bottom: var(--sp-2); }
+.em-de { font-size: var(--text-body-2); color: var(--text-secondary); line-height: 1.6; }
+
+/* Toast */
+.toast {
+  display: inline-flex; align-items: center; gap: var(--sp-3);
+  background: var(--gray-900); color: white;
+  padding: var(--sp-3) var(--sp-5); border-radius: var(--r-xl);
+  font-size: var(--text-body-2); font-weight: var(--font-medium);
+  box-shadow: var(--shadow-md);
+}
+
+/* 5-state showcase */
+.state-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.state-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.state-label { font-size: 10px; font-family: var(--font-body); color: var(--text-tertiary); }
+
+/* Section Spacer — TDS 섹션 구분 */
+.sec-spacer { height: var(--section-gap); background: var(--color-bg-base); }
+
+/* ══════════════════════════════════════════════════
+   SECTION 07 — PROMPT BOX
+══════════════════════════════════════════════════ */
+.pbox { background: var(--color-bg-surface); border-radius: var(--r-xl); overflow: hidden; box-shadow: var(--shadow-card); }
+.phead { padding: 14px 18px; background: var(--gray-050); border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+.ptitle { font-size: 12px; font-weight: 700; font-family: var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-emphasis); }
+.ptag { font-size: 10px; font-family: var(--font-body); font-weight: 700; padding: 3px 8px; border-radius: var(--r-xs); }
+.cbtn { font-size: 11px; font-family: var(--font-body); font-weight: 700; color: var(--color-primary); background: var(--color-primary-subtle); border: none; padding: 5px 12px; border-radius: var(--r-xs); cursor: pointer; transition: opacity var(--tr-fast); }
+.cbtn:hover { opacity: 0.75; }
+.pbody { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+.pkey { font-size: 10px; font-family: var(--font-body); font-weight: 700; color: var(--color-primary); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+.pblock { background: var(--gray-050); border-left: 3px solid var(--color-primary); padding: 12px 14px; border-radius: 0 var(--r-sm) var(--r-sm) 0; font-size: 12px; font-family: var(--font-body); color: var(--text-emphasis); line-height: 1.85; white-space: pre-wrap; }
+
+@media(max-width:760px) {
+  .wrap { padding: 0 14px 80px; }
+  .topbar { padding: 0 14px; }
+  .g2,.g3,.g4,.philosophy-grid { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════
+   INTERACTION ANIMATIONS — TDS v4 섹션 18 완전 구현
+══════════════════════════════════════════════════ */
+
+/* ── 화면 전환: Push (Stack Navigation) ── */
+@keyframes pushEnter {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes pushExit {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(-28%); opacity: 0.85; }
+}
+.screen-push-enter { animation: pushEnter 300ms var(--ease-out) forwards; }
+.screen-push-exit  { animation: pushExit  300ms var(--ease-out) forwards; }
+
+/* ── 화면 전환: Modal (하→상) ── */
+@keyframes modalEnter {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+@keyframes modalExit {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100%); }
+}
+@keyframes modalBgShrink {
+  from { transform: scale(1);    opacity: 1; }
+  to   { transform: scale(0.95); opacity: 0.6; border-radius: 16px; }
+}
+.screen-modal-enter  { animation: modalEnter    400ms var(--ease-spring) forwards; }
+.screen-modal-exit   { animation: modalExit     280ms var(--ease-in) forwards; }
+.screen-modal-bg-in  { animation: modalBgShrink 400ms var(--ease-out) forwards; }
+
+/* ── 화면 전환: Tab (Cross-fade) ── */
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes tabIconPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+.tab-content-enter { animation: tabFadeIn   200ms var(--ease-out) forwards; }
+.tab-icon--active  { animation: tabIconPop  250ms var(--ease-spring-sm) forwards; }
+
+/* ── 화면 전환: Replace (Fade) ── */
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+.screen-replace-enter { animation: fadeIn  300ms var(--ease-in-out); }
+.screen-replace-exit  { animation: fadeOut 200ms var(--ease-in); }
+
+/* ── 버튼 인터랙션 라이프사이클 ── */
+.btn-primary, .btn, .btn-p, .btn-s, .btn-ghost {
+  transition:
+    transform    100ms var(--ease-out),
+    background   100ms var(--ease-out),
+    opacity      150ms var(--ease-out);
+  will-change: transform;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.btn-primary:active, .btn-p:active { transition-duration: 80ms; }
+
+.btn-releasing {
+  transform: scale(1.0) !important;
+  transition: transform 180ms var(--ease-spring-sm) !important;
+}
+
+@keyframes btnSpin { to { transform: rotate(360deg); } }
+.btn-p.is-loading::after, .btn-loading::after {
+  content: '';
+  position: absolute; inset: 0; margin: auto;
+  width: 22px; height: 22px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btnSpin 0.65s linear infinite;
+}
+
+@keyframes shakeX {
+  0%, 100% { transform: translateX(0); }
+  15%       { transform: translateX(-6px); }
+  30%       { transform: translateX(5px); }
+  45%       { transform: translateX(-4px); }
+  60%       { transform: translateX(3px); }
+  75%       { transform: translateX(-2px); }
+  90%       { transform: translateX(1px); }
+}
+.btn-error { animation: shakeX 400ms var(--ease-in-out); }
+
+@keyframes checkDraw {
+  from { stroke-dashoffset: 100; }
+  to   { stroke-dashoffset: 0; }
+}
+.btn-check-icon path {
+  stroke-dasharray: 100; stroke-dashoffset: 100;
+  animation: checkDraw 350ms var(--ease-out) forwards;
+}
+
+/* ── 리스트 Row 탭 피드백 ── */
+.list-row {
+  transition: background 80ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+.list-row:active { background: var(--gray-050); transition-duration: 0ms; }
+.list-row:not(:active) { transition: background 200ms var(--ease-out); }
+
+/* ── 카드 탭 피드백 ── */
+.card--tappable {
+  transition: transform 100ms var(--ease-out), box-shadow 100ms var(--ease-out);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.card--tappable:active { transform: scale(0.985); box-shadow: var(--shadow-xs); transition-duration: 80ms; }
+.card--tappable.is-releasing {
+  transform: scale(1);
+  transition: transform 200ms var(--ease-spring-sm);
+}
+
+/* ── 바텀시트 인터랙션 ── */
+.sheet-overlay {
+  position: fixed; inset: 0;
+  background: var(--color-bg-overlay);
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out);
+  pointer-events: none;
+  z-index: 200;
+}
+.sheet-overlay.is-visible { opacity: 1; pointer-events: auto; }
+.sheet-overlay.is-closing { opacity: 0; transition: opacity 250ms var(--ease-in); }
+
+@keyframes sheetEnter { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes sheetExit  { from { transform: translateY(0); }   to { transform: translateY(100%); } }
+.bottom-sheet-anim { transition: transform 250ms var(--ease-in); }
+.bottom-sheet-anim.is-entering { animation: sheetEnter 380ms var(--ease-spring) forwards; }
+.bottom-sheet-anim.is-exiting  { animation: sheetExit  250ms var(--ease-in) forwards; }
+
+/* ── 인풋 Validation ── */
+.input-field { transition: border-color 200ms var(--ease-out); }
+.input-field:focus { border-bottom-color: var(--color-primary); outline: none; }
+.input-field.is-valid { border-bottom-color: var(--color-success); }
+.input-field.is-error {
+  border-bottom-color: var(--color-error);
+  animation: inputShake 300ms var(--ease-in-out);
+}
+@keyframes inputShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px); }
+  40%       { transform: translateX(4px); }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(2px); }
+}
+.input-error-msg {
+  color: var(--color-error);
+  font-size: var(--text-caption);
+  margin-top: 6px;
+  opacity: 0; transform: translateY(-4px);
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+}
+.input-field.is-error ~ .input-error-msg { opacity: 1; transform: translateY(0); }
+.input-valid-icon {
+  opacity: 0; transform: scale(0.5);
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-spring-sm);
+}
+.input-field.is-valid ~ .input-valid-icon { opacity: 1; transform: scale(1); }
+
+/* ── 토글 스위치 ── */
+.toggle {
+  width: 51px; height: 31px; border-radius: var(--r-full);
+  background: var(--gray-200); position: relative;
+  cursor: pointer; transition: background 250ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent; border: none;
+  display: block; flex-shrink: 0;
+}
+.toggle.is-on { background: var(--color-primary); }
+.toggle-thumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 27px; height: 27px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.20);
+  transition: transform 280ms var(--ease-spring-sm), width 100ms var(--ease-out);
+  will-change: transform;
+  pointer-events: none;
+}
+.toggle.is-on .toggle-thumb { transform: translateX(20px); }
+.toggle:active .toggle-thumb { width: 31px; }
+.toggle.is-on:active .toggle-thumb { transform: translateX(16px); }
+
+/* ── 체크박스 ── */
+.checkbox-comp {
+  width: 22px; height: 22px; border-radius: 6px;
+  border: 1.5px solid var(--gray-300); background: transparent;
+  position: relative; cursor: pointer;
+  transition: border-color 150ms var(--ease-out), background 150ms var(--ease-out);
+  display: grid; place-items: center; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.checkbox-comp.is-checked { border-color: var(--color-primary); background: var(--color-primary); }
+.checkbox-comp:active { transform: scale(0.92); }
+.checkbox-check { width: 12px; height: 9px; }
+.checkbox-check path {
+  fill: none; stroke: #fff; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 20; stroke-dashoffset: 20;
+  transition: stroke-dashoffset 200ms var(--ease-out) 50ms;
+}
+.checkbox-comp.is-checked .checkbox-check path { stroke-dashoffset: 0; }
+
+/* ── 토스트 ── */
+.toast-comp {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-width: 200px; max-width: calc(100% - 48px);
+  background: #1A1A2E; color: #fff;
+  border-radius: var(--r-full); padding: 14px 20px;
+  font-size: 14px; font-weight: 500;
+  box-shadow: var(--shadow-md); white-space: nowrap;
+}
+@keyframes toastEnter {
+  from { opacity: 0; transform: translateX(-50%) translateY(16px) scale(0.92); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes toastExit {
+  from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.96); }
+}
+.toast-wrap {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%); z-index: 9999; pointer-events: none;
+}
+.toast-wrap.is-entering { animation: toastEnter 280ms var(--ease-spring) forwards; }
+.toast-wrap.is-exiting  { animation: toastExit  220ms var(--ease-in) forwards; }
+
+/* ── 다이얼로그 ── */
+.dialog-overlay-comp {
+  position: fixed; inset: 0; background: var(--color-bg-overlay);
+  opacity: 0; transition: opacity 250ms var(--ease-out);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 400; pointer-events: none;
+}
+.dialog-overlay-comp.is-visible { opacity: 1; pointer-events: auto; }
+.dialog-box {
+  background: var(--color-bg-surface); border-radius: var(--r-2xl);
+  padding: 28px 24px 20px; width: calc(100% - 48px); max-width: 320px;
+  text-align: center; box-shadow: var(--shadow-lg);
+  transform: scale(0.88); opacity: 0;
+  transition: transform 350ms var(--ease-spring), opacity 200ms var(--ease-out);
+}
+.dialog-overlay-comp.is-visible .dialog-box { transform: scale(1); opacity: 1; }
+.dialog-overlay-comp.is-closing .dialog-box {
+  transform: scale(0.94); opacity: 0;
+  transition: transform 200ms var(--ease-in), opacity 180ms var(--ease-in);
+}
+
+/* ── 숫자 롤링 (금액·D-day 변경 시) ── */
+@keyframes digitRollUp   { from { transform: translateY(60%);  opacity: 0; } to { transform: translateY(0);   opacity: 1; } }
+@keyframes digitRollDown { from { transform: translateY(0);    opacity: 1; } to { transform: translateY(-60%); opacity: 0; } }
+.digit-char { display: inline-block; overflow: hidden; }
+.digit-char.is-out { animation: digitRollDown 180ms var(--ease-in); }
+.digit-char.is-in  { animation: digitRollUp   220ms var(--ease-out) 80ms both; }
+
+@keyframes commaAppear { from { opacity: 0; transform: translateX(4px); } to { opacity: 1; transform: translateX(0); } }
+.digit-comma { animation: commaAppear 150ms var(--ease-out); }
+
+/* ── 스크롤 컨테이너 ── */
+.scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+.scroll-container::-webkit-scrollbar { display: none; }
+.navbar.is-scrolled {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid var(--gray-200);
+}
+[data-theme="dark"] .navbar.is-scrolled { background: rgba(28,28,30,0.88); }
+
+</style>
+</head>
+<body>
+
+<!-- ══════════ TOPBAR ══════════ -->
+<div class="topbar">
+  <div class="tb-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 22 22" fill="none"><rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/><rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/><rect x="17.5" y="10" width="3.5" height="4" rx="1" fill="#FFFFFF" opacity="0.7"/><rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/></svg>
+    </div>
+    <span class="logo-word">cheche</span>
+  </div>
+  <div class="tb-right">
+    <span class="v-tag">DS v2.3 · TDS v4</span>
+    <div class="theme-sw" id="themeSw">
+      <div class="sw-opt on" id="lBtn" onclick="setTheme('light')">☀️ 라이트</div>
+      <div class="sw-opt" id="dBtn" onclick="setTheme('dark')">🌙 다크</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">CheChé Design System · v2.3 · TDS v4 인터랙션 완전 통합 · 2026.04</div>
+    <div class="hero-title">토스 디자인 시스템 기반<br><em>체체 Design System v2.2</em></div>
+    <div class="hero-desc">
+      토스(Toss) Design System v3의 철학·토큰·컴포넌트 규격을 체체 브랜드에 완전히 통합했습니다.<br>
+      8pt 그리드 · 1 Thing/1 Page · Apple HIG · 5-state · Skeleton UI · UX 라이팅 원칙 포함.<br><br>
+      <strong>v2.2 → v2.3 변경:</strong>&nbsp;
+      <span class="tag">TDS v4 이징 커브 6종</span>&nbsp;
+      <span class="tag">화면전환 4타입 완전 명세</span>&nbsp;
+      <span class="tag">버튼 라이프사이클</span>&nbsp;
+      <span class="tag">바텀시트 드래그</span>&nbsp;
+      <span class="tag">타이밍 치트시트</span>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════
+       01 · DESIGN PHILOSOPHY
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">01 · Design Philosophy</div>
+    <div class="sec-title">디자인 철학 6원칙</div>
+    <div class="sec-desc">토스 철학을 체체에 맞게 재해석. 모든 화면 설계의 판단 기준.</div>
+
+    <div class="philosophy-grid">
+      <div class="phi-card">
+        <div class="phi-num">P-01</div>
+        <div class="phi-title">1 Thing / 1 Page</div>
+        <div class="phi-desc">한 화면엔 하나의 목적, 하나의 CTA만. 체험단 탐색·신청·마감 확인 각각 분리된 화면으로 설계한다.</div>
+      </div>
+      <div class="phi-card">
+        <div class="phi-num">P-02</div>
+        <div class="phi-title">Normcore Minimal</div>
+        <div class="phi-desc">그라디언트·텍스처 없이 여백과 가독성으로 완성도. 브랜드 네이비는 Today 마커와 CTA에만 — 화면당 강조점 1개.</div>
+      </div>
+      <div class="phi-card">
+        <div class="phi-num">P-03</div>
+        <div class="phi-title">마감은 즉각 인지</div>
+        <div class="phi-desc">크리에이터의 핵심 가치 = 마감 절대 미스 금지. D-day 수치(Pretendard 700)와 상태 색상으로 0.3초 안에 위험도 파악.</div>
+      </div>
+      <div class="phi-card">
+        <div class="phi-num">P-04</div>
+        <div class="phi-title">Bottom Sheet 우선</div>
+        <div class="phi-desc">상태 변경·필터 설정·추가 정보는 새 페이지 대신 Bottom Sheet로. 현재 컨텍스트를 유지하며 결정.</div>
+      </div>
+      <div class="phi-card">
+        <div class="phi-num">P-05</div>
+        <div class="phi-title">여백은 디자인 요소</div>
+        <div class="phi-desc">섹션 간 40px 여백 > 구분선. "무엇을 더 넣을까?" 대신 "무엇을 뺄 수 있나?"를 먼저 묻는다.</div>
+      </div>
+      <div class="phi-card">
+        <div class="phi-num">P-06</div>
+        <div class="phi-title">5-state 설계 의무</div>
+        <div class="phi-desc">모든 인터랙티브 요소는 Default / Hover / Pressed / Disabled / Loading 5가지 상태 필수 설계. 상태 미설계는 미완성.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════
+       02 · COLOR TOKENS
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">02 · Color Tokens</div>
+    <div class="sec-title">컬러 토큰 시스템</div>
+    <div class="sec-desc">TDS 구조 준수. 브랜드 5개 토큰만 교체됨. HEX 직접 사용 금지 — 반드시 토큰명 사용.</div>
+
+    <div class="card">
+      <div class="tds-note">
+        <div class="tds-note-icon">🔒</div>
+        <div class="tds-note-text">
+          <strong>TDS 교체 영역:</strong> <code style="background:var(--gray-100);padding:1px 5px;border-radius:3px;font-size:11px;">--color-primary</code> 5개 변수만 체체 네이비로 교체됨. Gray Scale · Semantic · Shadow는 TDS 원본 고정.
+        </div>
+      </div>
+
+      <div class="pal-label">Brand Primary · 교체 영역 (5개)</div>
+      <div class="sw-row">
+        <div class="sw"><div class="sw-chip" style="background:linear-gradient(160deg,#2A52B8,#1C3C82);"></div><div class="sw-info"><span class="sw-n">--color-primary</span><span class="sw-h">#1C3C82</span><span class="sw-d">CTA · Today · 포인트</span></div></div>
+        <div class="sw"><div class="sw-chip" style="background:#152D61;"></div><div class="sw-info"><span class="sw-n">--primary-hover</span><span class="sw-h">#152D61</span><span class="sw-d">Hover (-10%)</span></div></div>
+        <div class="sw"><div class="sw-chip" style="background:#0E2048;"></div><div class="sw-info"><span class="sw-n">--primary-pressed</span><span class="sw-h">#0E2048</span><span class="sw-d">Pressed (-20%)</span></div></div>
+        <div class="sw"><div class="sw-chip" style="background:#E6EBF6; border:1px solid #d4daf0;"></div><div class="sw-info"><span class="sw-n">--primary-subtle</span><span class="sw-h">#E6EBF6</span><span class="sw-d">10% tint 배경</span></div></div>
+      </div>
+
+      <div class="pal-label">Calendar Tabs · 앱 도트 3종 (로고 탭 = 앱 도트)</div>
+      <div class="sw-row">
+        <div class="sw"><div class="dual"><div class="dual-c" style="background:#E8394A;"></div><div class="dual-c" style="background:#FF5F6D;"></div></div><div class="sw-info"><span class="sw-n">--tab-red</span><span class="sw-h">#E8394A / #FF5F6D</span><span class="sw-d">리뷰 마감 ●</span></div></div>
+        <div class="sw"><div class="dual"><div class="dual-c" style="background:#2B7FE8;"></div><div class="dual-c" style="background:#5B9EFF;"></div></div><div class="sw-info"><span class="sw-n">--tab-blue</span><span class="sw-h">#2B7FE8 / #5B9EFF</span><span class="sw-d">선정 발표 ●</span></div></div>
+        <div class="sw"><div class="dual"><div class="dual-c" style="background:#E8A820;"></div><div class="dual-c" style="background:#FFB84A;"></div></div><div class="sw-info"><span class="sw-n">--tab-yellow</span><span class="sw-h">#E8A820 / #FFB84A</span><span class="sw-d">신청 마감 ●</span></div></div>
+      </div>
+
+      <div class="pal-label">Surface · Background (TDS 고정)</div>
+      <div class="sw-row">
+        <div class="sw"><div class="dual"><div class="dual-c" style="background:#F2F4F6;border:1px solid #ddd;"></div><div class="dual-c" style="background:#111111;"></div></div><div class="sw-info"><span class="sw-n">--bg-base</span><span class="sw-h">#F2F4F6 / #111</span><span class="sw-d">페이지 배경</span></div></div>
+        <div class="sw"><div class="dual"><div class="dual-c" style="background:#FFFFFF;border:1px solid #ddd;"></div><div class="dual-c" style="background:#1C1C1E;"></div></div><div class="sw-info"><span class="sw-n">--bg-surface</span><span class="sw-h">#FFF / #1C1C1E</span><span class="sw-d">카드 배경</span></div></div>
+      </div>
+
+      <div class="pal-label">Semantic · 상태 시맨틱 (TDS 고정)</div>
+      <div class="sw-row">
+        <div class="sw"><div class="sw-chip" style="background:#00B386;"></div><div class="sw-info"><span class="sw-n">success</span><span class="sw-h">#00B386</span><span class="sw-d">성공·긍정</span></div></div>
+        <div class="sw"><div class="sw-chip" style="background:#E8A820;"></div><div class="sw-info"><span class="sw-n">warning</span><span class="sw-h">#E8A820</span><span class="sw-d">경고·마감임박</span></div></div>
+        <div class="sw"><div class="sw-chip" style="background:#E8394A;"></div><div class="sw-info"><span class="sw-n">error</span><span class="sw-h">#E8394A</span><span class="sw-d">에러·기한초과</span></div></div>
+        <div class="sw"><div class="sw-chip" style="background:#2B7FE8;"></div><div class="sw-info"><span class="sw-n">info</span><span class="sw-h">#2B7FE8</span><span class="sw-d">정보·신청</span></div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════
+       03 · TYPOGRAPHY
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">03 · Typography Scale</div>
+    <div class="sec-title">타이포그래피 스케일</div>
+    <div class="sec-desc">TDS 타입 스케일 준수. 로고: Poppins 800(영문 워드마크 전용) / 앱 전체: Pretendard Variable. 숫자·수치도 Pretendard로 통일 — 고딕 계열 일관 렌더링.</div>
+
+    <div class="g2" style="margin-bottom:20px;">
+      <div class="font-card">
+        <div class="fc-head"><span class="fc-name">Poppins — 로고 전용</span><span class="tag">LOGO ONLY</span></div>
+        <div class="fc-body">
+          <div style="font-family:'Poppins',sans-serif;font-size:38px;font-weight:800;color:var(--color-primary);letter-spacing:-1px;line-height:1;margin-bottom:8px;">cheche</div>
+          <div style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:800;letter-spacing:-0.3px;color:var(--text-secondary);margin-bottom:4px;">CheChé · 체험단체크</div>
+          <div class="fc-note">✅ 스플래시 · 아이콘 · 온보딩 워드마크에만<br>❌ 버튼 · 카드 · 본문 텍스트 사용 금지</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="font-card">
+          <div class="fc-head"><span class="fc-name">Pretendard Variable — 앱 전체 (한글 + 영문 + 숫자 통합)</span><span class="tag">BODY + NUM</span></div>
+          <div class="fc-body">
+            <div style="font-size:20px;font-weight:700;letter-spacing:-0.5px;margin-bottom:3px;color:var(--text-emphasis);">카페투어 강남점 리뷰 마감</div>
+            <div style="font-size:16px;font-weight:500;margin-bottom:4px;color:var(--text-primary);">오후 6:00까지 제출 필수</div>
+            <div style="font-size:28px;font-weight:800;color:var(--color-error);letter-spacing:-1px;margin-bottom:2px;">D-DAY</div>
+            <div style="font-size:26px;font-weight:800;color:var(--text-emphasis);letter-spacing:-1px;margin-bottom:6px;">1,240,000원 · 8건</div>
+            <div class="fc-note">Pretendard 하나로 한글·영문·숫자 모두 커버<br>Variable 폰트 (wght 100–900) / 동적 서브셋 CDN 제공</div>
+          </div>
+        </div>
+        <div class="font-card">
+          <div class="fc-head"><span class="fc-name">Pretendard — 숫자·수치 표현</span><span class="tag">NUMERIC</span></div>
+          <div class="fc-body">
+            <div style="font-size:28px;font-weight:700;color:var(--color-error);letter-spacing:-0.5px;margin-bottom:6px;">D-DAY &nbsp; D-2</div>
+            <div style="font-size:22px;font-weight:800;color:var(--text-emphasis);letter-spacing:-1px;margin-bottom:4px;">1,240,000원</div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-secondary);">8건 · 2024.10.14 · 18:00</div>
+            <div class="fc-note">DM Mono 제거 — Pretendard의 균일한 고딕 숫자로 통일<br>숫자 강조: font-weight 700~800 / letter-spacing -0.5px~-1px</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:30px;font-weight:800;letter-spacing:-1.5px;color:var(--text-emphasis);">체험단 탐색</span></div><div class="ty-meta">display / 30px / 800 / -1.5px<br>히어로·핵심 수치</div></div>
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:24px;font-weight:700;letter-spacing:-0.8px;color:var(--text-emphasis);">2024년 10월</span></div><div class="ty-meta">heading-1 / 24px / 700 / -2%<br>페이지 대제목·캘린더 월</div></div>
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:20px;font-weight:700;letter-spacing:-0.5px;color:var(--text-emphasis);">오늘의 일정</span></div><div class="ty-meta">heading-2 / 20px / 700 / -1%<br>섹션 제목</div></div>
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:18px;font-weight:600;letter-spacing:-0.3px;color:var(--text-emphasis);">카페투어 강남점 리뷰 마감</span></div><div class="ty-meta">heading-3 / 18px / 600 / -1%<br>카드·일정 타이틀</div></div>
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:16px;font-weight:500;color:var(--text-primary);">오후 6:00까지 제출 필수</span></div><div class="ty-meta">body-1 / 16px / 500 / lh 1.5<br>기본 본문</div></div>
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:14px;color:var(--text-secondary);">선정된 캠페인의 가이드라인을 확인하고 기한 내 업로드해 주세요.</span></div><div class="ty-meta">body-2 / 14px / 400 / lh 1.5<br>보조 설명</div></div>
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:22px;font-weight:700;color:var(--color-error);letter-spacing:-0.5px;">D-DAY</span>&nbsp;&nbsp;<span style="font-size:22px;font-weight:700;color:var(--color-warning);letter-spacing:-0.5px;">D-2</span>&nbsp;&nbsp;<span style="font-size:22px;font-weight:600;color:var(--text-tertiary);letter-spacing:-0.3px;">D-14</span></div><div class="ty-meta">Pretendard / 22px / 700 / -0.5px<br>D-day · 금액 · 날짜 수치</div></div>
+      <div class="ty-row"><div class="ty-samp"><span style="font-size:12px;color:var(--text-tertiary);">뷰티 · 강남구 · 블로그 · 10/16 발송 예정</span></div><div class="ty-meta">caption / 12px / 400<br>태그·메타 정보</div></div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════
+       04 · SPACING & RADIUS
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">04 · Spacing & Radius</div>
+    <div class="sec-title">간격 & 모서리 반경</div>
+    <div class="sec-desc">TDS 8pt Grid 전면 도입. 4의 배수 단위만 사용. Radius는 TDS 기준으로 통일.</div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="sec-eye" style="margin-bottom:14px;">Spacing — 8pt Grid</div>
+        <div class="sp-row"><div class="sp-key">--sp-1</div><div class="sp-bar" style="width:4px;"></div><div class="sp-use">4px — 아이콘·도트 내부</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-2</div><div class="sp-bar" style="width:8px;"></div><div class="sp-use">8px — 요소 간 최소 간격</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-3</div><div class="sp-bar" style="width:12px;"></div><div class="sp-use">12px — 카드 간격</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-4</div><div class="sp-bar" style="width:16px;"></div><div class="sp-use">16px — 카드 내부 패딩</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-5</div><div class="sp-bar" style="width:20px;"></div><div class="sp-use">20px — 카드 기본 패딩</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-6</div><div class="sp-bar" style="width:24px;"></div><div class="sp-use">24px — 화면 좌우 패딩</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-8</div><div class="sp-bar" style="width:32px;"></div><div class="sp-use">32px — 섹션 내부 여백</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-10</div><div class="sp-bar" style="width:40px;"></div><div class="sp-use">40px — 섹션 간 간격</div></div>
+        <div class="sp-row"><div class="sp-key">--sp-12</div><div class="sp-bar" style="width:48px;"></div><div class="sp-use">48px — 탭바 높이</div></div>
+      </div>
+      <div class="card">
+        <div class="sec-eye" style="margin-bottom:14px;">Border Radius — TDS 기준</div>
+        <div class="r-grid">
+          <div class="r-cell"><div class="r-box" style="border-radius:6px;"></div><div class="r-lbl">--r-xs<br>6px<br>인라인 태그·뱃지</div></div>
+          <div class="r-cell"><div class="r-box" style="border-radius:8px;"></div><div class="r-lbl">--r-sm<br>8px<br>인풋·작은 버튼</div></div>
+          <div class="r-cell"><div class="r-box" style="border-radius:14px;"></div><div class="r-lbl">--r-md<br>14px<br>버튼 CTA</div></div>
+          <div class="r-cell"><div class="r-box" style="border-radius:18px;"></div><div class="r-lbl">--r-lg<br>18px<br>기능형 카드</div></div>
+          <div class="r-cell"><div class="r-box" style="border-radius:22px;"></div><div class="r-lbl">--r-xl<br>22px<br>기본 카드</div></div>
+          <div class="r-cell"><div class="r-box" style="border-radius:24px;"></div><div class="r-lbl">--r-2xl<br>24px<br>배너·대형</div></div>
+          <div class="r-cell"><div class="r-box" style="border-radius:999px;width:72px;height:32px;"></div><div class="r-lbl">--r-full<br>pill<br>칩·뱃지</div></div>
+        </div>
+        <div class="tds-note" style="margin-top:16px;">
+          <div class="tds-note-icon">⚠️</div>
+          <div class="tds-note-text"><strong>v1.1 → v2.0 변경:</strong> 카드 Radius 16px → <strong>22px</strong>(TDS r-xl), 버튼 Radius → <strong>14px</strong>(TDS r-md), 바텀시트 상단만 20px 적용.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════
+       05 · STATUS BADGE
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">05 · Status Badge System</div>
+    <div class="sec-title">상태 뱃지 시스템</div>
+
+    <div class="card" style="padding:14px 16px; margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-emphasis);">📅 캘린더 도트 범례 (항상 하단 고정 표시)</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">
+        <div class="leg-item"><div class="leg-dot" style="background:var(--tab-red);"></div>리뷰 마감</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--tab-blue);"></div>선정 발표</div>
+        <div class="leg-item"><div class="leg-dot" style="background:var(--tab-yellow);"></div>신청 마감</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="btbl">
+        <thead><tr><th>상태값</th><th>뱃지</th><th>Light</th><th>Dark</th><th>트리거 조건</th></tr></thead>
+        <tbody>
+          <tr><td>APPLIED</td><td><div class="bdg b-ap"><div class="bdot" style="background:var(--s-applied);"></div>신청완료</div></td><td><span class="hpill">#2B7FE8</span></td><td><span class="hpill">#5B9EFF</span></td><td class="td-sm">외부 플랫폼 신청 후 사용자 수동 등록</td></tr>
+          <tr><td>SELECTED</td><td><div class="bdg b-sl"><div class="bdot" style="background:var(--s-selected);"></div>선정완료</div></td><td><span class="hpill">#00B386</span></td><td><span class="hpill">#34D4AC</span></td><td class="td-sm">선정 확인 → 사용자 수동 전환</td></tr>
+          <tr><td>NOT_SELECTED</td><td><div class="bdg b-ns"><div class="bdot" style="background:var(--s-not-sel);"></div>미선정</div></td><td><span class="hpill">#8B95A1</span></td><td><span class="hpill">#6B7684</span></td><td class="td-sm">미선정 통보 또는 수동 전환</td></tr>
+          <tr><td>COMPLETED</td><td><div class="bdg b-cp"><div class="bdot" style="background:var(--s-completed);"></div>완료</div></td><td><span class="hpill">#B0B8C1</span></td><td><span class="hpill">#8892A0</span></td><td class="td-sm">콘텐츠 업로드 완료 → 수동</td></tr>
+          <tr><td>DEADLINE_SOON</td><td><div class="bdg b-dl"><div class="bdot" style="background:var(--s-deadline);"></div>마감임박</div></td><td><span class="hpill">#E8A820</span></td><td><span class="hpill">#FFB84A</span></td><td class="td-sm">리뷰 마감 3일 이내 자동 전환</td></tr>
+          <tr><td>OVERDUE</td><td><div class="bdg b-ov"><div class="bdot" style="background:var(--s-overdue);"></div>기한초과</div></td><td><span class="hpill">#E8394A</span></td><td><span class="hpill">#FF5F6D</span></td><td class="td-sm">마감 경과 & 미완료 자동 전환</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════
+       06 · COMPONENTS
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">06 · Core Components</div>
+    <div class="sec-title">핵심 컴포넌트</div>
+
+    <!-- Buttons 5-state -->
+    <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Buttons — TDS 5-state (Default / Hover / Pressed / Disabled / Loading)</div>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- Primary variants -->
+        <div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">Primary Large — 56px / r-md(14px) / Full-width</div>
+          <button class="btn btn-p">체험단 신청하기</button>
+        </div>
+        <div class="g2" style="gap:10px;">
+          <div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:6px;">Secondary</div>
+            <button class="btn btn-s btn-md" style="width:100%;">확인했어요</button>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:6px;">Ghost</div>
+            <button class="btn btn-ghost btn-md" style="width:100%;">더보기</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-bottom:8px;">5-state Showcase</div>
+          <div class="state-row">
+            <div class="state-item">
+              <button class="btn btn-p btn-md" style="width:auto;padding:0 18px;">기본</button>
+              <div class="state-label">Default</div>
+            </div>
+            <div class="state-item">
+              <button class="btn btn-p btn-md" style="width:auto;padding:0 18px;background:var(--color-primary-hover);">호버</button>
+              <div class="state-label">Hover</div>
+            </div>
+            <div class="state-item">
+              <button class="btn btn-p btn-md" style="width:auto;padding:0 18px;background:var(--color-primary-pressed);transform:scale(0.97);">눌림</button>
+              <div class="state-label">Pressed</div>
+            </div>
+            <div class="state-item">
+              <button class="btn btn-p btn-md" style="width:auto;padding:0 18px;" disabled>비활성</button>
+              <div class="state-label">Disabled</div>
+            </div>
+            <div class="state-item">
+              <button class="btn btn-p btn-md btn-loading" style="width:auto;padding:0 32px;">로딩</button>
+              <div class="state-label">Loading</div>
+            </div>
+            <div class="state-item" style="margin-left:8px;">
+              <button class="fab">+</button>
+              <div class="state-label">FAB</div>
+            </div>
+            <div class="state-item">
+              <div class="fc-row"><div class="fc on">전체</div><div class="fc">뷰티</div><div class="fc">마감임박</div></div>
+              <div class="state-label">Pill Chips</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:16px;align-items:start;">
+      <!-- Calendar v26 — 동적 셀 높이 + 텍스트 이벤트 칩 -->
+      <div>
+        <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Calendar v26 — 동적 셀 높이 · 이벤트 칩</div>
+        <div class="cal-wrap" id="calWrap" style="height:580px;">
+
+          <!-- 앱 헤더 -->
+          <div class="cal-app-header">
+            <div class="cal-logo-area">
+              <div class="cal-logo-icon">
+                <svg viewBox="0 0 22 22" fill="none"><rect x="1" y="4" width="16" height="15" rx="3" fill="white" opacity="0.95"/><rect x="5" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="11" y="1.5" width="2" height="5" rx="1" fill="white" opacity="0.8"/><rect x="17.5" y="5" width="3.5" height="4" rx="1" fill="#E8394A"/><rect x="17.5" y="10" width="3.5" height="4" rx="1" fill="#FFFFFF" opacity="0.6"/><rect x="17.5" y="15" width="3.5" height="4" rx="1" fill="#E8A820"/></svg>
+              </div>
+              <span class="cal-logo-text">cheche</span>
+            </div>
+            <div class="cal-header-icons">
+              <button class="cal-icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                <div class="cal-notif-dot"></div>
+              </button>
+              <button class="cal-icon-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- 월 네비 -->
+          <div class="cal-top">
+            <button class="cnb">‹</button>
+            <div class="cal-mo">2026. 4</div>
+            <div class="cal-top-right">
+              <button class="cal-view-btn">주간</button>
+              <button class="cnb">›</button>
+            </div>
+          </div>
+
+          <!-- 필터 칩 -->
+          <div class="cal-filter-row">
+            <button class="cal-fchip on">전체</button>
+            <button class="cal-fchip"><span class="cal-fchip-dot" style="background:var(--tab-red);"></span>리뷰마감</button>
+            <button class="cal-fchip"><span class="cal-fchip-dot" style="background:var(--s-selected);"></span>체험일자</button>
+          </div>
+
+          <!-- 요일 헤더 -->
+          <div class="cal-wdays">
+            <div class="cwd su">일</div>
+            <div class="cwd">월</div>
+            <div class="cwd">화</div>
+            <div class="cwd">수</div>
+            <div class="cwd">목</div>
+            <div class="cwd">금</div>
+            <div class="cwd sa">토</div>
+          </div>
+
+          <!-- 그리드 (6주 × 4월) — 동적 셀 높이 -->
+          <div class="cal-grid-wrap" id="calGridWrap">
+            <div class="cal-grid" id="calGrid">
+              <!-- 주 1: 3/29 ~ 4/4 -->
+              <div class="cd su oth"><div class="dn">29</div><div class="cd-event ev-red">뷰티 체험</div></div>
+              <div class="cd oth"><div class="dn">30</div></div>
+              <div class="cd"><div class="dn">31</div></div>
+              <div class="cd"><div class="dn">1</div><div class="cd-event ev-red">홈뷰티 체험</div></div>
+              <div class="cd"><div class="dn">2</div></div>
+              <div class="cd"><div class="dn">3</div></div>
+              <div class="cd sa"><div class="dn">4</div></div>
+              <!-- 주 2: 4/5 ~ 4/11 -->
+              <div class="cd su"><div class="dn">5</div></div>
+              <div class="cd"><div class="dn">6</div></div>
+              <div class="cd"><div class="dn">7</div></div>
+              <div class="cd"><div class="dn">8</div></div>
+              <div class="cd"><div class="dn">9</div></div>
+              <div class="cd"><div class="dn">10</div></div>
+              <div class="cd sa"><div class="dn">11</div></div>
+              <!-- 주 3: 4/12 ~ 4/18 (오늘 포함) -->
+              <div class="cd su"><div class="dn">12</div><div class="cd-event ev-green">한강뷰 호텔 숙박 체험</div></div>
+              <div class="cd"><div class="dn">13</div></div>
+              <div class="cd today"><div class="dn">14</div><div class="cd-event ev-red">뷰티 파우더 체험단</div></div>
+              <div class="cd"><div class="dn">15</div></div>
+              <div class="cd"><div class="dn">16</div></div>
+              <div class="cd"><div class="dn">17</div></div>
+              <div class="cd sa"><div class="dn">18</div></div>
+              <!-- 주 4: 4/19 ~ 4/25 -->
+              <div class="cd su"><div class="dn">19</div></div>
+              <div class="cd"><div class="dn">20</div><div class="cd-event ev-blue">강남 피부과 시술 체험</div></div>
+              <div class="cd"><div class="dn">21</div></div>
+              <div class="cd"><div class="dn">22</div><div class="cd-event ev-yellow">유아동 의류 체험단</div></div>
+              <div class="cd"><div class="dn">23</div></div>
+              <div class="cd"><div class="dn">24</div></div>
+              <div class="cd sa"><div class="dn">25</div><div class="cd-event ev-green">한강뷰 호텔 숙박</div><div class="cd-event ev-blue">패션 여름 신상 체험</div></div>
+              <!-- 주 5: 4/26 ~ 5/2 -->
+              <div class="cd su"><div class="dn">26</div></div>
+              <div class="cd"><div class="dn">27</div></div>
+              <div class="cd"><div class="dn">28</div></div>
+              <div class="cd"><div class="dn">29</div></div>
+              <div class="cd"><div class="dn">30</div></div>
+              <div class="cd oth"><div class="dn">1</div></div>
+              <div class="cd oth sa"><div class="dn">2</div></div>
+              <!-- 주 6: 5/3 ~ 5/9 -->
+              <div class="cd su oth"><div class="dn">3</div></div>
+              <div class="cd oth"><div class="dn">4</div></div>
+              <div class="cd oth"><div class="dn">5</div></div>
+              <div class="cd oth"><div class="dn">6</div></div>
+              <div class="cd oth"><div class="dn">7</div></div>
+              <div class="cd oth"><div class="dn">8</div></div>
+              <div class="cd oth sa"><div class="dn">9</div></div>
+            </div>
+          </div>
+
+          <!-- 하단 탭 네비 -->
+          <div class="cal-bnav">
+            <div class="cal-nav-tab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <span class="cal-nav-tab-lbl">탐색</span>
+            </div>
+            <div class="cal-nav-tab on">
+              <div class="cal-nav-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <span class="cal-nav-tab-lbl">캘린더</span>
+            </div>
+            <div class="cal-nav-tab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              <span class="cal-nav-tab-lbl">수익</span>
+            </div>
+            <div class="cal-nav-tab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span class="cal-nav-tab-lbl">마이</span>
+            </div>
+          </div>
+
+        </div><!-- /cal-wrap -->
+      </div>
+
+      <!-- Right column -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Today's Schedule</div>
+          <div style="display:flex;flex-direction:column;gap:var(--card-gap);">
+            <div class="sch-item">
+              <div class="sch-icon" style="background:var(--s-overdue-bg);">⚠️</div>
+              <div class="sch-body">
+                <div class="sch-bdg"><div class="bdg b-ov" style="font-size:11px;padding:3px 8px;"><div class="bdot" style="background:var(--s-overdue);"></div>D-DAY</div></div>
+                <div class="sch-title">카페투어 강남점 리뷰 마감</div>
+                <div class="sch-sub">오후 6:00까지 제출 필수</div>
+              </div>
+              <div class="sch-arr">›</div>
+            </div>
+            <div class="sch-item">
+              <div class="sch-icon" style="background:var(--s-selected-bg);">📅</div>
+              <div class="sch-body">
+                <div class="sch-bdg"><div class="bdg b-sl" style="font-size:11px;padding:3px 8px;"><div class="bdot" style="background:var(--s-selected);"></div>선정완료</div></div>
+                <div class="sch-title">레뷰 뷰티 체험단 선정 발표</div>
+                <div class="sch-sub">제품 발송 예정일: 10/16</div>
+              </div>
+              <div class="sch-arr">›</div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Skeleton UI — 로딩 상태</div>
+          <div class="card" style="padding:16px;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+              <div class="skeleton" style="width:48px;height:48px;border-radius:var(--r-lg);flex-shrink:0;"></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+                <div class="skeleton" style="height:14px;width:80%;"></div>
+                <div class="skeleton" style="height:11px;width:55%;"></div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="skeleton" style="width:48px;height:48px;border-radius:var(--r-lg);flex-shrink:0;"></div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+                <div class="skeleton" style="height:14px;width:70%;"></div>
+                <div class="skeleton" style="height:11px;width:45%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Stats + Toast</div>
+          <div class="stat-grid" style="margin-bottom:10px;">
+            <div class="stat-card"><div class="stat-label">이번 달 수익</div><div class="stat-value" style="font-size:24px;letter-spacing:-0.8px;">1,240,000원</div></div>
+            <div class="stat-card"><div class="stat-label">진행 중 캠페인</div><div class="stat-value" style="font-size:24px;letter-spacing:-0.5px;">8건</div></div>
+          </div>
+          <div class="toast">✓ &nbsp;상태가 변경됐어요</div>
+        </div>
+
+        <div>
+          <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Bottom Navigation</div>
+          <div class="bnav">
+            <div class="nav-it"><div class="nav-ic">🔍</div><div class="nav-lb">탐색</div></div>
+            <div class="nav-it"><div class="nav-ic">📋</div><div class="nav-lb">내 신청</div></div>
+            <div class="nav-it on"><div class="nav-ic">📅</div><div class="nav-lb">캘린더</div><div class="nav-pip"></div></div>
+            <div class="nav-it"><div class="nav-ic">👤</div><div class="nav-lb">마이</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search + Input + Empty + Bottom Sheet -->
+    <div class="g2">
+      <div>
+        <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Search + Filter Chips</div>
+        <div class="srch" style="margin-bottom:10px;" tabindex="0"><span class="srch-ic">🔍</span><input class="srch-in" placeholder="체험단 검색..." readonly></div>
+        <div class="fc-row"><div class="fc on">전체</div><div class="fc">뷰티</div><div class="fc">푸드</div><div class="fc">강남구</div><div class="fc">블로그</div></div>
+        <div style="margin-top:16px;">
+          <div style="font-size:10px;color:var(--text-tertiary);margin-bottom:8px;letter-spacing:0.08em;text-transform:uppercase;">Input — Underline Style</div>
+          <input class="inp-underline" placeholder="캠페인명 입력">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Empty State</div>
+        <div class="empty">
+          <div class="em-ic">📭</div>
+          <div class="em-ti">신청한 체험단이 없어요</div>
+          <div class="em-de">탐색 탭에서 원하는 체험단을 찾아보세요</div>
+        </div>
+        <div style="margin-top:14px;">
+          <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;">Bottom Sheet</div>
+          <div class="bsheet-demo">
+            <div class="bsheet-handle"></div>
+            <div style="font-size:18px;font-weight:700;color:var(--text-emphasis);margin-bottom:16px;letter-spacing:-0.3px;">상태 변경</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div class="list-row" style="padding:14px 0;border-radius:var(--r-lg);"><div class="bdg b-sl"><div class="bdot" style="background:var(--s-selected);"></div>선정됐어요</div><span style="color:var(--gray-300);font-size:18px;">›</span></div>
+              <div class="list-row" style="padding:14px 0;border-radius:var(--r-lg);"><div class="bdg b-ns"><div class="bdot" style="background:var(--s-not-sel);"></div>미선정이에요</div><span style="color:var(--gray-300);font-size:18px;">›</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- ════════════════════════
+       09 · INTERACTION RULES
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">09 · Interaction Rules — TDS v4</div>
+    <div class="sec-title">인터랙션 규칙 완전 명세</div>
+    <div class="sec-desc">토스 핵심 철학: <strong>"반응은 즉각적으로, 전환은 자연스럽게, 완료는 명확하게."</strong><br>Android Ripple 금지 — Scale + Background 변화로만 피드백 표현.</div>
+
+    <!-- 이징 커브 -->
+    <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Easing Curves — 6종 완전 정의</div>
+    <div class="card" style="margin-bottom:16px;padding:0;overflow:hidden;">
+      <table class="btbl">
+        <thead><tr><th>변수명</th><th>Curve</th><th>사용 상황</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--color-primary);">--ease-out</td><td><span class="hpill">cubic-bezier(0.16,1,0.3,1)</span></td><td class="td-sm">화면·카드 등장, 버튼 UP</td><td class="td-sm">자연스러운 착지감</td></tr>
+          <tr><td style="color:var(--color-primary);">--ease-in</td><td><span class="hpill">cubic-bezier(0.7,0,0.84,0)</span></td><td class="td-sm">화면·모달 퇴장, Toast Exit</td><td class="td-sm">빠르게 떠나는 느낌</td></tr>
+          <tr><td style="color:var(--color-primary);">--ease-in-out</td><td><span class="hpill">cubic-bezier(0.45,0,0.55,1)</span></td><td class="td-sm">요소 위치 이동, Replace 전환</td><td class="td-sm">출발·도착 자연스럽게</td></tr>
+          <tr><td style="color:var(--color-primary);">--ease-spring</td><td><span class="hpill">cubic-bezier(0.34,1.56,0.64,1)</span></td><td class="td-sm">바텀시트·팝업·다이얼로그</td><td class="td-sm">물리적 탄성감</td></tr>
+          <tr><td style="color:var(--color-primary);">--ease-spring-sm</td><td><span class="hpill">cubic-bezier(0.22,1.2,0.36,1)</span></td><td class="td-sm">토글·체크박스·버튼 UP</td><td class="td-sm">살짝 튀는 느낌</td></tr>
+          <tr><td style="color:var(--color-primary);">--ease-instant</td><td><span class="hpill">steps(1)</span></td><td class="td-sm">상태 즉각 변화 필요 시</td><td class="td-sm">딜레이 제로</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 화면 전환 결정 트리 -->
+    <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Screen Transitions — 4타입 + 결정 트리</div>
+    <div class="g2" style="margin-bottom:16px;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="btbl">
+          <thead><tr><th>타입</th><th>방향</th><th>Duration</th><th>Easing</th></tr></thead>
+          <tbody>
+            <tr><td>Push (Stack)</td><td class="td-sm">우→좌 슬라이드<br>기존 화면 -28% 퇴장</td><td><span class="hpill">300ms</span></td><td class="td-sm">ease-out</td></tr>
+            <tr><td>Modal (Full)</td><td class="td-sm">하→상<br>배경 scale(0.95)</td><td><span class="hpill">400ms</span></td><td class="td-sm">spring</td></tr>
+            <tr><td>Tab Bar</td><td class="td-sm">Cross-fade<br>+Y 6px 진입</td><td><span class="hpill">200ms</span></td><td class="td-sm">ease-out</td></tr>
+            <tr><td>Replace</td><td class="td-sm">Fade in/out<br>방향 없음</td><td><span class="hpill">300ms</span></td><td class="td-sm">ease-in-out</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--text-emphasis);margin-bottom:12px;">결정 트리</div>
+        <div style="font-size:13px;color:var(--text-secondary);line-height:2.0;">
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;"><span style="color:var(--color-primary);font-weight:700;flex-shrink:0;">Push</span><span>같은 플로우의 다음 단계<br>(리스트 → 상세, 설정 → 세부)</span></div>
+          <div style="height:1px;background:var(--gray-100);margin:8px 0;"></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;"><span style="color:var(--color-primary);font-weight:700;flex-shrink:0;">Modal</span><span>현재와 독립적인 새 플로우<br>(로그인, 결제, 약관)</span></div>
+          <div style="height:1px;background:var(--gray-100);margin:8px 0;"></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;"><span style="color:var(--color-primary);font-weight:700;flex-shrink:0;">Tab</span><span>하단 탭 아이콘 탭<br>(병렬 관계 — 슬라이드 ❌)</span></div>
+          <div style="height:1px;background:var(--gray-100);margin:8px 0;"></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--color-primary);font-weight:700;flex-shrink:0;">Replace</span><span>인증·온보딩 완료 등<br>완전히 다른 상태 진입</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 인터랙티브 컴포넌트 데모 -->
+    <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Interactive Components Demo</div>
+    <div class="g2" style="margin-bottom:16px;">
+      <!-- 토글 + 체크박스 -->
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--text-emphasis);margin-bottom:16px;">Toggle & Checkbox</div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:500;">리뷰 마감 알림</div>
+              <div style="font-size:12px;color:var(--text-secondary);">마감 3일 전 알림</div>
+            </div>
+            <button class="toggle is-on" id="toggle1" onclick="this.classList.toggle('is-on')">
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+          <div style="height:1px;background:var(--gray-100);"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:14px;font-weight:500;">선정 발표 알림</div>
+              <div style="font-size:12px;color:var(--text-secondary);">발표일 당일 아침 9시</div>
+            </div>
+            <button class="toggle" id="toggle2" onclick="this.classList.toggle('is-on')">
+              <div class="toggle-thumb"></div>
+            </button>
+          </div>
+          <div style="height:1px;background:var(--gray-100);"></div>
+          <div style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="this.querySelector('.checkbox-comp').classList.toggle('is-checked')">
+            <div class="checkbox-comp is-checked">
+              <svg class="checkbox-check" viewBox="0 0 12 9"><path d="M1 4.5L4.5 8L11 1"/></svg>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:500;">블로그 체험단 포함</div>
+              <div style="font-size:12px;color:var(--text-secondary);">블로그 포스팅 필요 항목</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="this.querySelector('.checkbox-comp').classList.toggle('is-checked')">
+            <div class="checkbox-comp">
+              <svg class="checkbox-check" viewBox="0 0 12 9"><path d="M1 4.5L4.5 8L11 1"/></svg>
+            </div>
+            <div>
+              <div style="font-size:14px;font-weight:500;">인스타그램 체험단 포함</div>
+              <div style="font-size:12px;color:var(--text-secondary);">릴스·피드 포스팅 항목</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 토스트 + 다이얼로그 트리거 -->
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--text-emphasis);margin-bottom:16px;">Toast & Dialog Demo</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <button class="btn btn-p btn-md" onclick="showToast('success')">✓ 성공 토스트 보기</button>
+          <button class="btn btn-s btn-md" onclick="showToast('error')" style="width:100%;">✕ 에러 토스트 보기</button>
+          <button class="btn btn-ghost btn-md" onclick="showDialog()" style="width:100%;">다이얼로그 열기</button>
+        </div>
+        <div style="margin-top:16px;padding:14px;background:var(--gray-050);border-radius:var(--r-lg);">
+          <div style="font-size:11px;font-weight:700;color:var(--text-emphasis);margin-bottom:8px;">Toast 타이밍 규칙</div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.8;">
+            진입: <span class="hpill">280ms spring</span><br>
+            유지: <span class="hpill">2500ms</span> (중요: 4000ms)<br>
+            퇴장: <span class="hpill">220ms ease-in</span><br>
+            동시 최대: <span class="hpill">1개</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 타이밍 치트시트 -->
+    <div style="font-size:10px;color:var(--text-tertiary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">⚡ Timing Cheat Sheet</div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="btbl">
+        <thead><tr><th>인터랙션</th><th>Duration</th><th>Easing</th><th>비고</th></tr></thead>
+        <tbody>
+          <tr><td>버튼 DOWN</td><td><span class="hpill">80ms</span></td><td class="td-sm">ease-out</td><td class="td-sm">즉각 반응감</td></tr>
+          <tr><td>버튼 UP</td><td><span class="hpill">180ms</span></td><td class="td-sm">spring-sm</td><td class="td-sm">살짝 튀어오름</td></tr>
+          <tr><td>버튼 Loading</td><td><span class="hpill">0.65s ∞</span></td><td class="td-sm">linear</td><td class="td-sm">스피너 무한</td></tr>
+          <tr><td>버튼 에러 Shake</td><td><span class="hpill">400ms</span></td><td class="td-sm">ease-in-out</td><td class="td-sm">shakeX</td></tr>
+          <tr><td>화면 Push</td><td><span class="hpill">300ms</span></td><td class="td-sm">ease-out</td><td class="td-sm">Enter & Exit 쌍</td></tr>
+          <tr><td>화면 Modal</td><td><span class="hpill">400ms / 280ms</span></td><td class="td-sm">spring / ease-in</td><td class="td-sm">Enter / Exit</td></tr>
+          <tr><td>탭 전환</td><td><span class="hpill">200ms</span></td><td class="td-sm">ease-out</td><td class="td-sm">fade + Y 6px</td></tr>
+          <tr><td>바텀시트 Enter</td><td><span class="hpill">380ms</span></td><td class="td-sm">spring</td><td class="td-sm">탄성 등장</td></tr>
+          <tr><td>바텀시트 Exit</td><td><span class="hpill">250ms</span></td><td class="td-sm">ease-in</td><td class="td-sm">빠르게 내려감</td></tr>
+          <tr><td>토글</td><td><span class="hpill">280ms</span></td><td class="td-sm">spring-sm</td><td class="td-sm">썸 이동</td></tr>
+          <tr><td>체크박스</td><td><span class="hpill">150ms + 200ms</span></td><td class="td-sm">ease-out</td><td class="td-sm">배경 + Draw</td></tr>
+          <tr><td>토스트 Enter</td><td><span class="hpill">280ms</span></td><td class="td-sm">spring</td><td class="td-sm">scale + Y</td></tr>
+          <tr><td>토스트 Exit</td><td><span class="hpill">220ms</span></td><td class="td-sm">ease-in</td><td class="td-sm">scale + Y</td></tr>
+          <tr><td>다이얼로그</td><td><span class="hpill">350ms / 200ms</span></td><td class="td-sm">spring / ease-in</td><td class="td-sm">scale 0.88→1</td></tr>
+          <tr><td>인풋 Validation</td><td><span class="hpill">300ms</span></td><td class="td-sm">ease-in-out</td><td class="td-sm">Shake</td></tr>
+          <tr><td>숫자 Roll Up</td><td><span class="hpill">220ms</span></td><td class="td-sm">ease-out</td><td class="td-sm">80ms delay</td></tr>
+          <tr><td>스켈레톤 Shimmer</td><td><span class="hpill">1.5s ∞</span></td><td class="td-sm">linear</td><td class="td-sm">무한 반복</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ════════════════════════
+       07 · UX WRITING
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">07 · UX Writing</div>
+    <div class="sec-title">UX 라이팅 원칙</div>
+    <div class="sec-desc">토스 스타일 해요체 기반. 짧고, 부드럽고, 동사형 CTA.</div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="btbl">
+        <thead><tr><th>규칙</th><th>❌ 하지 마세요</th><th>✅ 이렇게 하세요</th></tr></thead>
+        <tbody>
+          <tr><td>해요체 사용</td><td class="td-sm" style="color:var(--color-error);">처리가 완료되었습니다.</td><td class="td-sm" style="color:var(--color-success);">완료됐어요.</td></tr>
+          <tr><td>짧고 명확하게</td><td class="td-sm" style="color:var(--color-error);">서비스 이용에 불편을 드려 죄송합니다.</td><td class="td-sm" style="color:var(--color-success);">앗, 잠깐 문제가 생겼어요. 다시 시도해 볼게요?</td></tr>
+          <tr><td>CTA는 동사형</td><td class="td-sm" style="color:var(--color-error);">"확인" / "등록"</td><td class="td-sm" style="color:var(--color-success);">"확인했어요" / "등록할게요"</td></tr>
+          <tr><td>빈 상태</td><td class="td-sm" style="color:var(--color-error);">데이터가 없습니다.</td><td class="td-sm" style="color:var(--color-success);">신청한 체험단이 없어요. 탐색 탭에서 찾아보세요.</td></tr>
+          <tr><td>에러 메시지</td><td class="td-sm" style="color:var(--color-error);">오류가 발생하였습니다. (CODE: 500)</td><td class="td-sm" style="color:var(--color-success);">앗, 연결이 끊겼어요. 잠시 후 다시 시도해 주세요.</td></tr>
+          <tr><td>마감 알림</td><td class="td-sm" style="color:var(--color-error);">리뷰 마감일이 도래하였습니다.</td><td class="td-sm" style="color:var(--color-success);">⚠️ 오늘 자정까지 리뷰 등록이 필요해요!</td></tr>
+          <tr><td>성공 피드백</td><td class="td-sm" style="color:var(--color-error);">저장 완료.</td><td class="td-sm" style="color:var(--color-success);">✓ 상태가 변경됐어요</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════
+       08 · MASTER PROMPT
+  ════════════════════════ -->
+  <div class="section">
+    <div class="sec-eye">08 · UX/UI Team · Common Prompt</div>
+    <div class="sec-title">UX/UI팀 공통 프롬프트 v2.0</div>
+    <div class="sec-desc">토스 DS v3 완전 통합 버전. 기존 v1.1 프롬프트를 이 버전으로 전면 교체하세요.</div>
+
+    <!-- MASTER -->
+    <div class="pbox" style="margin-bottom:16px;">
+      <div class="phead">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="ptitle">🎨 MASTER PROMPT v2.3</div>
+          <span class="ptag tag">TDS v4 + 인터랙션 v18</span>
+        </div>
+        <button class="cbtn" onclick="copyP('mp')">복사</button>
+      </div>
+      <div class="pbody" id="mp">
+
+        <div><div class="pkey">프로덕트 & 역할</div><div class="pblock">앱명: 체체 (cheche) / 체험단체크 / cheche.co.kr
+역할: 체체 앱 전담 UX/UI 디자이너
+기반: 토스(Toss) Design System v4 (TDS) + Apple HIG + 인터랙션 완전 명세(섹션 18)
+타깃: 블로그·릴스·유튜브 운영 인플루언서 (20~35세, 마감 관리 필수 크리에이터)
+톤: Normcore Minimal — 여백·가독성·기능 중심. 과한 그라디언트·텍스처 금지
+모든 화면은 아래 시스템을 100% 준수. HEX 직접 사용 금지.</div></div>
+
+        <div><div class="pkey">디자인 철학 (TDS 기반)</div><div class="pblock">P-01  1 Thing / 1 Page — 화면당 목적 1개, CTA 1개
+P-02  Normcore Minimal — 그라디언트·텍스처 없이 여백으로 완성
+P-03  마감은 즉각 인지 — D-day 0.3초 안에 위험도 파악 가능하게
+P-04  Bottom Sheet 우선 — 선택·설정은 새 페이지 < 바텀시트
+P-05  여백은 디자인 요소 — 섹션 간 40px, "무엇을 뺄까?" 먼저
+P-06  5-state 설계 의무 — Default / Hover / Pressed / Disabled / Loading</div></div>
+
+        <div><div class="pkey">레이아웃 & 그리드 (TDS 8pt Grid)</div><div class="pblock">그리드:         8pt Grid — 모든 간격은 4의 배수 (4, 8, 12, 16, 24, 32, 40, 48...)
+화면 좌우 패딩: 24px (기본) / 20px (소형)
+카드 간 간격:   12px (--card-gap)
+섹션 간 간격:   40px 이상 (--section-gap)
+터치 타겟:      최소 44×44px (Apple HIG 필수)
+섹션 구분 우선순위: 여백 → 배경색 차이 → 타이포 위계 → 선(최후 수단)</div></div>
+
+        <div><div class="pkey">폰트 시스템</div><div class="pblock">로고 전용:  Poppins ExtraBold 800  → 스플래시·아이콘·온보딩 워드마크("cheche" 영문)에만
+앱 전체:    Pretendard Variable  → 한글 + 영문 + 숫자 모두 통합
+            fallback: Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif
+
+※ DM Mono 사용 금지 — 숫자도 Pretendard 고딕으로 통일
+※ Noto Sans KR 사용 금지 — Pretendard로 대체
+
+타입 스케일 (TDS 기준):
+  display   30px / 800 / lh 1.4 / -2%     히어로·핵심 수치
+  heading-1 24px / 700 / lh 1.4 / -2%     페이지 대제목, 캘린더 월
+  heading-2 20px / 700 / lh 1.4 / -1%     섹션 제목
+  heading-3 18px / 600 / lh 1.4 / -1%     카드 타이틀
+  body-1    16px / 500 / lh 1.5           기본 본문
+  body-2    14px / 400 / lh 1.5           보조 설명
+  caption   12px / 400 / lh 1.4           태그·메타 정보
+
+숫자 강조 스타일 (Pretendard 기준):
+  D-day 강조:  font-weight 700 / letter-spacing -0.5px / color 시맨틱
+  금액 수치:   font-weight 800 / letter-spacing -1.0px / text-emphasis
+  날짜·건수:   font-weight 600 / letter-spacing -0.3px / text-secondary</div></div>
+
+        <div><div class="pkey">컬러 토큰 — 라이트 모드</div><div class="pblock">/* ── Brand (TDS 교체 영역 5개) ── */
+--color-primary:          #1C3C82   CTA·Today 마커·포인트
+--color-primary-hover:    #152D61   Hover 상태
+--color-primary-pressed:  #0E2048   Pressed 상태
+--color-primary-subtle:   #E6EBF6   10% tint 배경
+--color-primary-on:       #FFFFFF   브랜드 위 텍스트
+
+/* ── Calendar Tab → 앱 도트 1:1 매핑 ── */
+--tab-red    리뷰 마감:  #E8394A  bg rgba(232,57,74,0.10)
+--tab-blue   선정 발표:  #2B7FE8  bg rgba(43,127,232,0.10)
+--tab-yellow 신청 마감:  #E8A820  bg rgba(232,168,32,0.10)
+
+/* ── Surface (TDS 고정) ── */
+bg-base:     #F2F4F6   페이지 배경 (토스 연회색)
+bg-surface:  #FFFFFF   카드·헤더
+
+/* ── Text (TDS 고정) ── */
+text-emphasis:   #191F28   제목·핵심 수치
+text-primary:    #333D4B   본문
+text-secondary:  #6B7684   보조 설명
+text-tertiary:   #8B95A1   캡션·플레이스홀더
+text-disabled:   #B0B8C1
+
+/* ── Semantic (TDS 고정) ── */
+success: #00B386  warning: #E8A820  error: #E8394A  info: #2B7FE8
+
+/* ── Status 6-state ── */
+APPLIED:       #2B7FE8  bg rgba(43,127,232,0.10)
+SELECTED:      #00B386  bg rgba(0,179,134,0.10)
+NOT_SELECTED:  #8B95A1  bg rgba(139,149,161,0.10)
+COMPLETED:     #B0B8C1  bg rgba(176,184,193,0.10)
+DEADLINE_SOON: #E8A820  bg rgba(232,168,32,0.10)
+OVERDUE:       #E8394A  bg rgba(232,57,74,0.10)</div></div>
+
+        <div><div class="pkey">컬러 토큰 — 다크 모드</div><div class="pblock">bg-base: #111111  /  bg-surface: #1C1C1E  /  bg-card: #2C2C2E
+text-emphasis: #F2F4F6  /  primary: #D1D6DB  /  secondary: #8B95A1
+--color-primary: #4A7AE8  /  subtle: rgba(74,122,232,0.16)
+tab-red: #FF5F6D  /  tab-blue: #5B9EFF  /  tab-yellow: #FFB84A</div></div>
+
+        <div><div class="pkey">간격 · 반경 (TDS 기준 — v1.1에서 변경됨)</div><div class="pblock">Spacing: 4/8/12/16/20/24/28/32/40/48px 단위만 사용 (8pt Grid)
+
+Radius (TDS 기준 — 이전 버전과 다름):
+  --r-xs:     6px    인라인 태그·소형 뱃지
+  --r-sm:     8px    인풋 Filled·작은 버튼
+  --r-md:    14px    버튼 CTA (Primary/Secondary)   ← 이전 16px에서 변경
+  --r-lg:    18px    기능형 카드 (일정·체험단 카드)  ← 이전 12px에서 변경
+  --r-xl:    22px    기본 카드 컨테이너             ← 이전 16px에서 변경
+  --r-2xl:   24px    대형 카드·캘린더·배너
+  --r-sheet: 20px    바텀시트 상단만 적용
+  --r-full: 9999px   필 칩·캡슐 뱃지</div></div>
+
+        <div><div class="pkey">그림자 (TDS 고정)</div><div class="pblock">--shadow-card: 0 2px 12px 0 rgba(0,0,0,0.04)   기본 카드
+--shadow-xs:   0 1px  4px 0 rgba(0,0,0,0.06)   드롭다운
+--shadow-sm:   0 2px  8px 0 rgba(0,0,0,0.08)   카드 hover
+--shadow-md:   0 4px 16px 0 rgba(0,0,0,0.10)   FAB·모달
+--shadow-lg:   0 8px 24px 0 rgba(0,0,0,0.12)   바텀시트
+
+그림자 원칙: 기본 카드는 배경색 차이로 깊이 표현.
+떠있는 요소(모달·FAB·바텀시트)에만 그림자 사용.</div></div>
+
+        <div><div class="pkey">이징 커브 시스템 (TDS v4 — 6종)</div><div class="pblock">--ease-out:       cubic-bezier(0.16,1,0.3,1)     진입 (등장 애니메이션)
+--ease-in:        cubic-bezier(0.7,0,0.84,0)      퇴장 (사라짐 애니메이션)
+--ease-in-out:    cubic-bezier(0.45,0,0.55,1)     이동 (위치 변경)
+--ease-spring:    cubic-bezier(0.34,1.56,0.64,1)  바텀시트·팝업 탄성
+--ease-spring-sm: cubic-bezier(0.22,1.2,0.36,1)   토글·체크박스 살짝 탄성
+--ease-instant:   steps(1)                         즉시 상태 변화
+
+임의로 linear, ease 사용 금지 — 반드시 위 6종 중 선택</div></div>
+
+        <div><div class="pkey">화면 전환 규칙 (4타입)</div><div class="pblock">Push  — 같은 플로우 다음 단계 / 우→좌 300ms ease-out
+         기존화면 translateX(-28%) 동시 퇴장 (병렬 애니메이션)
+Modal — 독립 플로우 시작 / 하→상 400ms spring
+         배경화면 scale(0.95)+opacity(0.6) 동시 처리
+Tab   — 탭바 전환 / Cross-fade + Y 6px / 200ms ease-out
+         슬라이드 절대 금지 (탭은 병렬 관계)
+Replace — 인증·온보딩 완료 / Fade 300ms ease-in-out
+
+결정 기준: 같은 플로우? Push / 독립 플로우? Modal / 탭? Tab / 완전 다른 상태? Replace
+iOS Edge Swipe Back 절대 차단 금지</div></div>
+
+        <div><div class="pkey">버튼 라이프사이클</div><div class="pblock">DOWN:     scale(0.97) + primary-pressed 배경 / 80ms ease-out / 햅틱 .light
+UP:       scale(1.0) 복원 / 180ms ease-spring-sm / 액션 실행
+LOADING:  pointer-events none / 텍스트 투명 / 스피너 0.65s linear
+SUCCESS:  스피너→체크 아이콘 Draw 350ms / 햅틱 .success
+ERROR:    shakeX 400ms ease-in-out / 햅틱 .error / 에러 토스트
+
+-webkit-tap-highlight-color: transparent 필수
+will-change: transform (성능 최적화)</div></div>
+
+        <div><div class="pkey">바텀시트 드래그 Dismiss</div><div class="pblock">touchmove: 손가락 따라 translateY 실시간 1:1 추적
+           오버레이 opacity = 0.55 × (1 - dragDelta / sheetHeight)
+
+touchend:
+  IF velocity > 600px/s OR distance > sheetHeight × 40%
+    → Dismiss: translateY(100%) 250ms ease-in
+  ELSE
+    → Snap Back: translateY(0) 350ms ease-spring
+
+핸들바 최소 터치 영역: 44px 높이
+오버레이 탭 → 닫기 / iOS Edge Swipe 허용</div></div>
+
+        <div><div class="pkey">인풋 Validation 타이밍</div><div class="pblock">이메일·전화:  입력 멈춤 500ms 후
+비밀번호 강도: 실시간 (타이핑마다)
+금액 입력:    포커스 아웃 시
+필수 빈값:    Submit 시도 시
+중복 확인:    전용 버튼 탭 시
+
+에러 시: border-bottom → --color-error + shakeX 300ms
+         에러 메시지: opacity(0→1) + Y(-4px→0) 200ms ease-out
+성공 시: border-bottom → --color-success + 체크 아이콘 scale(0→1)</div></div>
+
+        <div><div class="pkey">토스트 & 다이얼로그</div><div class="pblock">토스트:
+  Enter: 280ms ease-spring (scale 0.92→1 + Y 16px→0)
+  유지:  2500ms (중요: 4000ms + 닫기 버튼)
+  Exit:  220ms ease-in / 동시 최대 1개
+  배경:  #1A1A2E (거의 검은색) + border-radius: full (캡슐형)
+  위치:  하단 탭바 위 + safe-area
+
+다이얼로그:
+  Enter: 350ms ease-spring (scale 0.88→1)
+  Exit:  200ms ease-in (scale 0.94)
+  버튼 최대 2개 / Destructive = --color-error 색상
+  오버레이 탭 닫기: 정보성만 허용 (확인 필요는 버튼으로만)</div></div>
+
+        <div><div class="pkey">숫자 롤링 & 스크롤</div><div class="pblock">숫자 변경 애니메이션 (D-day 감소, 금액 확정):
+  Out: digitRollDown 180ms ease-in (위로 사라짐)
+  In:  digitRollUp   220ms ease-out + 80ms delay (아래서 등장)
+  콤마 삽입: commaAppear 150ms ease-out
+
+스크롤:
+  -webkit-overflow-scrolling: touch (iOS 모멘텀)
+  overscroll-behavior-y: contain (부모 전파 차단)
+  스크롤바 항상 숨김 (scrollbar-width: none)
+  Sticky 헤더: 스크롤 200px 시 blur(20px) + 반투명 배경</div></div>
+
+        <div><div class="pkey">컴포넌트 필수 규칙</div><div class="pblock">1. 모든 카드: bg-surface(#FFF) + shadow-card + r-xl(22px) + padding 20px
+2. hover: shadow-sm + translateY(-1px)  /  pressed: scale(0.99)
+3. Today 마커: --color-primary(#1C3C82) 원형 — 화면당 단 하나
+4. 캘린더 셀: 테두리 없음, 여백으로만 구분, 도트 최대 3개
+5. D-day: Pretendard 700 / letter-spacing -0.5px + error(빨강) D-0~1 / warning(노랑) D-2~3 / tertiary 그 외
+6. FAB: --color-primary, r-full, 52×52px, 우하단 fixed, shadow-md
+7. Loading: 스켈레톤 UI (shimmer) 필수 — 빈 화면 금지
+8. Empty State: 모든 리스트 화면 필수. 이모지+제목+설명+CTA
+9. 5-state: Default/Hover/Pressed/Disabled/Loading 전부 설계
+10. 바텀시트: r-sheet(20px) 상단만, 핸들바(36×4px), 배경 overlay 55%
+
+Apple HIG 준수:
+- 터치 타겟 최소 44×44px
+- Safe Area inset 항상 적용
+- Dynamic Type 200%까지 레이아웃 유지
+- 색상+아이콘 병행 (색맹 접근성)</div></div>
+
+        <div><div class="pkey">UX 라이팅 원칙 (해요체)</div><div class="pblock">해요체 사용:  "완료됐어요." (O)  /  "처리가 완료되었습니다." (X)
+CTA 동사형:   "확인했어요" / "등록할게요" (O)  /  "확인" (X)
+에러 부드럽게: "앗, 연결이 끊겼어요." (O)  /  "오류가 발생하였습니다." (X)
+빈 상태:      "신청한 체험단이 없어요. 탐색 탭에서 찾아보세요."
+마감 알림:    "⚠️ 오늘 자정까지 리뷰 등록이 필요해요!"
+성공 토스트:  "✓ 상태가 변경됐어요"  /  "✓ 등록이 완료됐어요"</div></div>
+
+        <div><div class="pkey">4탭 네비게이션</div><div class="pblock">탭1 탐색  🔍  SCR-001~004  체험단 리스트·검색·필터·상세
+탭2 내신청 📋  SCR-005~007  신청목록·상태관리
+탭3 캘린더 📅  SCR-008~010  월간캘린더·오늘일정·통계
+탭4 마이   👤  SCR-011~013  프로필·설정·알림
+
+탭바: height 56px(상단) / 80px(하단, Safe Area 포함)
+Active: --color-primary 레이블 + 4px pip dot
+전환: fade 150ms (토스 스타일, 슬라이드 없음)</div></div>
+
+      </div>
+    </div>
+
+    <!-- SUB PROMPTS -->
+    <div class="g2">
+      <div class="pbox">
+        <div class="phead">
+          <div class="ptitle">📅 캘린더 추가 프롬프트</div>
+          <button class="cbtn" onclick="copyP('cp')">복사</button>
+        </div>
+        <div class="pbody" id="cp">
+          <div><div class="pkey">캘린더 규칙</div><div class="pblock">셀 테두리: 완전 없음 — 여백만으로 구분 (TDS 원칙)
+Today: --color-primary(#1C3C82) 원형 — 화면 내 유일한 강조
+도트: 숫자 아래 중앙, 3px 간격, 5px 원, 최대 3개 나열
+일요일: --tab-red(#E8394A) / 토요일: --tab-blue(#2B7FE8) opacity 80%
+타월 날짜: text-disabled(#B0B8C1)
+
+도트 → 탭 컬러 완전 1:1:
+  리뷰 마감  = --tab-red    = #E8394A (로고 빨강 탭 동일)
+  선정 발표  = --tab-blue   = #2B7FE8 (로고 파랑 탭 동일)
+  신청 마감  = --tab-yellow = #E8A820 (로고 노랑 탭 동일)
+
+오늘의 일정 카드 (TDS List Row 기준):
+  - 최소 높이 72px (아이콘 있는 경우)
+  - 아이콘 48px × 48px, r-lg(18px), 상태 색상 10% 배경
+  - 상태 뱃지 → heading-3(18px) 타이틀 → body-2(14px) 서브 → › 화살표
+
+통계 섹션:
+  - 2열 그리드, shadow-card, r-xl(22px)
+  - 레이블: 12px / semibold / --color-primary
+  - 수치: display(30px) / 800 / --text-emphasis / Pretendard / letter-spacing -1px
+
+로딩 시: 스켈레톤 shimmer 필수 (빈 화면 금지)</div></div>
+        </div>
+      </div>
+
+      <div class="pbox">
+        <div class="phead">
+          <div class="ptitle">🔍 탐색 탭 추가 프롬프트</div>
+          <button class="cbtn" onclick="copyP('ep')">복사</button>
+        </div>
+        <div class="pbody" id="ep">
+          <div><div class="pkey">탐색 탭 규칙</div><div class="pblock">검색바 (TDS Filled Input):
+  height 56px / background #F2F4F6 / border-radius r-sm(8px)
+  포커스: border 1.5px --color-primary + 3px subtle glow
+  placeholder: text-tertiary(#8B95A1)
+
+필터 칩 (TDS Pill):
+  height 40px / r-full / background gray-100(#E8EBED) / 기본
+  활성: primary-subtle bg + primary color + semibold 600
+
+캠페인 카드 (TDS List Row 기준):
+  min-height 72px / padding 20px / r-xl(22px) / shadow-card
+  썸네일 48×48 r-lg / 뱃지(6-state) / heading-3 타이틀(말줄임 1줄)
+  메타(body-2 secondary) / D-day(Pretendard 700, letter-spacing -0.5px, 시맨틱 색상)
+
+D-day 색상 기준:
+  D-0, D-DAY: --color-error(#E8394A) + bold
+  D-1 ~ D-3:  --color-warning(#E8A820)
+  D-4 이후:   --text-tertiary(#8B95A1)
+
+인원부족 뱃지:
+  "잔여 N명" — error-subtle bg + error color
+  카드 우측 상단 또는 메타 인라인
+
+CTA (하단 고정):
+  btn-primary "체험단 신청하기 →" height 56px / r-md(14px)
+  padding-bottom: safe-area-inset-bottom 포함
+  신청 후 복귀 → APPLIED 상태 수동 등록 안내 토스트
+
+로딩: 카드 스켈레톤 shimmer (3~5개 플레이스홀더)
+빈 상태: "아직 체험단이 없어요. 필터를 바꿔볼까요?" + 필터 초기화 버튼</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;" class="pbox">
+      <div class="phead">
+        <div class="ptitle">⚡ Quick Checklist — 화면 납품 전 확인</div>
+        <button class="cbtn" onclick="copyP('qc')">복사</button>
+      </div>
+      <div class="pbody" id="qc">
+        <div><div class="pkey">납품 전 필수 체크리스트 (TDS v4 완전판)</div><div class="pblock">레이아웃 & 그리드
+[ ] 모든 간격이 4pt 배수인가? (4/8/12/16/24/32/40px)
+[ ] 좌우 패딩 24px로 화면 전체 일관되게 적용됐는가?
+[ ] 화면당 CTA가 1개인가? (1 Thing / 1 Page)
+[ ] 하단 CTA에 Safe Area inset 적용됐는가?
+[ ] 터치 타겟이 모두 44×44px 이상인가?
+
+컬러 & 타이포
+[ ] HEX 직접 사용 없이 전부 토큰명으로 처리됐는가?
+[ ] Today 마커 = --color-primary 원형 (화면당 1개)인가?
+[ ] D-day 수치에 Pretendard 700 + letter-spacing -0.5px + 시맨틱 컬러?
+[ ] 색상 + 아이콘 병행 사용 (색맹 접근성) 됐는가?
+
+컴포넌트
+[ ] 카드 radius r-xl(22px) / 버튼 radius r-md(14px) 적용됐는가?
+[ ] 모든 인터랙티브 요소에 5-state 설계됐는가?
+[ ] -webkit-tap-highlight-color: transparent 처리됐는가?
+
+터치 피드백 (TDS v4 신규)
+[ ] 모든 탭 요소에 Pressed 상태(scale/bg 변화)가 있는가?
+[ ] Android Ripple 사용 안 했는가? (Scale + Background만)
+[ ] 버튼 Loading 중 중복 탭 방지(pointer-events: none)됐는가?
+[ ] 버튼 성공/에러 피드백 (체크Draw/shakeX) 있는가?
+
+화면 전환 (TDS v4 신규)
+[ ] Push/Modal/Tab/Replace가 상황에 맞게 쓰였는가?
+[ ] Enter & Exit 애니메이션이 쌍으로 정의됐는가?
+[ ] iOS Edge Swipe Back이 차단되지 않았는가?
+[ ] 전환 중 중복 인터랙션 방지됐는가?
+
+바텀시트 (TDS v4 신규)
+[ ] Swipe Down dismiss 구현됐는가?
+[ ] Snap Back (미완료 시 복원) 동작하는가?
+[ ] velocity 기반 dismiss (>600px/s) 구현됐는가?
+[ ] 오버레이 탭 닫기 구현됐는가?
+
+인풋 (TDS v4 신규)
+[ ] Validation 타이밍이 상황에 맞게 설정됐는가?
+[ ] 에러 메시지가 인풋 바로 아래 200ms ease-out으로 등장하는가?
+[ ] 키보드가 CTA를 가리지 않는가?
+
+상태 화면 3종
+[ ] 로딩: 스켈레톤 shimmer (실제 콘텐츠 레이아웃과 일치)
+[ ] 빈 상태(Empty): 이모지 + 제목 + 설명 + CTA 버튼
+[ ] 에러: 해요체 메시지 + 재시도 버튼
+
+이징 커브 & 타이밍
+[ ] linear/ease 임의 사용 없이 6종 커브 중 선택했는가?
+[ ] transform/opacity만 애니메이션 (layout thrashing 없음)?
+[ ] will-change가 필요한 곳에만 선택적으로 쓰였는가?
+
+UX 라이팅
+[ ] 모든 텍스트가 해요체인가? ("완료됐어요" 형식)
+[ ] CTA 버튼이 동사형인가? ("확인" → "확인했어요")
+[ ] 에러·빈 상태 메시지가 부드럽고 명확한가?</div></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- FOOTER -->
+  <div class="divider"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-tertiary);">
+    <span>체체(CheChé) Design System · v2.3 · TDS v4 인터랙션 완전 통합 · 2026.04</span>
+    <span>PO: 유진 · 다음 → Figma 컴포넌트 라이브러리</span>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ── 캘린더 동적 셀 높이 — v26 ──────────────────────
+ *  로직:
+ *  1. cal-grid-wrap 의 실제 가용 높이 측정
+ *  2. 주 수(rows) 자동 감지 (총 셀 ÷ 7)
+ *  3. rowH = floor(가용높이 / rows)
+ *  4. CSS 변수 --cal-row-h 에 주입 → grid-auto-rows 반영
+ *  5. 이벤트 있는 셀은 min-height 초과해 자연스럽게 늘어남
+ * ────────────────────────────────────────────────── */
+function calcCalRowHeight() {
+  const wrap = document.getElementById('calGridWrap');
+  const grid = document.getElementById('calGrid');
+  if (!wrap || !grid) return;
+
+  const cells     = grid.querySelectorAll('.cd');
+  const totalCells = cells.length;          // 28 or 35 or 42
+  const rows      = Math.round(totalCells / 7);  // 4, 5, or 6
+
+  const wrapH     = wrap.getBoundingClientRect().height;
+  const rowH      = Math.floor(wrapH / rows);
+  const safeRowH  = Math.max(rowH, 52);     // 최소 52px 보장
+
+  grid.style.setProperty('--cal-row-h', safeRowH + 'px');
+  grid.style.gridAutoRows = safeRowH + 'px';
+}
+
+/* DOM 확정 후 측정 (requestAnimationFrame) */
+function initCalendar() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      calcCalRowHeight();
+    });
+  });
+}
+
+/* 초기화 + 리사이즈 대응 */
+document.addEventListener('DOMContentLoaded', initCalendar);
+window.addEventListener('resize', calcCalRowHeight);
+/* 테마 전환 후에도 재계산 */
+
+
+function copyP(id) {
+  const el = document.getElementById(id);
+  const ks = el.querySelectorAll('.pkey');
+  const bs = el.querySelectorAll('.pblock');
+  let t = '';
+  ks.forEach((k,i) => {
+    t += '[' + k.textContent.trim() + ']\n';
+    if(bs[i]) t += bs[i].textContent.trim() + '\n\n';
+  });
+  navigator.clipboard.writeText(t).then(() => {
+    const btn = el.closest('.pbox').querySelector('.cbtn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ 복사됨';
+    btn.style.background = 'rgba(0,179,134,0.15)';
+    btn.style.color = '#00B386';
+    setTimeout(() => { btn.textContent = orig; btn.style.background=''; btn.style.color=''; }, 2200);
+  });
+}
+function setTheme(m) {
+  document.documentElement.setAttribute('data-theme', m);
+  document.getElementById('lBtn').classList.toggle('on', m==='light');
+  document.getElementById('dBtn').classList.toggle('on', m==='dark');
+  requestAnimationFrame(calcCalRowHeight);
+}
+
+/* ── 토스트 시스템 ── */
+let toastTimer = null;
+function showToast(type) {
+  // 기존 토스트 즉시 제거
+  const existing = document.getElementById('toastEl');
+  if (existing) existing.remove();
+  if (toastTimer) clearTimeout(toastTimer);
+
+  const wrap = document.createElement('div');
+  wrap.id = 'toastEl';
+  wrap.className = 'toast-wrap';
+
+  const isSuccess = type === 'success';
+  wrap.innerHTML = `<div class="toast-comp">
+    <span style="font-size:16px;">${isSuccess ? '✓' : '✕'}</span>
+    <span>${isSuccess ? '상태가 변경됐어요' : '앗, 잠깐 문제가 생겼어요'}</span>
+  </div>`;
+
+  if (!isSuccess) {
+    wrap.querySelector('.toast-comp').style.background = '#2D1B1F';
+    wrap.querySelector('.toast-comp').style.border = '1px solid rgba(232,57,74,0.4)';
+  }
+
+  document.body.appendChild(wrap);
+
+  requestAnimationFrame(() => {
+    wrap.classList.add('is-entering');
+  });
+
+  toastTimer = setTimeout(() => {
+    wrap.classList.remove('is-entering');
+    wrap.classList.add('is-exiting');
+    wrap.addEventListener('animationend', () => wrap.remove(), { once: true });
+  }, 2500);
+}
+
+/* ── 다이얼로그 시스템 ── */
+function showDialog() {
+  let overlay = document.getElementById('dialogOverlay');
+  if (overlay) { overlay.remove(); return; }
+
+  overlay = document.createElement('div');
+  overlay.id = 'dialogOverlay';
+  overlay.className = 'dialog-overlay-comp';
+  overlay.innerHTML = `
+    <div class="dialog-box">
+      <div style="font-size:18px;font-weight:700;margin-bottom:10px;color:var(--text-emphasis);">신청을 취소할까요?</div>
+      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:24px;line-height:1.6;">취소하면 다시 신청해야 해요.<br>정말 취소할게요?</div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="closeDialog()" style="flex:1;height:48px;border-radius:var(--r-md);background:var(--gray-100);border:none;font-size:15px;font-weight:600;cursor:pointer;color:var(--text-primary);">아니요</button>
+        <button onclick="closeDialog()" style="flex:1;height:48px;border-radius:var(--r-md);background:var(--color-error);border:none;font-size:15px;font-weight:600;cursor:pointer;color:#fff;">취소할게요</button>
+      </div>
+    </div>`;
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeDialog();
+  });
+
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add('is-visible'));
+}
+
+function closeDialog() {
+  const overlay = document.getElementById('dialogOverlay');
+  if (!overlay) return;
+  overlay.classList.add('is-closing');
+  overlay.classList.remove('is-visible');
+  setTimeout(() => overlay.remove(), 220);
+}
+</script>
+</body>
+</html>

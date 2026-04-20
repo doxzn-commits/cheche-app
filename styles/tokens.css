@@ -1,0 +1,155 @@
+/* ══════════════════════════════════════
+   DESIGN TOKENS — LIGHT  (체체 TDS v4)
+   출처: ref/체체_앱_최종.html :root 기준
+══════════════════════════════════════ */
+:root, [data-theme="light"] {
+  /* Brand */
+  --brand:         #1C3C82;
+  --brand-dark:    #152D61;
+  --brand-pressed: #0E2048;
+  --brand-mid:     #2750A8;
+  --brand-light:   #E6EBF6;
+  --brand-xlight:  #F0F3FA;
+  --brand-text:    #1C3C82;
+  --brand-shadow:  0 4px 14px rgba(28,60,130,0.28);
+
+  /* Calendar Tab Colors */
+  --tab-red:    #E8394A;   /* 리뷰 마감 */
+  --tab-blue:   #2B7FE8;   /* 선정 발표 (Phase 2) */
+  --tab-yellow: #E8A820;   /* 신청 마감 (Phase 2) */
+
+  /* Surface */
+  --bg-page:       #F2F4F6;
+  --bg-card:       #FFFFFF;
+  --bg-card-inner: #F8F9FB;
+  --bg-input:      #F2F4F6;
+  --bg-chip:       #E8EBED;
+  --bg-overlay:    rgba(25,31,40,0.55);
+
+  /* Border */
+  --border:        rgba(0,0,0,0.06);
+  --border-mid:    rgba(0,0,0,0.10);
+  --border-strong: rgba(0,0,0,0.18);
+
+  /* Text — TDS 명칭 준수 */
+  --text-primary:   #191F28;
+  --text-secondary: #6B7684;
+  --text-muted:     #8B95A1;
+  --text-disabled:  #B0B8C1;
+  --text-inverse:   #FFFFFF;
+
+  /* Shadows */
+  --shadow-xs: 0 1px  4px rgba(0,0,0,0.06);
+  --shadow-sm: 0 2px  8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+
+  /* Status 6-state */
+  --s-applied:      #2B7FE8;  --s-applied-bg:   rgba(43,127,232,0.10);
+  --s-selected:     #00B386;  --s-selected-bg:  rgba(0,179,134,0.10);
+  --s-not-sel:      #8B95A1;  --s-not-sel-bg:   rgba(139,149,161,0.10);
+  --s-completed:    #B0B8C1;  --s-completed-bg: rgba(176,184,193,0.10);
+  --s-deadline:     #E8A820;  --s-deadline-bg:  rgba(232,168,32,0.10);
+  --s-overdue:      #E8394A;  --s-overdue-bg:   rgba(232,57,74,0.10);
+}
+
+/* ══════════════════════════════════════
+   DESIGN TOKENS — DARK
+══════════════════════════════════════ */
+[data-theme="dark"] {
+  --brand:         #4A7AE8;
+  --brand-dark:    #3560CC;
+  --brand-pressed: #2952B3;
+  --brand-mid:     #6494F5;
+  --brand-light:   rgba(74,122,232,0.16);
+  --brand-xlight:  rgba(74,122,232,0.08);
+  --brand-text:    #7AAEFF;
+  --brand-shadow:  0 4px 14px rgba(74,122,232,0.36);
+
+  --tab-red:    #FF5F6D;
+  --tab-blue:   #5B9EFF;
+  --tab-yellow: #FFB84A;
+
+  --bg-page:       #111111;
+  --bg-card:       #1C1C1E;
+  --bg-card-inner: #2C2C2E;
+  --bg-input:      #2C2C2E;
+  --bg-chip:       #3A3A3C;
+  --bg-overlay:    rgba(0,0,0,0.70);
+
+  --border:        rgba(255,255,255,0.06);
+  --border-mid:    rgba(255,255,255,0.10);
+  --border-strong: rgba(255,255,255,0.18);
+
+  --text-primary:   #F2F4F6;
+  --text-secondary: #8B95A1;
+  --text-muted:     #6B7684;
+  --text-disabled:  #4E5968;
+  --text-inverse:   #191F28;
+
+  --shadow-xs: 0 1px  4px rgba(0,0,0,0.35);
+  --shadow-sm: 0 2px  8px rgba(0,0,0,0.42);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.52);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.62);
+
+  --s-applied:      #5B9EFF;  --s-applied-bg:   rgba(91,158,255,0.13);
+  --s-selected:     #34D4AC;  --s-selected-bg:  rgba(52,212,172,0.13);
+  --s-not-sel:      #6B7684;  --s-not-sel-bg:   rgba(107,118,132,0.15);
+  --s-completed:    #8892A0;  --s-completed-bg: rgba(136,146,160,0.13);
+  --s-deadline:     #FFB84A;  --s-deadline-bg:  rgba(255,184,74,0.13);
+  --s-overdue:      #FF5F6D;  --s-overdue-bg:   rgba(255,95,109,0.13);
+}
+
+/* ══════════════════════════════════════
+   SHARED TOKENS — TDS v4 (mode-independent)
+══════════════════════════════════════ */
+:root {
+  /* Border Radius — TDS 기준 */
+  --r-xs:    6px;    /* 인라인 태그·소형 뱃지 */
+  --r-sm:    8px;    /* 소형 인풋·작은 버튼 */
+  --r-md:   14px;    /* 버튼 Primary/Secondary */
+  --r-lg:   18px;    /* 기능 요소 많은 카드 */
+  --r-xl:   22px;    /* 기본 카드 */
+  --r-2xl:  24px;    /* 대형 카드·배너 */
+  --r-sheet:20px;    /* 바텀시트 상단 */
+  --r-full: 9999px;  /* 필 버튼·캡슐 뱃지 */
+
+  /* Fonts */
+  --font-logo: 'Poppins', sans-serif;
+  --font-body: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+               'Apple SD Gothic Neo', sans-serif;
+  --font-mono: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+               'Apple SD Gothic Neo', sans-serif;
+
+  /* Type Scale */
+  --text-display:   30px;
+  --text-heading-1: 24px;
+  --text-heading-2: 20px;
+  --text-heading-3: 18px;
+  --text-body-1:    16px;
+  --text-body-2:    14px;
+  --text-caption:   12px;
+
+  /* Spacing — 8pt Grid */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-7:  28px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --screen-pad: 24px;
+
+  /* Motion */
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-spring-sm: cubic-bezier(0.22, 1.20, 0.36, 1);
+  --ease-out:       cubic-bezier(0.16, 1.00, 0.30, 1);
+  --ease-in:        cubic-bezier(0.70, 0.00, 0.84, 0);
+  --ease-in-out:    cubic-bezier(0.45, 0.00, 0.55, 1);
+  --dur-fast:  110ms;
+  --dur-base:  200ms;
+  --dur-slow:  320ms;
+}
