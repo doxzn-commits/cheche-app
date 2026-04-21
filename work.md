@@ -533,3 +533,17 @@
   - npm run build 성공, TypeScript 에러 없음, Suspense 관련 warning 없음
   - 18개 라우트 전부 컴파일 통과
 - 다음 작업: Vercel 배포 후 DevTools Network·Console 에서 gtm.js 로드 / dataLayer 이벤트 누적 확인, GTM Preview 모드 Tag Assistant 연결 테스트
+
+## 2026-04-21 (8차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - ANALYTICS.md (신규) — 애널리틱스 설정 히스토리 문서
+- 변경 내용:
+  [Analytics 히스토리 문서화]
+  - GTM 컨테이너 ID: GTM-NPWLSPWR
+  - GA4 측정 ID: G-VKGCMP6G39
+  - 설치 구조(next/script afterInteractive, noscript iframe, SPA 추적 컴포넌트)
+  - 자동 수집 / 미설정(추후 추가) 이벤트 범위 명시
+  - 커스텀 이벤트 추가 이력 테이블 (현재 비어있음)
+  - 새 AI 온보딩용 컨텍스트 섹션 (대시보드 관리 원칙 · data-hide 화면 주의)
+- 다음 작업: Vercel 배포 후 GTM Preview 연결 테스트, GA4 실시간 리포트 수신 확인
