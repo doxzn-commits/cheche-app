@@ -34,6 +34,7 @@ const CAL_EVENTS: CalEvent[] = [
 
 // ── Constants ──────────────────────────────────────────
 const CHANNELS = ['블로그', '인스타그램', '유튜브', '클립'] as const;
+const PLATFORMS = ['레뷰', '미블', '리뷰노트', '강남맛집', '서울오빠', '디너의여왕', '티블', '링블', '놀러와'] as const;
 const KO_MONTH = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const DOW_LABELS = ['일','월','화','수','목','금','토'];
 const ACTIVE_TYPES = new Set<string>(['r','g']);
@@ -118,12 +119,16 @@ export default function CalendarPage() {
 
   // 수기 입력 폼 state
   const [manualName, setManualName]           = useState('');
+  const [manualPlatform, setManualPlatform]   = useState('');
   const [manualDeadline, setManualDeadline]   = useState('');
   const [manualExpDate, setManualExpDate]     = useState('');
   const [manualAmount, setManualAmount]       = useState('');
   const [manualLocation, setManualLocation]   = useState('');
   const [manualMemo, setManualMemo]           = useState('');
   const [manualChannels, setManualChannels]   = useState<Set<string>>(new Set());
+
+  // 상세 시트 편집용 채널 state
+  const [editChannels, setEditChannels]       = useState<Set<string>>(new Set());
 
   // 주간 뷰 오프셋 (0 = 현재 주)
   const [weekOffset, setWeekOffset]   = useState(0);
@@ -183,6 +188,8 @@ export default function CalendarPage() {
   function showCalSheet(eventId: string) {
     setEditMode(false);
     setSheetEventId(eventId);
+    const ev = events.find(e => e.id === eventId);
+    setEditChannels(new Set(ev?.channels ?? []));
     setOpenSheet('calSheet');
   }
 
@@ -193,6 +200,7 @@ export default function CalendarPage() {
     setUrlParsed(false);
     setGuidelineText('');
     setManualName('');
+    setManualPlatform('');
     setManualDeadline('');
     setManualExpDate('');
     setManualAmount('');
@@ -320,7 +328,7 @@ export default function CalendarPage() {
 
   // ── 수기 등록 핸들러 ──────────────────────────────────
   function handleAddManual() {
-    if (!manualName.trim() || !manualDeadline) return;
+    if (!manualName.trim() || !manualPlatform || !manualDeadline) return;
     const id = `m${Date.now()}`;
     const ch = manualChannels.size > 0 ? [...manualChannels] : undefined;
     const newEvents: CalEvent[] = [{
@@ -329,7 +337,7 @@ export default function CalendarPage() {
       type: 'r',
       label: '리뷰 마감',
       name: manualName.trim(),
-      plat: '수기',
+      plat: manualPlatform,
       location: manualLocation.trim() || '—',
       dday: calcDday(manualDeadline, todayStr),
       amount: manualAmount.trim() || undefined,
@@ -343,7 +351,7 @@ export default function CalendarPage() {
         type: 'g',
         label: '체험 기간',
         name: manualName.trim(),
-        plat: '수기',
+        plat: manualPlatform,
         location: manualLocation.trim() || '—',
         dday: calcDday(manualExpDate, todayStr),
         amount: manualAmount.trim() || undefined,
@@ -385,7 +393,18 @@ export default function CalendarPage() {
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
                 <button
                   style={{width:32,height:32,background:'var(--bg-chip)',border:'none',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
-                  onClick={() => { alert('삭제하시겠어요?'); closeSheet(); }}
+                  onClick={() => {
+                    if (!sheetEvent) return;
+                    if (!window.confirm(`'${sheetEvent.name}' 일정을 삭제할까요?\n관련된 리뷰 마감·체험 일자가 모두 삭제돼요.`)) return;
+                    const idsToRemove = new Set(sheetAllIds);
+                    setEvents(prev => prev.filter(e => !idsToRemove.has(e.id)));
+                    setDoneSet(prev => {
+                      const next = new Set(prev);
+                      idsToRemove.forEach(id => next.delete(id));
+                      return next;
+                    });
+                    closeSheet();
+                  }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--s-overdue)" strokeWidth="2">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
@@ -430,11 +449,31 @@ export default function CalendarPage() {
                 )}
                 <div style={{display:'flex',alignItems:'center',gap:6}}>
                   <span style={{fontSize:11,fontWeight:700,color:'var(--brand-text)'}}>{sheetEvent.plat}</span>
-                  <span style={{fontSize:11,color:'var(--text-muted)'}}>·</span>
-                  <span style={{fontSize:11,color:sheetEvent.channels?.length?'var(--text-muted)':'var(--text-disabled)'}}>
-                    {sheetEvent.channels?.length ? sheetEvent.channels.join(', ') : '—'}
-                  </span>
+                  {!editMode && (
+                    <>
+                      <span style={{fontSize:11,color:'var(--text-muted)'}}>·</span>
+                      <span style={{fontSize:11,color:sheetEvent.channels?.length?'var(--text-muted)':'var(--text-disabled)'}}>
+                        {sheetEvent.channels?.length ? sheetEvent.channels.join(', ') : '—'}
+                      </span>
+                    </>
+                  )}
                 </div>
+                {editMode && (
+                  <div style={{marginTop:10}}>
+                    <div style={{fontSize:10,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:6}}>채널 <span style={{fontSize:9,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(복수 선택)</span></div>
+                    <div style={{display:'flex',gap:6}}>
+                      {CHANNELS.map(ch => {
+                        const active = editChannels.has(ch);
+                        return (
+                          <div key={ch} onClick={() => setEditChannels(prev => { const n = new Set(prev); n.has(ch) ? n.delete(ch) : n.add(ch); return n; })}
+                            style={{flex:1,height:34,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'var(--r-sm)',border:active?'1.5px solid var(--brand)':'1px solid var(--border-mid)',background:active?'var(--brand-light)':'var(--bg-card)',color:active?'var(--brand-text)':'var(--text-secondary)',fontSize:11,fontWeight:active?700:600,cursor:'pointer',transition:'all 0.15s',userSelect:'none'}}>
+                            {ch}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{height:1,background:'var(--border)',marginBottom:12}} />
@@ -569,7 +608,12 @@ export default function CalendarPage() {
               {/* 편집 모드 저장 버튼 */}
               {editMode && (
                 <div style={{marginBottom:8}}>
-                  <button className="btn btn-primary" onClick={() => setEditMode(false)}
+                  <button className="btn btn-primary" onClick={() => {
+                    const ch = editChannels.size > 0 ? [...editChannels] : undefined;
+                    const ids = new Set(sheetAllIds);
+                    setEvents(prev => prev.map(e => ids.has(e.id) ? { ...e, channels: ch } : e));
+                    setEditMode(false);
+                  }}
                     style={{width:'100%',padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:'var(--brand)',color:'#fff',border:'none',cursor:'pointer',boxShadow:'var(--brand-shadow)'}}>
                     저장하기
                   </button>
@@ -580,11 +624,11 @@ export default function CalendarPage() {
               {!editMode && (
                 <div style={{display:'flex',gap:8}}>
                   <button onClick={closeSheet}
-                    style={{flex:1,padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:'var(--bg-input)',color:'var(--text-primary)',border:'1px solid var(--border-mid)',cursor:'pointer'}}>
+                    style={{flex:1,padding:'13px 14px',borderRadius:'var(--r-md)',fontSize:13,fontWeight:700,background:'var(--bg-input)',color:'var(--text-primary)',border:'1px solid var(--border-mid)',cursor:'pointer',whiteSpace:'nowrap'}}>
                     플랫폼에서 확인하기
                   </button>
                   <button onClick={toggleDone}
-                    style={{flex:1,padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:sheetIsDone?'var(--s-selected)':'var(--brand)',color:'#fff',border:'none',cursor:'pointer',boxShadow:sheetIsDone?'0 4px 14px rgba(0,179,134,0.3)':'var(--brand-shadow)',opacity:sheetIsDone?0.85:1}}>
+                    style={{flex:1,padding:'13px 14px',borderRadius:'var(--r-md)',fontSize:13,fontWeight:700,background:sheetIsDone?'var(--s-selected)':'var(--brand)',color:'#fff',border:'none',cursor:'pointer',boxShadow:sheetIsDone?'0 4px 14px rgba(0,179,134,0.3)':'var(--brand-shadow)',opacity:sheetIsDone?0.85:1,whiteSpace:'nowrap'}}>
                     {sheetIsDone ? '리뷰 등록 완료 ✓' : '리뷰 완료'}
                   </button>
                 </div>
@@ -701,6 +745,18 @@ export default function CalendarPage() {
                   <div style={{marginBottom:16}}>
                     <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>캠페인명 <span style={{color:'var(--s-overdue)'}}>*</span></label>
                     <input value={manualName} onChange={e => setManualName(e.target.value)} placeholder="예) 카페투어 강남점 체험단" style={{width:'100%',padding:'12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:13,color:'var(--text-primary)',background:'var(--bg-input)',outline:'none',height:44,fontFamily:'var(--font-body)',boxSizing:'border-box'}} />
+                  </div>
+
+                  {/* 플랫폼 */}
+                  <div style={{marginBottom:16}}>
+                    <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>플랫폼 <span style={{color:'var(--s-overdue)'}}>*</span></label>
+                    <select value={manualPlatform} onChange={e => setManualPlatform(e.target.value)}
+                      style={{width:'100%',padding:'12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:13,color:manualPlatform?'var(--text-primary)':'var(--text-muted)',background:'var(--bg-input)',outline:'none',height:44,fontFamily:'var(--font-body)',boxSizing:'border-box',appearance:'none',backgroundImage:'url("data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%23999\' stroke-width=\'2\'><polyline points=\'6 9 12 15 18 9\'/></svg>")',backgroundRepeat:'no-repeat',backgroundPosition:'right 14px center',paddingRight:38}}>
+                      <option value="" disabled>플랫폼을 선택해 주세요</option>
+                      {PLATFORMS.map(p => (
+                        <option key={p} value={p} style={{color:'var(--text-primary)'}}>{p}</option>
+                      ))}
+                    </select>
                   </div>
 
                   {/* 채널 */}
@@ -831,7 +887,7 @@ export default function CalendarPage() {
               )}
 
               {/* CTA */}
-              <button onClick={addTab === 'manual' ? handleAddManual : closeSheet} style={{width:'100%',padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:'var(--brand)',color:'#fff',border:'none',cursor:'pointer',boxShadow:'var(--brand-shadow)',marginTop:4,opacity:addTab==='manual'&&(!manualName.trim()||!manualDeadline)?0.5:1}}>
+              <button onClick={addTab === 'manual' ? handleAddManual : closeSheet} style={{width:'100%',padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:'var(--brand)',color:'#fff',border:'none',cursor:'pointer',boxShadow:'var(--brand-shadow)',marginTop:4,opacity:addTab==='manual'&&(!manualName.trim()||!manualPlatform||!manualDeadline)?0.5:1}}>
                 등록할게요
               </button>
             </div>

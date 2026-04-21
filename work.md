@@ -382,6 +382,37 @@
   - 다른 컴퓨터에서 작업 시작 전 git pull 절차 명시
 - 다음 작업: 깃허브 push 후 윈도우 노트북에서 git pull 테스트
 
+## 2026-04-21 (2차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — 캘린더 일정 등록·편집·삭제 UX 개선
+- 변경 내용:
+  [SCR-012B 삭제 기능 실제 동작]
+  - 기존: alert 띄우고 closeSheet만 호출 (이벤트 미삭제)
+  - window.confirm으로 확인 후 sheetAllIds 모두 setEvents에서 filter 제거
+  - doneSet에서도 해당 id 모두 정리 → 캘린더 그리드·필터 모두 즉시 반영
+  [플랫폼에서 확인하기 버튼 폰트 축소]
+  - fontSize:15 → fontSize:13, padding 좌우 22→14, whiteSpace:nowrap 추가
+  - "리뷰 완료" 버튼도 동일하게 통일 (한 줄 표기 보장)
+  [SCR-012B 채널 편집 가능]
+  - editChannels: Set<string> state 추가 → showCalSheet 호출 시 sheetEvent.channels로 초기화
+  - 편집 모드에서 plat 옆 채널 텍스트 숨기고, 헤더 하단에 4개 채널 토글 UI 노출
+  - 저장하기 클릭 시 sheetAllIds 전체 이벤트의 channels 필드 일괄 갱신
+  [수기 입력 폼 — 플랫폼 필드 추가]
+  - PLATFORMS 상수 추가 (레뷰·미블·리뷰노트·강남맛집·서울오빠·디너의여왕·티블·링블·놀러와)
+  - manualPlatform state 추가 → closeSheet 초기화 포함
+  - 캠페인명 아래·채널 위 위치에 select(필수) 필드 신규
+  - 커스텀 SVG chevron 적용 (appearance:none + backgroundImage)
+  [수기 등록 plat 값 변경]
+  - 기존: plat:'수기' 하드코딩
+  - 변경: plat: manualPlatform — 사용자가 선택한 플랫폼 그대로 저장
+  - r·g 두 이벤트 모두 동일 적용
+  - handleAddManual early return 조건에 !manualPlatform 추가
+  - 등록 버튼 opacity 조건도 manualPlatform 검사 포함
+  [TypeScript 검증]
+  - npx tsc --noEmit 에러 없음 확인
+- 다음 작업: 사용자 확인 후 추가 요청 대응
+
 ## 2026-04-20 (2차)
 - 작업자: Claude Code
 - 변경 파일:
