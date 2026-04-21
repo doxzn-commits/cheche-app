@@ -1,13 +1,14 @@
 'use client';
 // SCR-009 마이페이지 — TDS v4 완전 재작성 (ref s009 원본 구조 유지)
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-// 하드코딩 통계 (샘플 데이터)
-const STATS = {
-  upcoming: 3,
-  revenue: '238,000',
-  done: 12,
-};
+type StoredEvent = { id: string; date: string; type: 'r' | 'g'; name: string };
+
+function getTodayStr() {
+  const t = new Date();
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+}
 
 const ChevR = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--text-disabled)', flexShrink: 0 }}>
@@ -50,6 +51,33 @@ function SettingsRow({ icon, iconBg, label, right, onClick }: RowProps) {
 
 export default function MyPage() {
   const router = useRouter();
+  const [upcoming, setUpcoming] = useState(0);
+  const [done, setDone] = useState(0);
+
+  useEffect(() => {
+    function load() {
+      try {
+        const rawE = localStorage.getItem('cheche_events');
+        const rawD = localStorage.getItem('cheche_done_set');
+        const events: StoredEvent[] = rawE ? JSON.parse(rawE) : [];
+        const doneIds: string[] = rawD ? JSON.parse(rawD) : [];
+        const doneIdSet = new Set(doneIds);
+        const today = getTodayStr();
+        // 체험 예정: type='g' 이며 오늘 이후 (D-N) 인 이벤트
+        setUpcoming(events.filter(e => e.type === 'g' && e.date > today).length);
+        // 리뷰 완료: 캘린더에서 '리뷰 완료' 체크한 캠페인 수 (이름 기준 중복 제거)
+        const doneNames = new Set(events.filter(e => doneIdSet.has(e.id)).map(e => e.name));
+        setDone(doneNames.size);
+      } catch {}
+    }
+    load();
+    window.addEventListener('focus', load);
+    window.addEventListener('pageshow', load);
+    return () => {
+      window.removeEventListener('focus', load);
+      window.removeEventListener('pageshow', load);
+    };
+  }, []);
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-page)', overflow: 'hidden' }}>
@@ -117,15 +145,15 @@ export default function MyPage() {
           borderBottom: 'none',
         }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '14px 8px 16px', borderRight: '1px solid rgba(255,255,255,0.12)' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.8px', lineHeight: 1, marginBottom: 5 }}>{STATS.upcoming}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: '-0.8px', lineHeight: 1, marginBottom: 5 }}>{upcoming}</div>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', textAlign: 'center' }}>체험 예정</div>
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '14px 8px 16px', borderRight: '1px solid rgba(255,255,255,0.12)' }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#7AFFD4', letterSpacing: '-0.8px', lineHeight: 1, marginBottom: 5 }}>{STATS.revenue}<span style={{ fontSize: 11 }}>원</span></div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#7AFFD4', letterSpacing: '-0.8px', lineHeight: 1, marginBottom: 5 }}>238,000<span style={{ fontSize: 11 }}>원</span></div>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', textAlign: 'center' }}>이번 달 수익</div>
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '14px 8px 16px' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '-0.8px', lineHeight: 1, marginBottom: 5 }}>{STATS.done}</div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: 'rgba(255,255,255,0.6)', letterSpacing: '-0.8px', lineHeight: 1, marginBottom: 5 }}>{done}</div>
             <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em', textAlign: 'center' }}>리뷰 완료</div>
           </div>
         </div>

@@ -484,3 +484,28 @@
   [TypeScript 검증]
   - npx tsc --noEmit 에러 없음 확인
 - 다음 작업: 사용자 확인 후 추가 요청 대응
+
+## 2026-04-21 (6차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — 헤더 알림·필터 버튼 동작, localStorage 동기화
+  - app/mypage/page.tsx (수정) — 체험 예정/리뷰 완료 통계를 캘린더 데이터 기반으로 계산
+- 변경 내용:
+  [캘린더 헤더 버튼 연결]
+  - 알림(종) 버튼 onClick 추가 → useRouter 로 /mypage/notification-center 이동
+  - 필터(세 줄) 버튼 onClick 추가 → filtersOpen state 토글
+  - filtersOpen=false 이면 필터 칩 전체(전체·리뷰마감·체험일자) 숨김 처리
+  - 활성 상태(열림) 시 버튼 배경 var(--brand-light), 아이콘 색 var(--brand) 로 시각화
+  [캘린더 state localStorage 동기화]
+  - events → 'cheche_events', doneSet → 'cheche_done_set' 키로 저장
+  - mount 시 localStorage 에서 먼저 읽어 state 복원 후 loaded=true 세팅
+  - loaded 이후 events/doneSet 변경마다 writeback (초기 샘플 반복 저장 방지)
+  [마이페이지 통계 동적 계산]
+  - hardcoded STATS 상수 제거, useState(upcoming/done) 로 전환
+  - useEffect: mount·focus·pageshow 시 localStorage 로드
+    · 체험 예정 = events.filter(type==='g' && date > today).length (리뷰마감은 제외)
+    · 리뷰 완료 = events 중 doneSet 에 포함된 것의 name 기준 Set 크기 (r·g 이중 카운트 방지)
+  - 이번 달 수익은 별도 지표이므로 기존 '238,000' 유지 (요청 범위 외)
+  [TypeScript 검증]
+  - npx tsc --noEmit 에러 없음 확인
+- 다음 작업: 사용자 확인 후 추가 요청 대응

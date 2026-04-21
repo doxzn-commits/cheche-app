@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 // ── Types ──────────────────────────────────────────────
 type EventType = 'r' | 'g';
@@ -84,6 +85,7 @@ function LogoMark() {
 
 // ── Main Page ──────────────────────────────────────────
 export default function CalendarPage() {
+  const router = useRouter();
   const todayStr = getTodayStr();
 
   // State
@@ -94,6 +96,29 @@ export default function CalendarPage() {
   const [doneSet, setDoneSet]     = useState<Set<string>>(new Set());
   const [events, setEvents]       = useState<CalEvent[]>(CAL_EVENTS);
   const [viewMode, setViewMode]   = useState<'monthly' | 'weekly'>('monthly');
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [loaded, setLoaded]       = useState(false);
+
+  // localStorage 동기화 — 마이페이지·수익 페이지에서 사용
+  useEffect(() => {
+    try {
+      const rawE = localStorage.getItem('cheche_events');
+      if (rawE) setEvents(JSON.parse(rawE));
+      const rawD = localStorage.getItem('cheche_done_set');
+      if (rawD) setDoneSet(new Set(JSON.parse(rawD)));
+    } catch {}
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try { localStorage.setItem('cheche_events', JSON.stringify(events)); } catch {}
+  }, [events, loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    try { localStorage.setItem('cheche_done_set', JSON.stringify([...doneSet])); } catch {}
+  }, [doneSet, loaded]);
 
   // Grid row height (동적 계산 — HTML 원본 rowH 로직)
   const [rowH, setRowH] = useState(52);
@@ -1008,11 +1033,13 @@ export default function CalendarPage() {
               <span style={{fontFamily:'var(--font-logo)',fontSize:17,fontWeight:800,letterSpacing:'-0.3px',color:'var(--brand)'}}>cheche</span>
             </div>
             <div style={{display:'flex',gap:6}}>
-              <button style={{width:36,height:36,borderRadius:'50%',border:'none',background:'var(--bg-input)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}}>
+              <button onClick={() => router.push('/mypage/notification-center')}
+                style={{width:36,height:36,borderRadius:'50%',border:'none',background:'var(--bg-input)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',position:'relative'}}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="18" height="18"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
                 <span style={{position:'absolute',top:6,right:6,width:7,height:7,background:'var(--s-overdue)',borderRadius:'50%',border:'1.5px solid var(--bg-card)'}} />
               </button>
-              <button style={{width:36,height:36,borderRadius:'50%',border:'none',background:'var(--bg-input)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>
+              <button onClick={() => setFiltersOpen(o => !o)}
+                style={{width:36,height:36,borderRadius:'50%',border:'none',background:filtersOpen?'var(--brand-light)':'var(--bg-input)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',color:filtersOpen?'var(--brand)':'var(--text-secondary)'}}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="18" height="18"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
               </button>
             </div>
@@ -1029,18 +1056,20 @@ export default function CalendarPage() {
           </div>
 
           {/* 필터 칩 */}
-          <div style={{display:'flex',gap:5,padding:'2px 14px 6px',overflowX:'auto',scrollbarWidth:'none',flexShrink:0}}>
-            {([['all','전체'], ['r','리뷰마감'], ['g','체험일자']] as [string, string][]).map(([type, label]) => (
-              <button key={type}
-                onClick={() => { setCalFilter(type as 'all'|EventType); setSelDate(null); }}
-                style={{fontSize:11,fontWeight:600,padding:'5px 11px',borderRadius:'var(--r-full)',border:`1px solid ${calFilter===type?'var(--brand)':'var(--border-mid)'}`,background:calFilter===type?'var(--brand-light)':'var(--bg-card)',color:calFilter===type?'var(--brand-text)':'var(--text-secondary)',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,display:'inline-flex',alignItems:'center',gap:4,fontFamily:'var(--font-body)'}}>
-                {type === 'r' && <span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'var(--tab-red)'}} />}
-                {type === 'g' && <span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'var(--s-selected)'}} />}
-                {label}
-              </button>
-            ))}
-            {/* 선정발표(b) · 신청마감(y) — Phase 2, data-hide */}
-          </div>
+          {filtersOpen && (
+            <div style={{display:'flex',gap:5,padding:'2px 14px 6px',overflowX:'auto',scrollbarWidth:'none',flexShrink:0}}>
+              {([['all','전체'], ['r','리뷰마감'], ['g','체험일자']] as [string, string][]).map(([type, label]) => (
+                <button key={type}
+                  onClick={() => { setCalFilter(type as 'all'|EventType); setSelDate(null); }}
+                  style={{fontSize:11,fontWeight:600,padding:'5px 11px',borderRadius:'var(--r-full)',border:`1px solid ${calFilter===type?'var(--brand)':'var(--border-mid)'}`,background:calFilter===type?'var(--brand-light)':'var(--bg-card)',color:calFilter===type?'var(--brand-text)':'var(--text-secondary)',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,display:'inline-flex',alignItems:'center',gap:4,fontFamily:'var(--font-body)'}}>
+                  {type === 'r' && <span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'var(--tab-red)'}} />}
+                  {type === 'g' && <span style={{display:'inline-block',width:7,height:7,borderRadius:'50%',background:'var(--s-selected)'}} />}
+                  {label}
+                </button>
+              ))}
+              {/* 선정발표(b) · 신청마감(y) — Phase 2, data-hide */}
+            </div>
+          )}
 
           {/* 요일 헤더 */}
           <div style={{display:'grid',gridTemplateColumns:'repeat(7,minmax(0,1fr))',borderTop:'1px solid var(--border)',borderBottom:'1px solid var(--border)',padding:'4px 0',flexShrink:0}}>
