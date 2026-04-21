@@ -509,3 +509,27 @@
   [TypeScript 검증]
   - npx tsc --noEmit 에러 없음 확인
 - 다음 작업: 사용자 확인 후 추가 요청 대응
+
+## 2026-04-21 (7차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - components/analytics/GTMPageView.tsx (신규) — SPA 라우트 변경 시 dataLayer page_view 이벤트 push
+  - app/layout.tsx (수정) — GTM 메인 스크립트 + noscript iframe + GTMPageView 마운트
+- 변경 내용:
+  [GTM 컨테이너 설치]
+  - Container ID: GTM-NPWLSPWR
+  - next/script 의 Script 컴포넌트로 strategy="afterInteractive" GTM 부트스트랩 스니펫 로드
+  - body 최상단에 noscript iframe(fallback) 배치
+  [SPA 페이지뷰 추적]
+  - usePathname + useSearchParams 로 App Router 라우트 변경 감지
+  - 변경마다 window.dataLayer.push({event:'page_view', page_path, page_location, page_title})
+  - useSearchParams Suspense 경계 필수 → GTMPageViewInner 를 Suspense 로 감싼 래퍼 export
+  - declare global 로 window.dataLayer 타입 선언
+  [기존 layout 구조 유지]
+  - metadata/font/BottomNav/max-width 393 컨테이너 등 기존 구조 완전 보존
+  - <head> 가 없던 기존 구조에 <head> 신규 추가 후 GTM Script 삽입
+  - @/components/analytics/GTMPageView alias 적용 (tsconfig paths "@/*": ["./*"])
+  [빌드 검증]
+  - npm run build 성공, TypeScript 에러 없음, Suspense 관련 warning 없음
+  - 18개 라우트 전부 컴파일 통과
+- 다음 작업: Vercel 배포 후 DevTools Network·Console 에서 gtm.js 로드 / dataLayer 이벤트 누적 확인, GTM Preview 모드 Tag Assistant 연결 테스트
