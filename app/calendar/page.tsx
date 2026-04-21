@@ -25,7 +25,7 @@ interface CalEvent {
    y(신청마감) · b(선정발표) → data-hide Phase 1 제외 */
 const CAL_EVENTS: CalEvent[] = [
   {id:'e2',date:'2026-04-09',type:'r',label:'리뷰 마감',name:'카페투어 강남점 체험',plat:'레뷰',location:'서울 강남구',dday:'D-3',amount:'28,000',guideline:'음료 2잔 + 디저트 1개 무료 제공\n#체체 #카페투어 해시태그 필수\n포스팅 후 URL 제출'},
-  {id:'e3',date:'2026-04-12',type:'g',label:'체험 기간',name:'한강뷰 호텔 숙박 체험',plat:'미블',location:'서울 영등포구',dday:'+2'},
+  {id:'e3',date:'2026-04-12',type:'g',label:'체험 기간',name:'한강뷰 호텔 숙박 체험',plat:'미블',location:'서울 영등포구',dday:'D+2'},
   {id:'e4',date:'2026-04-14',type:'r',label:'리뷰 마감',name:'뷰티 파우더 체험단',plat:'레뷰',location:'전국',dday:'D-1'},
   {id:'e5',date:'2026-04-20',type:'g',label:'체험 기간',name:'강남 피부과 시술 체험',plat:'레뷰',location:'서울 강남구',dday:'D-13'},
   {id:'e7',date:'2026-04-25',type:'r',label:'리뷰 마감',name:'한강뷰 호텔 숙박',plat:'미블',location:'서울 영등포구',dday:'D-18'},
@@ -63,7 +63,7 @@ function calcDday(dateStr: string, todayS: string): string {
   if (!dateStr) return '';
   const diff = Math.round((new Date(dateStr).getTime() - new Date(todayS).getTime()) / 86400000);
   if (diff === 0) return 'D-DAY';
-  return diff > 0 ? `D-${diff}` : `+${Math.abs(diff)}`;
+  return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
 }
 
 // ── LogoMark SVG (재사용) ──────────────────────────────
@@ -127,8 +127,14 @@ export default function CalendarPage() {
   const [manualMemo, setManualMemo]           = useState('');
   const [manualChannels, setManualChannels]   = useState<Set<string>>(new Set());
 
-  // 상세 시트 편집용 채널 state
+  // 상세 시트 편집용 state
   const [editChannels, setEditChannels]       = useState<Set<string>>(new Set());
+  const [editName, setEditName]               = useState('');
+  const [editLocation, setEditLocation]       = useState('');
+  const [editAmount, setEditAmount]           = useState('');
+  const [editGuideline, setEditGuideline]     = useState('');
+  const [editDeadlineDate, setEditDeadlineDate] = useState('');
+  const [editExpDate, setEditExpDate]         = useState('');
 
   // 주간 뷰 오프셋 (0 = 현재 주)
   const [weekOffset, setWeekOffset]   = useState(0);
@@ -209,6 +215,13 @@ export default function CalendarPage() {
     setManualChannels(new Set());
     setResToggle('예정');
     setWkndToggle(null);
+    setEditChannels(new Set());
+    setEditName('');
+    setEditLocation('');
+    setEditAmount('');
+    setEditGuideline('');
+    setEditDeadlineDate('');
+    setEditExpDate('');
   }
 
   // ── 슬라이드 네비 ─────────────────────────────────────
@@ -360,11 +373,103 @@ export default function CalendarPage() {
       });
     }
     setEvents(prev => [...prev, ...newEvents]);
+
+    // 수익 페이지 연동: 금액이 있으면 localStorage 에 수익 항목 추가
+    const amountNum = parseInt((manualAmount || '').replace(/[^0-9]/g, '')) || 0;
+    if (amountNum > 0) {
+      const firstCh = manualChannels.size > 0 ? [...manualChannels][0] : '블로그';
+      const chAlias: Record<string, string> = { '인스타그램': '인스타', '클립': '블로그 클립' };
+      const rev = {
+        linkId: id,
+        name: manualName.trim(),
+        plat: manualPlatform,
+        channel: chAlias[firstCh] ?? firstCh,
+        date: manualExpDate || manualDeadline,
+        goods: amountNum,
+        ad: 0,
+        emoji: '📝',
+      };
+      try {
+        const raw = localStorage.getItem('cheche_user_revenues');
+        const arr = raw ? JSON.parse(raw) : [];
+        arr.push(rev);
+        localStorage.setItem('cheche_user_revenues', JSON.stringify(arr));
+      } catch {}
+    }
+
     const dateObj = new Date(manualDeadline);
     setYear(dateObj.getFullYear());
     setMonth(dateObj.getMonth());
     setSelDate(manualDeadline);
     closeSheet();
+  }
+
+  // ── 상세 시트 편집 진입 ────────────────────────────────
+  function enterEditMode() {
+    if (!sheetEvent) return;
+    setEditName(sheetEvent.name);
+    setEditLocation(sheetEvent.location);
+    setEditAmount(sheetEvent.amount ?? '');
+    setEditGuideline(sheetEvent.guideline ?? '');
+    setEditDeadlineDate(sheetDeadlineEv?.date ?? '');
+    setEditExpDate(sheetExpEv?.date ?? '');
+    setEditChannels(new Set(sheetEvent.channels ?? []));
+    setEditMode(true);
+  }
+
+  // ── 상세 시트 편집 저장 ────────────────────────────────
+  function handleSaveEdit() {
+    if (!sheetEvent) return;
+    const ch = editChannels.size > 0 ? [...editChannels] : undefined;
+    const ids = new Set(sheetAllIds);
+    const nameTrim = editName.trim() || sheetEvent.name;
+    const locTrim  = editLocation.trim() || '—';
+    const amtTrim  = editAmount.trim() || undefined;
+    const gdTrim   = editGuideline.trim() || undefined;
+
+    const rebuilt: CalEvent[] = [];
+    if (editDeadlineDate) {
+      rebuilt.push({
+        id: sheetDeadlineEv?.id ?? `r${Date.now()}`,
+        date: editDeadlineDate,
+        type: 'r',
+        label: '리뷰 마감',
+        name: nameTrim,
+        plat: sheetEvent.plat,
+        location: locTrim,
+        dday: calcDday(editDeadlineDate, todayStr),
+        amount: amtTrim,
+        guideline: gdTrim,
+        channels: ch,
+      });
+    }
+    if (editExpDate) {
+      rebuilt.push({
+        id: sheetExpEv?.id ?? `g${Date.now()}`,
+        date: editExpDate,
+        type: 'g',
+        label: '체험 기간',
+        name: nameTrim,
+        plat: sheetEvent.plat,
+        location: locTrim,
+        dday: calcDday(editExpDate, todayStr),
+        amount: amtTrim,
+        guideline: gdTrim,
+        channels: ch,
+      });
+    }
+
+    setEvents(prev => [...prev.filter(e => !ids.has(e.id)), ...rebuilt]);
+
+    // 현재 시트가 가리키던 이벤트가 사라진 경우 포인터 갱신
+    if (rebuilt.length === 0) {
+      setOpenSheet(null);
+    } else {
+      const sameType = rebuilt.find(e => e.type === sheetEvent.type);
+      setSheetEventId((sameType ?? rebuilt[0]).id);
+    }
+
+    setEditMode(false);
   }
 
   // ─────────────────────────────────────────────────────
@@ -412,7 +517,7 @@ export default function CalendarPage() {
                 </button>
                 <button
                   style={{display:'flex',alignItems:'center',gap:5,background:editMode?'var(--brand-light)':'var(--bg-chip)',border:editMode?'1.5px solid var(--brand)':'none',borderRadius:'var(--r-full)',padding:'6px 14px',cursor:'pointer',fontSize:12,fontWeight:700,color:'var(--brand-text)',fontFamily:'var(--font-body)'}}
-                  onClick={() => setEditMode(m => !m)}
+                  onClick={() => editMode ? setEditMode(false) : enterEditMode()}
                 >
                   {editMode ? (
                     <>
@@ -445,7 +550,7 @@ export default function CalendarPage() {
                 {!editMode ? (
                   <div style={{fontSize:17,fontWeight:800,color:'var(--text-primary)',letterSpacing:'-0.4px',marginBottom:3}}>{sheetEvent.name}</div>
                 ) : (
-                  <input defaultValue={sheetEvent.name} style={{width:'100%',padding:'6px 10px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,fontFamily:'var(--font-body)',background:'var(--bg-input)',color:'var(--text-primary)',outline:'none',marginBottom:3}} />
+                  <input value={editName} onChange={e => setEditName(e.target.value)} style={{width:'100%',padding:'6px 10px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,fontFamily:'var(--font-body)',background:'var(--bg-input)',color:'var(--text-primary)',outline:'none',marginBottom:3}} />
                 )}
                 <div style={{display:'flex',alignItems:'center',gap:6}}>
                   <span style={{fontSize:11,fontWeight:700,color:'var(--brand-text)'}}>{sheetEvent.plat}</span>
@@ -490,7 +595,7 @@ export default function CalendarPage() {
                       {sheetDeadlineEv && <span style={{fontSize:10,fontWeight:700,color:'var(--s-overdue)',fontFamily:'var(--font-mono)',background:'var(--s-overdue-bg)',padding:'2px 6px',borderRadius:'var(--r-full)'}}>{calcDday(sheetDeadlineEv.date, todayStr)}</span>}
                     </div>
                   ) : (
-                    <input type="date" defaultValue={sheetDeadlineEv?.date ?? ''} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-body)',outline:'none',width:140}} />
+                    <input type="date" value={editDeadlineDate} onChange={e => setEditDeadlineDate(e.target.value)} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-body)',outline:'none',width:140}} />
                   )}
                 </div>
                 {/* 체험일자 */}
@@ -502,7 +607,7 @@ export default function CalendarPage() {
                       {sheetExpEv && <span style={{fontSize:10,fontWeight:700,color:'var(--s-selected)',fontFamily:'var(--font-mono)',background:'var(--s-selected-bg)',padding:'2px 6px',borderRadius:'var(--r-full)'}}>{calcDday(sheetExpEv.date, todayStr)}</span>}
                     </div>
                   ) : (
-                    <input type="date" defaultValue={sheetExpEv?.date ?? ''} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-body)',outline:'none',width:140}} />
+                    <input type="date" value={editExpDate} onChange={e => setEditExpDate(e.target.value)} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-body)',outline:'none',width:140}} />
                   )}
                 </div>
                 {/* 위치 */}
@@ -511,7 +616,7 @@ export default function CalendarPage() {
                   {!editMode ? (
                     <span style={{fontSize:12,fontWeight:600,color:'var(--text-primary)'}}>{sheetEvent.location}</span>
                   ) : (
-                    <input defaultValue={sheetEvent.location} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-body)',outline:'none',width:140}} />
+                    <input value={editLocation} onChange={e => setEditLocation(e.target.value)} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-body)',outline:'none',width:140}} />
                   )}
                 </div>
               </div>
@@ -540,7 +645,7 @@ export default function CalendarPage() {
                     )
                   ) : (
                     <div style={{display:'flex',alignItems:'center',gap:4}}>
-                      <input type="text" inputMode="numeric" defaultValue={sheetEvent?.amount ?? ''} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-mono)',outline:'none',width:100,textAlign:'right'}} />
+                      <input type="text" inputMode="numeric" value={editAmount} onChange={e => setEditAmount(e.target.value)} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-mono)',outline:'none',width:100,textAlign:'right'}} />
                       <span style={{fontSize:12,color:'var(--text-muted)'}}>원</span>
                     </div>
                   )}
@@ -597,7 +702,7 @@ export default function CalendarPage() {
                   {sheetEvent?.guideline || '—'}
                 </div>
               ) : (
-                <textarea rows={3} defaultValue={sheetEvent?.guideline ?? ''} style={{width:'100%',padding:'11px 12px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:12,color:'var(--text-primary)',background:'var(--bg-input)',fontFamily:'var(--font-body)',outline:'none',resize:'none',lineHeight:1.7,marginBottom:14}} />
+                <textarea rows={3} value={editGuideline} onChange={e => setEditGuideline(e.target.value)} style={{width:'100%',padding:'11px 12px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:12,color:'var(--text-primary)',background:'var(--bg-input)',fontFamily:'var(--font-body)',outline:'none',resize:'none',lineHeight:1.7,marginBottom:14}} />
               )}
 
               {/* 메모 — 항상 즉시 편집 (F-12) */}
@@ -608,12 +713,7 @@ export default function CalendarPage() {
               {/* 편집 모드 저장 버튼 */}
               {editMode && (
                 <div style={{marginBottom:8}}>
-                  <button className="btn btn-primary" onClick={() => {
-                    const ch = editChannels.size > 0 ? [...editChannels] : undefined;
-                    const ids = new Set(sheetAllIds);
-                    setEvents(prev => prev.map(e => ids.has(e.id) ? { ...e, channels: ch } : e));
-                    setEditMode(false);
-                  }}
+                  <button className="btn btn-primary" onClick={handleSaveEdit}
                     style={{width:'100%',padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:'var(--brand)',color:'#fff',border:'none',cursor:'pointer',boxShadow:'var(--brand-shadow)'}}>
                     저장하기
                   </button>

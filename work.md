@@ -456,3 +456,31 @@
   [TypeScript 검증]
   - npx tsc --noEmit 에러 없음 확인
 - 다음 작업: 사용자 확인 후 추가 요청 대응
+
+## 2026-04-21 (5차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — 편집 저장 반영 로직 보강, D+N 표기 포맷, handleAddManual 수익 연동
+  - app/revenue/page.tsx (수정) — localStorage 수익 항목 머지
+- 변경 내용:
+  [calcDday D+N 포맷]
+  - 과거 날짜 표기: `+N` → `D+N` 통일 (뱃지·리스트·시트 전반)
+  - 샘플 이벤트 e3 dday 'D+2' 로 정리
+  [편집 저장 반영]
+  - editName·editLocation·editAmount·editGuideline·editDeadlineDate·editExpDate state 신규
+  - enterEditMode(): 편집 진입 시 sheetEvent/sheetDeadlineEv/sheetExpEv 로부터 각 state 초기화
+  - 편집 버튼 onClick: editMode 토글 시 enterEditMode 호출
+  - 캠페인명·리뷰 마감일·체험일자·위치·협찬 금액·가이드라인 input/textarea 전부 controlled 로 전환
+  - handleSaveEdit(): sheetAllIds 제거 후 editDeadlineDate/editExpDate 값 기반으로 r·g 이벤트 재구성
+    · 기존 id 보존, 신규(체험일자 추가 케이스) 는 g{Date.now()} 로 생성
+    · 저장 후 sheetEventId 를 동일 type 이벤트 또는 첫 이벤트로 재지정, 둘 다 없으면 시트 닫기
+  - closeSheet 에 모든 edit state reset 포함
+  [수익 페이지 연동]
+  - handleAddManual: manualAmount 숫자 파싱 후 0보다 크면 localStorage('cheche_user_revenues') 에 RevItem 형태로 push
+    · 채널 alias: 인스타그램→인스타, 클립→블로그 클립 (revenue CHANNEL_COLOR 매칭)
+    · 날짜는 manualExpDate 우선, 없으면 manualDeadline
+    · emoji 기본값 📝, ad 0
+  - revenue/page.tsx: mount 시 localStorage 로부터 userRevs state 복원 → ALL_REVS 와 머지하여 filtered/cumul/prevTotal 산출
+  [TypeScript 검증]
+  - npx tsc --noEmit 에러 없음 확인
+- 다음 작업: 사용자 확인 후 추가 요청 대응

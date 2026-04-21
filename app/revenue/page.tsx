@@ -82,19 +82,29 @@ export default function RevenuePage() {
   const [addOpen, setAddOpen] = useState(false);
   const [addName, setAddName] = useState('');
   const [addGoods, setAddGoods] = useState('');
+  const [userRevs, setUserRevs] = useState<RevItem[]>([]);
 
+  // 캘린더에서 등록된 수익 항목을 localStorage 에서 로드
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('cheche_user_revenues');
+      if (raw) setUserRevs(JSON.parse(raw));
+    } catch {}
+  }, []);
+
+  const allRevs = [...ALL_REVS, ...userRevs];
   const mth = TAB_MONTH[tab];
-  const filtered = mth ? ALL_REVS.filter(r => r.date.startsWith(mth)) : ALL_REVS;
+  const filtered = mth ? allRevs.filter(r => r.date.startsWith(mth)) : allRevs;
 
   const total  = filtered.reduce((s, r) => s + r.goods + r.ad, 0);
   const goods  = filtered.reduce((s, r) => s + r.goods, 0);
   const ad     = filtered.reduce((s, r) => s + r.ad, 0);
   const count  = filtered.length;
   const avg    = count ? Math.round(total / count) : 0;
-  const cumul  = ALL_REVS.reduce((s, r) => s + r.goods + r.ad, 0);
+  const cumul  = allRevs.reduce((s, r) => s + r.goods + r.ad, 0);
 
   // 전월 대비 (이번 달 탭에서만 표시)
-  const prevTotal = ALL_REVS.filter(r => r.date.startsWith('2026-03')).reduce((s, r) => s + r.goods + r.ad, 0);
+  const prevTotal = allRevs.filter(r => r.date.startsWith('2026-03')).reduce((s, r) => s + r.goods + r.ad, 0);
   const diff = tab === 'current' ? total - prevTotal : null;
 
   // 채널별 분포
