@@ -382,6 +382,36 @@
   - 다른 컴퓨터에서 작업 시작 전 git pull 절차 명시
 - 다음 작업: 깃허브 push 후 윈도우 노트북에서 git pull 테스트
 
+## 2026-04-20 (2차)
+- 작업자: Claude Code
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — SCR-012B 상세 시트 D-day 동적 계산
+- 변경 내용:
+  [sheetRelated 파생값 추가]
+  - sheetRelated: 같은 캠페인명(name)을 가진 모든 이벤트 배열
+  - sheetDeadlineEv: sheetRelated 중 type:'r' 이벤트 (리뷰마감)
+  - sheetExpEv: sheetRelated 중 type:'g' 이벤트 (체험기간)
+  - sheetAllIds를 sheetRelated 기반으로 단순화
+  [헤더 D-day 뱃지 동적 계산]
+  - 기존 {sheetEvent.dday} 정적값 → calcDday(sheetEvent.date, todayStr) 동적 계산
+  - 오늘 기준 실시간 D-N / D-DAY / D+N 표시
+  [일정 정보 > 리뷰 마감일]
+  - sheetDeadlineEv?.date 로 실제 마감일 날짜 표시 (없으면 '—')
+  - D-day 뱃지: calcDday(sheetDeadlineEv.date, todayStr) 동적 계산
+  - 편집 모드 input defaultValue: sheetDeadlineEv?.date ?? ''
+  [일정 정보 > 체험일자]
+  - 하드코딩 '2026-04-15' / 'D+6' 완전 제거
+  - sheetExpEv?.date 로 실제 체험일자 표시 (없으면 '—')
+  - D-day 뱃지: calcDday(sheetExpEv.date, todayStr) 동적 계산
+  - 편집 모드 input defaultValue: sheetExpEv?.date ?? ''
+  [기준 / 표기 룰]
+  - 리뷰 마감 (type:'r'): 미래 → D-N, 당일 → D-DAY, 지남 → D+N
+  - 체험 기간 (type:'g'): 미래 → D-N, 당일 → D-DAY, 지남 → D+N (동일 공식)
+  - 예) 오늘 4/20, 체험일 4/18 → D+2 / 오늘 4/20, 마감일 4/27 → D-7
+  [TypeScript 검증]
+  - npx tsc --noEmit 에러 없음 확인
+- 다음 작업: 미구현 화면 점검 및 마무리
+
 ## 2026-04-21 (2차)
 - 작업자: 도유진 - 윈도우
 - 변경 파일:
@@ -412,33 +442,3 @@
   [TypeScript 검증]
   - npx tsc --noEmit 에러 없음 확인
 - 다음 작업: 사용자 확인 후 추가 요청 대응
-
-## 2026-04-20 (2차)
-- 작업자: Claude Code
-- 변경 파일:
-  - app/calendar/page.tsx (수정) — SCR-012B 상세 시트 D-day 동적 계산
-- 변경 내용:
-  [sheetRelated 파생값 추가]
-  - sheetRelated: 같은 캠페인명(name)을 가진 모든 이벤트 배열
-  - sheetDeadlineEv: sheetRelated 중 type:'r' 이벤트 (리뷰마감)
-  - sheetExpEv: sheetRelated 중 type:'g' 이벤트 (체험기간)
-  - sheetAllIds를 sheetRelated 기반으로 단순화
-  [헤더 D-day 뱃지 동적 계산]
-  - 기존 {sheetEvent.dday} 정적값 → calcDday(sheetEvent.date, todayStr) 동적 계산
-  - 오늘 기준 실시간 D-N / D-DAY / D+N 표시
-  [일정 정보 > 리뷰 마감일]
-  - sheetDeadlineEv?.date 로 실제 마감일 날짜 표시 (없으면 '—')
-  - D-day 뱃지: calcDday(sheetDeadlineEv.date, todayStr) 동적 계산
-  - 편집 모드 input defaultValue: sheetDeadlineEv?.date ?? ''
-  [일정 정보 > 체험일자]
-  - 하드코딩 '2026-04-15' / 'D+6' 완전 제거
-  - sheetExpEv?.date 로 실제 체험일자 표시 (없으면 '—')
-  - D-day 뱃지: calcDday(sheetExpEv.date, todayStr) 동적 계산
-  - 편집 모드 input defaultValue: sheetExpEv?.date ?? ''
-  [기준 / 표기 룰]
-  - 리뷰 마감 (type:'r'): 미래 → D-N, 당일 → D-DAY, 지남 → D+N
-  - 체험 기간 (type:'g'): 미래 → D-N, 당일 → D-DAY, 지남 → D+N (동일 공식)
-  - 예) 오늘 4/20, 체험일 4/18 → D+2 / 오늘 4/20, 마감일 4/27 → D-7
-  [TypeScript 검증]
-  - npx tsc --noEmit 에러 없음 확인
-- 다음 작업: 미구현 화면 점검 및 마무리
