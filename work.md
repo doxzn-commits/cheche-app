@@ -442,3 +442,17 @@
   [TypeScript 검증]
   - npx tsc --noEmit 에러 없음 확인
 - 다음 작업: 사용자 확인 후 추가 요청 대응
+
+## 2026-04-21 (4차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - app/page.tsx (수정) — 루트 경로 진입 시 /calendar 로 redirect
+- 변경 내용:
+  [루트 진입 동작 변경]
+  - 기존: <h1>홈 (탐색) SCR-004</h1> placeholder 표시
+  - 변경: next/navigation redirect()로 /calendar 강제 이동
+  - Vercel 배포 https://cheche-app.vercel.app/ 진입 시 캘린더(메인 랜딩) 즉시 노출
+  - server component 패턴 사용 (use client 불필요)
+  [TypeScript 검증]
+  - npx tsc --noEmit 에러 없음 확인
+- 다음 작업: 사용자 확인 후 추가 요청 대응
