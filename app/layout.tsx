@@ -3,6 +3,7 @@ import Script from "next/script";
 import "../styles/globals.css";
 import BottomNav from "@/components/layout/BottomNav";
 import GTMPageView from "@/components/analytics/GTMPageView";
+import AuthSessionProvider from "@/components/providers/AuthSessionProvider";
 
 export const metadata: Metadata = {
   title: "체체 (CheChé)",
@@ -41,22 +42,24 @@ export default function RootLayout({
 
         <GTMPageView />
 
-        <div
-          style={{
-            maxWidth: "393px",
-            margin: "0 auto",
-            height: "100dvh",
-            background: "var(--bg-card)",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          <div style={{ flex: 1, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
-            {children}
+        <AuthSessionProvider>
+          <div
+            style={{
+              maxWidth: "393px",
+              margin: "0 auto",
+              height: "100dvh",
+              background: "var(--bg-card)",
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+            }}
+          >
+            <div style={{ flex: 1, overflow: "hidden", position: "relative", display: "flex", flexDirection: "column" }}>
+              {children}
+            </div>
+            <BottomNav />
           </div>
-          <BottomNav />
-        </div>
+        </AuthSessionProvider>
       </body>
     </html>
   );

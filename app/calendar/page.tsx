@@ -21,17 +21,12 @@ interface CalEvent {
   channels?: string[];
 }
 
-// ── Sample Data (ref/체체_앱_최종.html CAL_EVENTS 그대로) ───
-/* Phase 1 활성 타입: r(리뷰마감) · g(체험기간) 만 포함
-   y(신청마감) · b(선정발표) → data-hide Phase 1 제외 */
-const CAL_EVENTS: CalEvent[] = [
-  {id:'e2',date:'2026-04-09',type:'r',label:'리뷰 마감',name:'카페투어 강남점 체험',plat:'레뷰',location:'서울 강남구',dday:'D-3',amount:'28,000',guideline:'음료 2잔 + 디저트 1개 무료 제공\n#체체 #카페투어 해시태그 필수\n포스팅 후 URL 제출'},
-  {id:'e3',date:'2026-04-12',type:'g',label:'체험 기간',name:'한강뷰 호텔 숙박 체험',plat:'미블',location:'서울 영등포구',dday:'D+2'},
-  {id:'e4',date:'2026-04-14',type:'r',label:'리뷰 마감',name:'뷰티 파우더 체험단',plat:'레뷰',location:'전국',dday:'D-1'},
-  {id:'e5',date:'2026-04-20',type:'g',label:'체험 기간',name:'강남 피부과 시술 체험',plat:'레뷰',location:'서울 강남구',dday:'D-13'},
-  {id:'e7',date:'2026-04-25',type:'r',label:'리뷰 마감',name:'한강뷰 호텔 숙박',plat:'미블',location:'서울 영등포구',dday:'D-18'},
-  {id:'e8',date:'2026-04-25',type:'g',label:'체험 기간',name:'패션 여름 신상 체험',plat:'레뷰',location:'전국',dday:'D-18'},
-];
+// ── 샘플 시드 데이터는 제거 — 유저별 /api/events API 로만 소유 데이터 로드 ─────
+// Phase 1 활성 타입: r(리뷰마감) · g(체험기간) 만 허용
+// y(신청마감) · b(선정발표) → data-hide Phase 1 제외
+
+// 서버에서 내려오는 raw Event 필드(dday·label 누락 가능) → CalEvent 로 hydrate.
+const LABEL_MAP: Record<string, string> = { r: '리뷰 마감', g: '체험 기간' };
 
 // ── Constants ──────────────────────────────────────────
 const CHANNELS = ['블로그', '인스타그램', '유튜브', '클립'] as const;
@@ -94,31 +89,51 @@ export default function CalendarPage() {
   const [calFilter, setCalFilter] = useState<'all' | EventType>('all');
   const [selDate, setSelDate]     = useState<string | null>(null);
   const [doneSet, setDoneSet]     = useState<Set<string>>(new Set());
-  const [events, setEvents]       = useState<CalEvent[]>(CAL_EVENTS);
+  const [events, setEvents]       = useState<CalEvent[]>([]);
   const [viewMode, setViewMode]   = useState<'monthly' | 'weekly'>('monthly');
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [loaded, setLoaded]       = useState(false);
 
-  // localStorage 동기화 — 마이페이지·수익 페이지에서 사용
-  useEffect(() => {
+  // /api/events — 현재 세션 유저가 소유한 이벤트만 반환 (userId 격리).
+  // dday·label 은 서버에 저장하지 않고 클라이언트에서 hydrate.
+  async function refreshEvents(): Promise<void> {
     try {
-      const rawE = localStorage.getItem('cheche_events');
-      if (rawE) setEvents(JSON.parse(rawE));
-      const rawD = localStorage.getItem('cheche_done_set');
-      if (rawD) setDoneSet(new Set(JSON.parse(rawD)));
-    } catch {}
-    setLoaded(true);
+      const res = await fetch('/api/events', { cache: 'no-store' });
+      if (!res.ok) {
+        setEvents([]);
+        setDoneSet(new Set());
+        return;
+      }
+      const raw: Array<{ id: string; date: string; type: string; label?: string; name: string; plat: string; location: string; amount?: string | null; guideline?: string | null; channels?: string[] | null; done?: boolean }>
+        = await res.json();
+      const today = getTodayStr();
+      const hydrated: CalEvent[] = raw
+        .filter(e => e.type === 'r' || e.type === 'g')
+        .map(e => ({
+          id: e.id,
+          date: e.date,
+          type: e.type as EventType,
+          label: e.label || LABEL_MAP[e.type] || '',
+          name: e.name,
+          plat: e.plat,
+          location: e.location,
+          dday: calcDday(e.date, today),
+          amount: e.amount ?? undefined,
+          guideline: e.guideline ?? undefined,
+          channels: e.channels && e.channels.length ? e.channels : undefined,
+        }));
+      setEvents(hydrated);
+      setDoneSet(new Set(raw.filter(e => e.done).map(e => e.id)));
+    } catch {
+      // 네트워크 오류 시 현 상태 유지 — 빈 배열로 덮어쓰지 않음
+    }
+  }
+
+  // 최초 로드: 내 이벤트 가져오기
+  useEffect(() => {
+    refreshEvents().finally(() => setLoaded(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!loaded) return;
-    try { localStorage.setItem('cheche_events', JSON.stringify(events)); } catch {}
-  }, [events, loaded]);
-
-  useEffect(() => {
-    if (!loaded) return;
-    try { localStorage.setItem('cheche_done_set', JSON.stringify([...doneSet])); } catch {}
-  }, [doneSet, loaded]);
 
   // Grid row height (동적 계산 — HTML 원본 rowH 로직)
   const [rowH, setRowH] = useState(52);
@@ -270,17 +285,18 @@ export default function CalendarPage() {
     else if (diff < -50) mode === 'monthly' ? nextMonth() : nextWeek();
   }
 
-  function toggleDone() {
+  async function toggleDone() {
     if (!sheetEventId) return;
     const curEv = events.find(e => e.id === sheetEventId);
     if (!curEv) return;
     const allIds = events.filter(e => e.name === curEv.name).map(e => e.id);
     const isNowDone = doneSet.has(sheetEventId);
-    setDoneSet(prev => {
-      const next = new Set(prev);
-      allIds.forEach(id => { isNowDone ? next.delete(id) : next.add(id); });
-      return next;
+    await fetch('/api/events/batch-done', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: allIds, done: !isNowDone }),
     });
+    await refreshEvents();
     closeSheet();
   }
 
@@ -364,63 +380,60 @@ export default function CalendarPage() {
     events: weekEventsAll.filter(e => e.date === wd.ds),
   }));
 
-  // ── 수기 등록 핸들러 ──────────────────────────────────
-  function handleAddManual() {
+  // ── 수기 등록 핸들러 — /api/events 및 /api/revenues 로 POST ──
+  async function handleAddManual() {
     if (!manualName.trim() || !manualPlatform || !manualDeadline) return;
-    const id = `m${Date.now()}`;
-    const ch = manualChannels.size > 0 ? [...manualChannels] : undefined;
-    const newEvents: CalEvent[] = [{
-      id,
-      date: manualDeadline,
-      type: 'r',
-      label: '리뷰 마감',
-      name: manualName.trim(),
-      plat: manualPlatform,
-      location: manualLocation.trim() || '—',
-      dday: calcDday(manualDeadline, todayStr),
-      amount: manualAmount.trim() || undefined,
-      guideline: guidelineText.trim() || undefined,
-      channels: ch,
-    }];
+    const ch = manualChannels.size > 0 ? [...manualChannels] : [];
+    const name = manualName.trim();
+    const plat = manualPlatform;
+    const location = manualLocation.trim() || '—';
+    const amount = manualAmount.trim() || null;
+    const guideline = guidelineText.trim() || null;
+
+    const jsonHeaders = { 'Content-Type': 'application/json' };
+
+    // 리뷰 마감 이벤트
+    await fetch('/api/events', {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({
+        date: manualDeadline, type: 'r', name, plat, location,
+        amount, guideline, channels: ch,
+      }),
+    });
+    // 체험 기간 이벤트 (있으면)
     if (manualExpDate) {
-      newEvents.push({
-        id: `${id}_g`,
-        date: manualExpDate,
-        type: 'g',
-        label: '체험 기간',
-        name: manualName.trim(),
-        plat: manualPlatform,
-        location: manualLocation.trim() || '—',
-        dday: calcDday(manualExpDate, todayStr),
-        amount: manualAmount.trim() || undefined,
-        guideline: guidelineText.trim() || undefined,
-        channels: ch,
+      await fetch('/api/events', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          date: manualExpDate, type: 'g', name, plat, location,
+          amount, guideline, channels: ch,
+        }),
       });
     }
-    setEvents(prev => [...prev, ...newEvents]);
 
-    // 수익 페이지 연동: 금액이 있으면 localStorage 에 수익 항목 추가
+    // 수익 항목 — 금액이 있으면 POST /api/revenues
     const amountNum = parseInt((manualAmount || '').replace(/[^0-9]/g, '')) || 0;
     if (amountNum > 0) {
       const firstCh = manualChannels.size > 0 ? [...manualChannels][0] : '블로그';
       const chAlias: Record<string, string> = { '인스타그램': '인스타', '클립': '블로그 클립' };
-      const rev = {
-        linkId: id,
-        name: manualName.trim(),
-        plat: manualPlatform,
-        channel: chAlias[firstCh] ?? firstCh,
-        date: manualExpDate || manualDeadline,
-        goods: amountNum,
-        ad: 0,
-        emoji: '📝',
-      };
-      try {
-        const raw = localStorage.getItem('cheche_user_revenues');
-        const arr = raw ? JSON.parse(raw) : [];
-        arr.push(rev);
-        localStorage.setItem('cheche_user_revenues', JSON.stringify(arr));
-      } catch {}
+      await fetch('/api/revenues', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          name,
+          plat,
+          channel: chAlias[firstCh] ?? firstCh,
+          date: manualExpDate || manualDeadline,
+          goods: amountNum,
+          ad: 0,
+          emoji: '📝',
+        }),
+      });
     }
+
+    await refreshEvents();
 
     const dateObj = new Date(manualDeadline);
     setYear(dateObj.getFullYear());
@@ -442,59 +455,50 @@ export default function CalendarPage() {
     setEditMode(true);
   }
 
-  // ── 상세 시트 편집 저장 ────────────────────────────────
-  function handleSaveEdit() {
+  // ── 상세 시트 편집 저장 — 기존 관련 이벤트 전부 삭제 후 재생성 ──
+  async function handleSaveEdit() {
     if (!sheetEvent) return;
-    const ch = editChannels.size > 0 ? [...editChannels] : undefined;
-    const ids = new Set(sheetAllIds);
+    const ch = editChannels.size > 0 ? [...editChannels] : [];
     const nameTrim = editName.trim() || sheetEvent.name;
     const locTrim  = editLocation.trim() || '—';
-    const amtTrim  = editAmount.trim() || undefined;
-    const gdTrim   = editGuideline.trim() || undefined;
+    const amtTrim  = editAmount.trim() || null;
+    const gdTrim   = editGuideline.trim() || null;
+    const plat     = sheetEvent.plat;
+    const jsonHeaders = { 'Content-Type': 'application/json' };
 
-    const rebuilt: CalEvent[] = [];
+    // 기존 관련 id 전부 삭제
+    await Promise.all(sheetAllIds.map(id =>
+      fetch(`/api/events/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    ));
+
+    // 새 레코드 생성 — 편집 후 폼에 남아있는 항목만
     if (editDeadlineDate) {
-      rebuilt.push({
-        id: sheetDeadlineEv?.id ?? `r${Date.now()}`,
-        date: editDeadlineDate,
-        type: 'r',
-        label: '리뷰 마감',
-        name: nameTrim,
-        plat: sheetEvent.plat,
-        location: locTrim,
-        dday: calcDday(editDeadlineDate, todayStr),
-        amount: amtTrim,
-        guideline: gdTrim,
-        channels: ch,
+      await fetch('/api/events', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          date: editDeadlineDate, type: 'r', name: nameTrim, plat, location: locTrim,
+          amount: amtTrim, guideline: gdTrim, channels: ch,
+        }),
       });
     }
     if (editExpDate) {
-      rebuilt.push({
-        id: sheetExpEv?.id ?? `g${Date.now()}`,
-        date: editExpDate,
-        type: 'g',
-        label: '체험 기간',
-        name: nameTrim,
-        plat: sheetEvent.plat,
-        location: locTrim,
-        dday: calcDday(editExpDate, todayStr),
-        amount: amtTrim,
-        guideline: gdTrim,
-        channels: ch,
+      await fetch('/api/events', {
+        method: 'POST',
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          date: editExpDate, type: 'g', name: nameTrim, plat, location: locTrim,
+          amount: amtTrim, guideline: gdTrim, channels: ch,
+        }),
       });
     }
 
-    setEvents(prev => [...prev.filter(e => !ids.has(e.id)), ...rebuilt]);
+    await refreshEvents();
 
-    // 현재 시트가 가리키던 이벤트가 사라진 경우 포인터 갱신
-    if (rebuilt.length === 0) {
-      setOpenSheet(null);
-    } else {
-      const sameType = rebuilt.find(e => e.type === sheetEvent.type);
-      setSheetEventId((sameType ?? rebuilt[0]).id);
-    }
-
+    // 편집 후에는 서버 id 가 바뀌므로 시트를 닫는다 — 필요 시 유저가 다시 탭해 연다.
     setEditMode(false);
+    setOpenSheet(null);
+    setSheetEventId(null);
   }
 
   // ─────────────────────────────────────────────────────
@@ -523,16 +527,13 @@ export default function CalendarPage() {
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
                 <button
                   style={{width:32,height:32,background:'var(--bg-chip)',border:'none',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}
-                  onClick={() => {
+                  onClick={async () => {
                     if (!sheetEvent) return;
                     if (!window.confirm(`'${sheetEvent.name}' 일정을 삭제할까요?\n관련된 리뷰 마감·체험 일자가 모두 삭제돼요.`)) return;
-                    const idsToRemove = new Set(sheetAllIds);
-                    setEvents(prev => prev.filter(e => !idsToRemove.has(e.id)));
-                    setDoneSet(prev => {
-                      const next = new Set(prev);
-                      idsToRemove.forEach(id => next.delete(id));
-                      return next;
-                    });
+                    await Promise.all(sheetAllIds.map(id =>
+                      fetch(`/api/events/${encodeURIComponent(id)}`, { method: 'DELETE' })
+                    ));
+                    await refreshEvents();
                     closeSheet();
                   }}
                 >

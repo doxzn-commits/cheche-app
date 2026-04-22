@@ -18,20 +18,12 @@ const CHANNEL_COLOR: Record<string, string> = {
   '블로그 클립':  'var(--s-deadline)',
 };
 
-/* ── 데이터 ── */
+/* ── 데이터 타입 ── */
+// 유저별 격리 — 샘플 시드 데이터는 제거. 서버(/api/revenues)가 내 소유 데이터만 반환.
 type RevItem = {
   name: string; plat: string; channel: string;
   date: string; goods: number; ad: number; emoji: string;
 };
-const ALL_REVS: RevItem[] = [
-  { name: '카페투어 강남점 체험단',  plat: '레뷰',     channel: '블로그',      date: '2026-04-09', goods:  58000, ad:     0, emoji: '☕' },
-  { name: '뷰티 파우더 체험단',     plat: '레뷰',     channel: '인스타',      date: '2026-04-14', goods:  90000, ad: 30000, emoji: '💄' },
-  { name: '한강뷰 호텔 숙박 체험',  plat: '미블',     channel: '유튜브',      date: '2026-04-12', goods:  50000, ad: 10000, emoji: '🏨' },
-  { name: '봄 신상 파우더 체험단',  plat: '레뷰',     channel: '인스타',      date: '2026-03-20', goods:  38000, ad:     0, emoji: '🌸' },
-  { name: '홍대 이자카야 체험',     plat: '강남맛집', channel: '블로그',      date: '2026-03-28', goods:  70000, ad:     0, emoji: '🍶' },
-  { name: '공기청정기 장기 체험단', plat: '레뷰',     channel: '블로그',      date: '2026-02-15', goods: 120000, ad: 20000, emoji: '💨' },
-  { name: '경리단길 타코 맛집 체험',plat: '티블',     channel: '블로그 클립', date: '2026-02-22', goods:  45000, ad:     0, emoji: '🌮' },
-];
 
 /* 월별 트렌드 — 하드코딩 (2026 상반기) */
 const MONTH_BARS = [
@@ -84,15 +76,48 @@ export default function RevenuePage() {
   const [addGoods, setAddGoods] = useState('');
   const [userRevs, setUserRevs] = useState<RevItem[]>([]);
 
-  // 캘린더에서 등록된 수익 항목을 localStorage 에서 로드
-  useEffect(() => {
+  // /api/revenues — 현재 세션 유저가 소유한 수익 항목만 로드 (userId 격리).
+  async function refreshRevenues() {
     try {
-      const raw = localStorage.getItem('cheche_user_revenues');
-      if (raw) setUserRevs(JSON.parse(raw));
-    } catch {}
-  }, []);
+      const res = await fetch('/api/revenues', { cache: 'no-store' });
+      if (!res.ok) { setUserRevs([]); return; }
+      const data: Array<{ name: string; plat: string; channel: string; date: string; goods: number; ad: number; emoji: string | null }> = await res.json();
+      setUserRevs(data.map(r => ({
+        name: r.name, plat: r.plat, channel: r.channel,
+        date: r.date, goods: r.goods, ad: r.ad, emoji: r.emoji ?? '💼',
+      })));
+    } catch {
+      setUserRevs([]);
+    }
+  }
+  useEffect(() => { refreshRevenues(); }, []);
 
-  const allRevs = [...ALL_REVS, ...userRevs];
+  // 수익 시트에서 등록 완료 시 POST 후 재조회
+  async function handleAddRevenue() {
+    const goodsNum = parseInt(addGoods.replace(/[^0-9]/g, '')) || 0;
+    if (!addName.trim() || goodsNum <= 0) return;
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    await fetch('/api/revenues', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: addName.trim(),
+        plat: '직접 등록',
+        channel: '블로그',
+        date: dateStr,
+        goods: goodsNum,
+        ad: 0,
+        emoji: '✍️',
+      }),
+    });
+    await refreshRevenues();
+    setAddOpen(false);
+    setAddName('');
+    setAddGoods('');
+  }
+
+  const allRevs = userRevs;
   const mth = TAB_MONTH[tab];
   const filtered = mth ? allRevs.filter(r => r.date.startsWith(mth)) : allRevs;
 
@@ -352,10 +377,10 @@ export default function RevenuePage() {
               </div>
             ))}
             <button
-              onClick={() => { setAddOpen(false); setAddName(''); setAddGoods(''); }}
-              style={{ width: '100%', padding: '15px', background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 'var(--r-md)', fontSize: '15px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)', boxShadow: 'var(--brand-shadow)', marginTop: '4px' }}
+              onClick={handleAddRevenue}
+              style={{ width: '100%', padding: '15px', background: 'var(--brand)', color: 'var(--text-inverse)', border: 'none', borderRadius: 'var(--r-md)', fontSize: '15px', fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)', boxShadow: 'var(--brand-shadow)', marginTop: '4px', minHeight: 48 }}
             >
-              등록하기
+              등록할게요
             </button>
           </div>
         </div>

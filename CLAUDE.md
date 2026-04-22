@@ -64,3 +64,22 @@ styles/tokens.css 참조. 변수명은 앱_최종.html 기준.
 - 같은 날 여러 번 작업하면 "(2차)", "(3차)" 식으로 카운트.
 - 커밋·푸시 전에 work.md가 갱신되었는지 반드시 확인한다.
 - 다른 컴퓨터에서 작업 시작 전에는 먼저 `git pull` 하여 최신 work.md를 받아온다.
+
+
+## 인증 시스템
+- 라이브러리: NextAuth.js v5 (Auth.js)
+- Provider: Google, Kakao, Naver (3종 소셜 로그인)
+- ORM: Prisma
+- DB: Supabase PostgreSQL
+- 배포: Vercel (https://cheche-app.vercel.app)
+
+## 환경변수 관리
+- 로컬: .env.local (gitignore 처리됨, GitHub 업로드 금지)
+- 프로덕션: Vercel 대시보드 환경변수
+- 필수 키 목록은 .env.local.example 참조
+
+## 작업 원칙 (소셜 로그인 구현 시)
+- 수정 전 관련 파일 전체 읽기
+- 부분 수정 금지 → 완전한 수정만
+- 경우의 수를 사전 파악 후 한 번에 완성
+- 수정 후 반드시 work.md 업데이트 (기존 형식 준수)

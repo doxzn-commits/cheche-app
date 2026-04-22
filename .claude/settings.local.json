@@ -14,7 +14,12 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(claude auth *)",
+      "Bash(npx prisma *)",
+      "WebFetch(domain:www.prisma.io)",
+      "Bash(npm uninstall *)",
+      "Bash(tasklist)"
     ]
   }
 }

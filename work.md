@@ -1,5 +1,63 @@
 # 체체 작업 이력
 
+## 2026-04-22 (3차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - prisma/schema.prisma (수정) — Event / Revenue 모델 추가, User에 역관계(events, revenues) 추가, 모두 userId FK + onDelete:Cascade
+  - app/api/events/route.ts (신규) — GET(유저 본인 이벤트만) / POST(userId 자동 주입)
+  - app/api/events/[id]/route.ts (신규) — PATCH / DELETE, where절에 userId 강제(다른 유저 데이터 차단)
+  - app/api/events/batch-done/route.ts (신규) — 같은 캠페인 묶음 done 플래그 일괄 토글
+  - app/api/revenues/route.ts (신규) — GET / POST, userId 격리
+  - app/api/revenues/[id]/route.ts (신규) — DELETE, userId 격리
+  - app/calendar/page.tsx (수정) — CAL_EVENTS 하드코딩 시드 제거, localStorage 3개 effect 제거, refreshEvents() 로 /api/events GET, handleAddManual/toggleDone/handleSaveEdit/삭제 onClick 전부 fetch API 로 전환, dday 는 클라이언트에서 calcDday 로 hydrate
+  - app/revenue/page.tsx (수정) — ALL_REVS 하드코딩 시드 제거, localStorage 로드 제거, /api/revenues GET 로 전환, "등록할게요" 버튼에 POST /api/revenues 연동
+  - app/mypage/page.tsx (수정) — localStorage 로드 제거, /api/events GET 으로 체험예정·리뷰완료 카운트 계산, focus/pageshow 에서도 재조회
+- 변경 내용:
+  - "카카오→네이버 데이터 공유" 버그 해결: 모든 소유 데이터가 userId 외래키로 격리
+  - API 레이어에서 auth() 확인 후 session.user.id 를 where 절에 강제 → 다른 유저 데이터 조회/수정/삭제 불가
+  - localStorage 기반 공용 키(cheche_events / cheche_done_set / cheche_user_revenues) 전면 폐기
+  - 샘플 시드(CAL_EVENTS, ALL_REVS) 제거 → 신규 유저는 빈 상태로 시작 (테스트 시나리오 5 충족)
+  - updateMany / deleteMany 사용으로 id + userId 동시 매칭 — 권한 오류는 404 로 반환
+- 다음 작업: 사용자가 `npx prisma migrate dev --name add_user_domain` 실행 필요. 기존 스키마에 신규 모델 추가이므로 reset 불필요(다만 로컬 개발 DB만 있다면 `npx prisma migrate reset` 도 안전)
+
+## 2026-04-22 (2차)
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - proxy.ts (신규) — Next.js 16 표준 파일명, 매처로 /login·/onboarding·/splash·/api/auth·정적리소스 제외
+  - middleware.ts (삭제) — proxy.ts로 이관
+  - components/providers/AuthSessionProvider.tsx (신규) — SessionProvider client 래퍼
+  - app/layout.tsx (수정) — AuthSessionProvider로 트리 래핑, 헤더에서 useSession 사용 가능
+  - app/mypage/page.tsx (수정) — useSession 연동, 하드코딩 유진/이메일 제거, 이미지 아바타 + 이니셜 폴백, signOut({callbackUrl:'/login'}) 연결, 히어로 그라디언트를 brand 토큰으로 교체
+- 변경 내용:
+  - 문제1: 매처를 '/((?!api/auth|login|onboarding|splash|_next/static|_next/image|favicon.ico|.*\\..*).*)'로 고정 → 루트(/) 포함 전 경로 보호. middleware→proxy 리네임으로 Next 16 deprecation 경고 해소
+  - 문제2: 마이페이지가 useSession().data?.user의 name/email/image를 표시. 이미지 없으면 이름·이메일 첫 글자 이니셜, 이름 없으면 이메일 앞부분 → '크리에이터' 폴백
+  - 문제3: 로그아웃 버튼 onClick에 signOut({callbackUrl:'/login'}) 연결, loading 상태 추가 ("나가는 중이에요…")
+  - 히어로 영역 HEX(#0E2048/#1C3C82/#2750A8) → var(--brand-pressed/brand/brand-mid) 토큰화
+  - 알림 아이콘 터치 타겟 36→44px, 로그아웃 버튼 44→48px로 보정
+- 다음 작업: 타임존(한국시간) 처리, /campaigns 페이지 신규, provider 필드 UI 활용, 카카오 이메일 수집 정책 검토
+
+## 2026-04-22
+- 작업자: 도유진 - 윈도우
+- 변경 파일:
+  - prisma/schema.prisma (신규) — User/Account/Session/VerificationToken + provider 필드
+  - lib/prisma.ts (신규) — PrismaClient 싱글톤 (dev HMR 대응)
+  - auth.ts (신규) — Auth.js v5, PrismaAdapter, JWT 세션, Kakao/Naver(커스텀)/Google 3 provider
+  - types/next-auth.d.ts (신규) — Session.user.id 타입 확장
+  - app/api/auth/[...nextauth]/route.ts (신규) — handlers GET/POST re-export
+  - app/login/page.tsx (수정) — Suspense 래퍼로 단순화 (useSearchParams prerender 요건 대응)
+  - app/login/LoginClient.tsx (신규) — SCR-003 실제 UI, signIn() 통합, 버튼 순서 카카오→네이버→구글, Apple 제거
+  - middleware.ts (신규) — /login /onboarding /splash /api/auth/* 외 보호, 미인증 시 callbackUrl 포함 리다이렉트
+  - styles/tokens.css (수정) — --oauth-kakao/naver/google-bg/text 소셜 브랜드 토큰 추가 (light/dark)
+  - .env.local.example (신규) — 10개 환경변수 템플릿 (AUTH_SECRET/DB/OAuth 3종/NEXTAUTH_URL)
+  - package.json / package-lock.json (수정) — next-auth@beta, @auth/prisma-adapter, prisma, @prisma/client 추가
+- 변경 내용:
+  - NextAuth.js v5(Auth.js) 기반 소셜 로그인 3종 설치 완료
+  - 세션 전략: JWT (Edge 런타임 미들웨어 호환). User/Account는 Prisma adapter로 DB 저장
+  - signIn 콜백에서 provider 필드를 user 레코드에 기록
+  - 로그인 화면: 토큰 변수만 사용(HEX 직접 사용 제거), 터치 타겟 48px, 해요체 UX 라이팅
+  - 미들웨어: 공개 경로 제외 전체 보호, 로그인 상태로 /login 접근 시 /calendar 리다이렉트
+- 다음 작업: Supabase DB에 prisma migrate 실행 후 실기기 OAuth 리다이렉트 테스트
+
 ## 2026-04-16
 - 작업자: Claude Code
 - 변경 파일: 전체 프로젝트 초기 생성

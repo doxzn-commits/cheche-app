@@ -51,6 +51,14 @@
   --s-completed:    #B0B8C1;  --s-completed-bg: rgba(176,184,193,0.10);
   --s-deadline:     #E8A820;  --s-deadline-bg:  rgba(232,168,32,0.10);
   --s-overdue:      #E8394A;  --s-overdue-bg:   rgba(232,57,74,0.10);
+
+  /* Social Brand — 소셜 로그인 버튼 전용 (브랜드 가이드 고정 컬러) */
+  --oauth-kakao-bg:    #FEE500;
+  --oauth-kakao-text:  #191919;
+  --oauth-naver-bg:    #03C75A;
+  --oauth-naver-text:  #FFFFFF;
+  --oauth-google-bg:   #FFFFFF;
+  --oauth-google-text: #191F28;
 }
 
 /* ══════════════════════════════════════
@@ -98,6 +106,14 @@
   --s-completed:    #8892A0;  --s-completed-bg: rgba(136,146,160,0.13);
   --s-deadline:     #FFB84A;  --s-deadline-bg:  rgba(255,184,74,0.13);
   --s-overdue:      #FF5F6D;  --s-overdue-bg:   rgba(255,95,109,0.13);
+
+  /* Social Brand — 다크모드에서도 브랜드 컬러 유지 */
+  --oauth-kakao-bg:    #FEE500;
+  --oauth-kakao-text:  #191919;
+  --oauth-naver-bg:    #03C75A;
+  --oauth-naver-text:  #FFFFFF;
+  --oauth-google-bg:   #FFFFFF;
+  --oauth-google-text: #191F28;
 }
 
 /* ══════════════════════════════════════
