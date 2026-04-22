@@ -19,7 +19,8 @@
       "Bash(npx prisma *)",
       "WebFetch(domain:www.prisma.io)",
       "Bash(npm uninstall *)",
-      "Bash(tasklist)"
+      "Bash(tasklist)",
+      "Bash(node .sort-work.mjs)"
     ]
   }
 }
