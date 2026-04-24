@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "codex": "codex",
+    "codex:resume": "codex resume",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "db:push": "dotenv -e .env.local -- prisma db push",
     "db:studio": "dotenv -e .env.local -- prisma studio"
@@ -24,6 +26,7 @@
     "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
+    "@openai/codex": "^0.124.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

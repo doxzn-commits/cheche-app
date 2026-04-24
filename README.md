@@ -20,6 +20,28 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## CLI Collaboration
+
+This repo already includes per-agent context files:
+
+- `CLAUDE.md` for Claude Code
+- `AGENTS.md` for Antigravity
+- `CODEX.md` for OpenAI Codex CLI
+
+Codex is installed locally, so you can run it from this project without a global npm install:
+
+```bash
+npm run codex
+```
+
+To resume an existing Codex session:
+
+```bash
+npm run codex:resume
+```
+
+Because Codex is installed as a project dev dependency, it works alongside your other CLI tools without needing `sudo` or a writable global npm prefix.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
