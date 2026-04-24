@@ -1,5 +1,29 @@
 # 체체 작업 이력
 
+## 2026-04-24 (3차)
+- 작업자: Codex CLI (OpenAI)
+- 변경 파일:
+  - lib/dday.ts (신규) — 캘린더 D-day 계산 유틸 분리
+  - lib/dday.test.ts (신규) — 과거/당일/미래 D-day 단위 테스트 추가
+  - app/calendar/page.tsx (수정) — 로컬 calcDday 제거 후 lib/dday import 사용
+- 변경 내용:
+  - 캘린더 내부에 있던 `calcDday()`를 `lib/dday.ts`로 이관해 재사용 가능한 유틸로 분리
+  - `app/calendar/page.tsx`는 동일 로직을 유지한 채 `@/lib/dday` import 경로로 전환
+  - `lib/dday.test.ts`에서 과거/당일/미래 3가지 케이스를 검증하도록 단위 테스트 작성
+- 다음 작업: [Claude Code 인계] app/calendar/page.tsx에서 lib/dday의 calcDday import로 교체
+
+## 2026-04-24 (2차)
+- 작업자: Codex CLI (OpenAI)
+- 변경 파일:
+  - package.json (수정) — 로컬 Codex CLI 실행 스크립트 추가
+  - package-lock.json (수정) — @openai/codex devDependency 설치 반영
+  - README.md (수정) — 프로젝트 단위 Codex 실행 방법 문서화
+- 변경 내용:
+  - 전역 npm 권한 문제를 피하기 위해 @openai/codex 를 프로젝트 로컬 devDependency 로 설치
+  - `npm run codex`, `npm run codex:resume` 스크립트를 추가해 cheche-app 안에서 바로 실행 가능하게 정리
+  - CLAUDE.md, AGENTS.md, CODEX.md 기반의 멀티 CLI 협업 흐름을 README 에서 바로 찾을 수 있게 연결
+- 다음 작업: Codex 실행 전 `OPENAI_API_KEY` 또는 사용 중인 Codex 인증 방식이 로컬 셸에 준비돼 있는지 확인
+
 ## 2026-04-24
 - 작업자: 도유진 - 윈도우
 - 변경 파일:

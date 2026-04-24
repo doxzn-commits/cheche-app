@@ -1,6 +1,7 @@
 'use client';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { calcDday } from '@/lib/dday';
 
 // ── Types ──────────────────────────────────────────────
 type EventType = 'r' | 'g';
@@ -54,12 +55,6 @@ function ddayColor(dday: string) {
   if (!dday || !dday.startsWith('D-')) return 'var(--text-muted)';
   const n = parseInt(dday.slice(2));
   return n <= 3 ? 'var(--s-overdue)' : n <= 7 ? 'var(--s-deadline)' : 'var(--text-muted)';
-}
-function calcDday(dateStr: string, todayS: string): string {
-  if (!dateStr) return '';
-  const diff = Math.round((new Date(dateStr).getTime() - new Date(todayS).getTime()) / 86400000);
-  if (diff === 0) return 'D-DAY';
-  return diff > 0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
 }
 
 // ── LogoMark SVG (재사용) ──────────────────────────────
