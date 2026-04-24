@@ -90,7 +90,17 @@ export default function RevenuePage() {
       setUserRevs([]);
     }
   }
-  useEffect(() => { refreshRevenues(); }, []);
+  useEffect(() => {
+    refreshRevenues();
+    // 캘린더에서 캠페인 삭제 후 복귀했을 때 집계가 즉시 재계산되도록 포커스/복귀 시 재조회.
+    const onFocus = () => refreshRevenues();
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('pageshow', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('pageshow', onFocus);
+    };
+  }, []);
 
   // 수익 시트에서 등록 완료 시 POST 후 재조회
   async function handleAddRevenue() {

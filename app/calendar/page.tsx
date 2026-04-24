@@ -530,6 +530,25 @@ export default function CalendarPage() {
                   onClick={async () => {
                     if (!sheetEvent) return;
                     if (!window.confirm(`'${sheetEvent.name}' 일정을 삭제할까요?\n관련된 리뷰 마감·체험 일자가 모두 삭제돼요.`)) return;
+
+                    // 같은 캠페인으로 등록된 수익 항목도 함께 제거 — 수익 탭 집계에 잔존 방지.
+                    // linkId 매칭 우선, 구데이터(linkId null)는 name+plat 로 보조 매칭. 리뷰완료 상태도 동일 처리.
+                    try {
+                      const revRes = await fetch('/api/revenues', { cache: 'no-store' });
+                      if (revRes.ok) {
+                        const revs: Array<{ id: string; linkId: string | null; name: string; plat: string }> = await revRes.json();
+                        const matched = revs.filter(r =>
+                          (r.linkId && sheetAllIds.includes(r.linkId)) ||
+                          (r.name === sheetEvent.name && r.plat === sheetEvent.plat)
+                        );
+                        await Promise.all(matched.map(r =>
+                          fetch(`/api/revenues/${encodeURIComponent(r.id)}`, { method: 'DELETE' })
+                        ));
+                      }
+                    } catch {
+                      // 네트워크 실패 시에도 캘린더 삭제는 계속 진행.
+                    }
+
                     await Promise.all(sheetAllIds.map(id =>
                       fetch(`/api/events/${encodeURIComponent(id)}`, { method: 'DELETE' })
                     ));
