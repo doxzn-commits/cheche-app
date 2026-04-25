@@ -1,5 +1,20 @@
 # 체체 작업 이력
 
+## 2026-04-25 (2차)
+- 작업자: 도유진 - 맥북 (via Claude Code)
+- 변경 파일:
+  - app/api/parse-url/route.ts (신규) — 레뷰 캠페인 URL 파싱 API Route (POST)
+- 변경 내용:
+  - URL 자동완성 ② 단계: revu.net HTML을 서버에서 fetch → `parseRevuCampaign` 호출 → ParseResult JSON 응답
+  - `isRevuCampaignUrl` 검증 실패 시 400 INVALID_URL 반환
+  - 사용자당(또는 IP) 1초 윈도우 인메모리 Rate Limit (429 RATE_LIMIT)
+  - URL별 5분 TTL 인메모리 캐시 (재요청 시 즉시 반환, 만료 항목 lazy prune)
+  - AbortController 8초 타임아웃 (504 TIMEOUT) / fetch 실패 502 FETCH_FAILED / 파싱 실패 422 PARSE_FAILED
+  - User-Agent: `ChecheApp/1.0`, Accept-Encoding: `gzip, deflate`
+  - Capacitor 정적 빌드 충돌 방지: `export const dynamic = 'force-dynamic'`, `export const runtime = 'nodejs'` 명시
+  - curl 검증: INVALID_URL 400 / RATE_LIMIT 429 / 실 캠페인 URL 200 + ParseResult / 캐시 히트 시 cold 0.226s → cached 0.049s
+- 다음 작업: [다음 단계 ③] SCR-008C 또는 SCR-012B 일정 등록 UI에서 /api/parse-url 호출 + 폼 자동 채우기 통합 (Capacitor 빌드 시 BASE_URL env 분기 필요)
+
 ## 2026-04-25
 - 작업자: Codex CLI (OpenAI)
 - 변경 파일:
