@@ -1,5 +1,19 @@
 # 체체 작업 이력
 
+## 2026-04-25
+- 작업자: Codex CLI (OpenAI)
+- 변경 파일:
+  - package.json (수정) — cheerio 의존성 추가
+  - package-lock.json (수정) — cheerio 설치 반영
+  - types/parsed-campaign.ts (신규) — URL 파싱 등록용 ParsedCampaign / ParseResult 타입 정의
+  - lib/parsers/revu.ts (신규) — 레뷰 캠페인 HTML 순수 파서 및 URL 검증 유틸 추가
+  - lib/parsers/revu.test.ts (신규) — 레뷰 URL 검증 및 HTML 파싱 단위 테스트 추가
+- 변경 내용:
+  - `cheerio` 기반으로 레뷰 캠페인 HTML 문자열을 `ParsedCampaign`으로 변환하는 순수 함수 `parseRevuCampaign()` 작성
+  - `og:` 메타태그 우선, 본문 fallback, 날짜 ISO 변환, 채널 키워드 매칭, 방문형/배송형 판별, 위치 추출, 부분 성공 메타 계산을 구현
+  - `isRevuCampaignUrl()` 유효성 검증과 정상/부분 성공/빈 HTML 케이스를 포함한 Node 실행형 단위 테스트 5건 작성
+- 다음 작업: [Claude Code 인계] app/api/parse-url/route.ts 작성 — revu.net fetch + parseRevuCampaign() 호출 + Rate Limit + User-Agent 'ChecheApp/1.0'
+
 ## 2026-04-24 (3차)
 - 작업자: Codex CLI (OpenAI)
 - 변경 파일:
