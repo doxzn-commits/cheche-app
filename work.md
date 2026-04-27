@@ -1,5 +1,105 @@
 # 체체 작업 이력
 
+## 2026-04-27 (10차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/mypage/page.tsx (수정) — 이번달 수익 API 연동 + 탈퇴 완료 안내 화면
+- 변경 내용:
+  - **수정 1 — 이번달 수익 238,000원 하드코딩 → API 연동**
+    · 원인: 시나리오 A — line 274에 `238,000` 숫자 리터럴 하드코딩. API 호출 없음.
+    · `ApiRevenue = { id, date, goods, ad }` 타입 추가
+    · `thisMonthRevenue: number | null` state 추가 (null = 로딩 중 또는 오류)
+    · 신규 useEffect: `/api/revenues` GET → 현재 월(YYYY-MM prefix 필터) 의 `goods + ad` 합산
+      → `setThisMonthRevenue(total)` (0원도 정상 표시)
+    · focus/pageshow 이벤트에 동일하게 리슨 (캘린더 탭 복귀 시 최신화)
+    · JSX: `thisMonthRevenue === null` → `—` 표시, 로드 완료 → `toLocaleString('ko-KR')원`
+  - **수정 2 — 탈퇴 완료 안내 화면**
+    · `withdrawDone: boolean` state 추가
+    · `handleDeleteConfirm` 성공 분기:
+      - 기존: `await signOut({ callbackUrl: '/' })`
+      - 변경: `setWithdrawDone(true)` + `setTimeout(() => signOut({ callbackUrl: '/' }), 3000)`
+    · `withdrawDone === true` 일 때 조기 return으로 안내 화면 렌더:
+      - 중앙 정렬 전체 화면, `var(--bg-page)` 배경
+      - 👋 이모지 (48px), "탈퇴가 정상적으로 처리 되었습니다." (20px 800), 서브 메시지, "잠시 후 자동으로 이동합니다..." (12px, text-disabled)
+      - 이모지는 spec에서 명시 — 이 케이스에만 예외적 사용
+    · 모달 상태도 `setShowDeleteModal(false)` 로 닫아 z-index 충돌 방지
+- Capacitor 호환성:
+  - setTimeout은 Capacitor WebView에서 동일 동작
+  - fetch 클라이언트에서 수행, localStorage 없음
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 0)
+  - `238` 하드코딩 grep 결과 0건 (완전 제거)
+  - dev 서버 핫리로드 ✓ Compiled in 51–56ms, GET /mypage 200
+  - ⚠️ 도유진 본인이 로그인된 브라우저에서 다음 검증 필요:
+    1. /mypage 이번달 수익 — 실제 revenue 데이터 합산 값 표시 (데이터 없으면 0원, API 오류 시 —)
+    2. 탈퇴하기 → 모달 → 탈퇴하기 버튼 → 👋 안내 화면 → 3초 후 로그인 페이지 이동
+       ⚠️ 실제 데이터 삭제되므로 테스트 계정으로만 진행!
+- 발견 이슈 / 남은 이슈:
+  - 이번달 수익 통계 칸의 `#7AFFD4` 색상이 CLAUDE.md "HEX 직접 사용 금지" 위반 — 기존 코드라 이번 범위 외로 유지. 추후 CSS 토큰(`--stat-mint` 등) 추가 시 교체 권장.
+  - 탈퇴 안내 화면에 뒤로가기/새로고침 방지 없음 — 3초 내 실수로 이탈 가능. MVP 수용.
+- 다음 작업: 탈퇴 실제 동작 수동 검증 (카카오 연결 해제 포함)
+
+## 2026-04-27 (9차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/api/user/me/route.ts (신규) — GET: 세션 userId로 provider + createdAt 조회
+  - app/api/user/delete/route.ts (신규) — DELETE: 트랜잭션으로 유저 데이터 전체 삭제 + 카카오 연결 해제
+  - app/mypage/account/page.tsx (신규) — SCR-009 계정 정보 서브 페이지
+  - app/mypage/page.tsx (수정) — 계정 정보/수익 내역 항목 추가, 탈퇴하기 모달, 레이아웃 고정 제거
+- 변경 내용:
+  - **수정 1 — 계정 정보 페이지 신설**
+    · 신규 `/api/user/me` GET: `prisma.user.findUnique` 로 `provider, createdAt` 반환 (auth() 세션 유저만)
+    · 신규 `/mypage/account` 페이지:
+      - 헤더: "← 계정 정보" 뒤로가기 버튼
+      - 아바타: user.image 있으면 img, 없으면 이니셜 원
+      - InfoRow 4개: 이름 / 이메일 / 가입 방법(kakao→카카오, naver→네이버, google→구글) / 가입일(toLocaleDateString)
+      - useEffect 에서 /api/user/me 호출해 provider + createdAt hydrate
+    · mypage/page.tsx "계정 설정" 섹션 최상단에 "계정 정보" SettingsRow 추가 (`/mypage/account`)
+  - **수정 2 — 수익 내역 탭 연동**
+    · "계정 설정" 섹션에 "수익 내역" SettingsRow 추가 (달러 아이콘, `var(--s-selected-bg)` / `var(--s-selected)`)
+    · onClick → `router.push('/revenue')`
+  - **수정 3 — 탈퇴하기 기능**
+    · 신규 `/api/user/delete` DELETE:
+      - auth() 세션 없으면 401
+      - kakaoAccount 조회 (access_token — DB 삭제 전에 조회 필수)
+      - `prisma.$transaction` 으로 명시적 순서 삭제: Revenue → Event → Session → Account → User
+        (onDelete:Cascade 도 있지만 spec 요구사항 준수)
+      - User 삭제 후 카카오 unlink POST fire-and-forget (fetch().catch() — 실패 무시)
+      - 성공: `{ ok: true }` 200
+    · mypage/page.tsx:
+      - `showDeleteModal`, `deleting`, `deleteError` state 추가
+      - "회원 탈퇴" → "탈퇴하기" 버튼 (opacity:0.7, 빨간색 텍스트) + `setShowDeleteModal(true)`
+      - `DeleteModal` 컴포넌트 (fixed 오버레이, 제목/본문/취소(회색)/탈퇴하기(빨간) 버튼)
+      - 탈퇴 확인 시 → DELETE /api/user/delete → 성공 시 `signOut({ callbackUrl: '/' })`
+      - 실패 시 `deleteError` state에 메시지 저장하여 버튼 아래 인라인 표시
+  - **수정 4 — 마이페이지 고정 영역 제거**
+    · 기존: outer div `overflow: 'hidden'` + inner "스크롤 영역" div `flex:1, overflowY:auto`
+    · 변경: outer div → `overflowY: 'auto'` (전체 페이지 스크롤) + inner 스크롤 div 제거 (자연 flow)
+    · 결과: 프로필 히어로가 고정 영역 없이 페이지 내용과 함께 스크롤
+    · sticky/fixed 요소는 mypage/page.tsx 에 원래 없었음 — overflow:hidden 이 사실상 고정 효과를 줬음
+  - **SettingsRow 확장**
+    · `labelColor?: string` prop 추가 — 탈퇴 등 위험 행위에서 빨간 텍스트 지원 (현재 미사용, 탈퇴는 별도 버튼으로 처리)
+- Capacitor 호환성:
+  - 모든 fetch 클라이언트에서 수행 (`useEffect`, 이벤트 핸들러)
+  - localStorage 사용 없음
+  - Server Actions 사용 없음
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 0)
+  - dev 서버 핫리로드 ✓ Compiled in 216ms
+  - /mypage, /mypage/account, /api/user/me, /api/user/delete 모두 307 (proxy 인증 가드 정상)
+  - 500 에러 없음
+  - ⚠️ 도유진 본인이 로그인된 브라우저에서 다음 검증 필요:
+    1. /mypage → 계정 정보 / 수익 내역 항목 확인 → 각각 클릭 → /mypage/account / /revenue 이동
+    2. /mypage/account → 이름·이메일·가입방법·가입일 표시
+    3. /mypage → 탈퇴하기 클릭 → 모달 → 취소 정상, 탈퇴하기는 실제 데이터 삭제되므로 테스트 계정으로만!
+    4. 페이지 스크롤 → 프로필 히어로도 함께 스크롤되는지 확인
+- 발견 이슈 / 남은 이슈:
+  - **Account 테이블 access_token 가용성**: 카카오 OAuth 플로우에서 access_token 이 Account 레코드에 저장되어 있으면 unlink 동작. NextAuth Prisma Adapter 는 기본적으로 저장하므로 대부분 경우 정상.
+    단, 토큰 만료(expires_at 초과) 시 카카오 unlink API 가 실패할 수 있음 — fire-and-forget이라 탈퇴 자체에는 영향 없음.
+  - 이미 탈퇴한 계정으로 재로그인 시도 → NextAuth가 신규 유저로 등록할 수 있음 — 소셜 계정 연결 해제로 방지되나 네이버/구글은 unlink 없음.
+  - "이번 달 수익" 통계 (238,000원) 는 하드코딩 mockup — 추후 /api/revenues 연동 필요.
+- 다음 작업: 탈퇴 실제 동작 수동 검증 (카카오 연결 해제 포함)
+
 ## 2026-04-27 (8차)
 - 작업자: 도유진 - 윈도우 (via Claude Code)
 - 변경 파일:
