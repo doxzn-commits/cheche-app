@@ -144,7 +144,7 @@ test('parseDinnerqueenCampaign parses a delivery campaign', () => {
   assert.match(result.data.guideline ?? '', /정성 있게 리뷰/u);
 });
 
-test('parseDinnerqueenCampaign parses a payback campaign and point amount', () => {
+test('parseDinnerqueenCampaign parses a reward campaign from payback content and point amount', () => {
   const html = `
     <html>
       <head>
@@ -200,13 +200,13 @@ test('parseDinnerqueenCampaign parses a payback campaign and point amount', () =
   const result = parseDinnerqueenCampaign(html);
 
   assert.equal(result.data.benefit, '에티오피아 시다마 홀빈 원두 / 구매평 원두타입: 홀빈 원두 / 200g / 25,000원');
-  assert.equal(result.data.campaignType, 'payback');
+  assert.equal(result.data.campaignType, 'reward');
   assert.equal(result.data.pointAmount, 28500);
   assert.deepEqual(result.data.channels, ['blog']);
   assert.equal(result.data.reviewDeadline, '2026-05-21');
 });
 
-test('parseDinnerqueenCampaign parses a reporter campaign', () => {
+test('parseDinnerqueenCampaign parses a reward campaign from reporter content', () => {
   const html = `
     <html>
       <head>
@@ -261,13 +261,13 @@ test('parseDinnerqueenCampaign parses a reporter campaign', () => {
 
   assert.equal(result.data.title, '[기자단] 블라우풀빌라 2차');
   assert.equal(result.data.benefit, '★5,000 포인트 지급');
-  assert.equal(result.data.campaignType, 'reporter');
+  assert.equal(result.data.campaignType, 'reward');
   assert.equal(result.data.pointAmount, 5000);
   assert.deepEqual(result.data.channels, ['blog']);
   assert.match(result.data.guideline ?? '', /직접 체험한 것처럼/u);
 });
 
-test('parseDinnerqueenCampaign uses reviewer mission instead of keyword guide', () => {
+test('parseDinnerqueenCampaign parses an instagram visit campaign benefit and reviewer mission', () => {
   const html = `
     <html>
       <head>
@@ -278,6 +278,19 @@ test('parseDinnerqueenCampaign uses reviewer mission instead of keyword guide', 
           <h5><strong class="qz-h6-kr">제공 내역</strong></h5>
           <div class="qz-collapse__content">
             <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">아구찜 소 사이즈 제공</strong></p>
+          </div>
+        </div>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">매장 정보 링크</strong></h5>
+          <div class="qz-collapse__content">
+            <p id="detailPlaceLink">https://naver.me/xWTLLJxY</p>
+          </div>
+        </div>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">방문 및 예약</strong></h5>
+          <div class="qz-collapse__content">
+            <p>방문 위치: 경기 부천시 원미구 중동 1125</p>
+            <div id="map-canvas"></div>
           </div>
         </div>
         <div class="qz-collapse qz-row">
@@ -319,7 +332,8 @@ test('parseDinnerqueenCampaign uses reviewer mission instead of keyword guide', 
 
   assert.equal(result.data.benefit, '아구찜 소 사이즈 제공');
   assert.deepEqual(result.data.channels, ['instagram']);
-  assert.equal(result.data.campaignType, 'delivery');
+  assert.equal(result.data.campaignType, 'visit');
+  assert.equal(result.data.location, '경기 부천시 원미구 중동 1125');
   assert.match(result.data.guideline ?? '', /^- 릴스 촬영\/편집 미션/u);
   assert.match(result.data.guideline ?? '', /\n분량: 30초~50초 내외/u);
   assert.match(result.data.guideline ?? '', /\n★해시태그\(아구아구\)필수/u);

@@ -18,8 +18,8 @@ export interface ParsedCampaign {
   /** Store address or visit location */
   location?: string;
   /** Campaign type */
-  campaignType?: 'visit' | 'delivery' | 'payback' | 'reporter';
-  /** Point amount for payback/reporter campaigns */
+  campaignType?: 'visit' | 'delivery' | 'reward';
+  /** Point amount for reward campaigns */
   pointAmount?: number;
 }
 

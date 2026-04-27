@@ -278,9 +278,11 @@ function extractCampaignType(
   $: cheerio.CheerioAPI,
   location: string | undefined,
   pointAmount: number | undefined,
-  documentText: string
+  documentText: string,
+  titleText: string
 ): ParsedCampaign['campaignType'] {
   const text = normalizeText(documentText).toLowerCase();
+  const title = normalizeText(titleText).toLowerCase();
   const hasProductLink =
     $('#detailProductLink').length > 0 || text.includes('smartstore.naver.com');
   const hasPlaceLink = $('#detailPlaceLink').length > 0 || $('#map-canvas').length > 0;
@@ -289,9 +291,16 @@ function extractCampaignType(
     $('.qz-collapse__content strong.w-600').length > 0 ||
     $('#MainKeyword').length > 0 ||
     $('#SubKeyword').length > 0;
+  const pointSection = getCollapseSectionByHeader($, '포인트 지급').first();
+  const pointSectionText = normalizeText(pointSection.text()).toLowerCase();
+  const hasRewardKeyword =
+    title.includes('페이백') ||
+    title.includes('기자단') ||
+    title.includes('구매평') ||
+    pointSection.length > 0 ||
+    pointSectionText.includes('포인트');
 
-  if (pointAmount !== undefined && hasProductLink) return 'payback';
-  if (pointAmount !== undefined) return 'reporter';
+  if (pointAmount !== undefined || hasRewardKeyword) return 'reward';
   if (location || hasPlaceLink) return 'visit';
   if (hasProductLink || hasStructuredContent) return 'delivery';
 
@@ -386,7 +395,7 @@ export function parseDinnerqueenCampaign(html: string): ParseResult {
     assignIfPresent(
       data,
       'campaignType',
-      extractCampaignType($, data.location, pointAmount, documentText)
+      extractCampaignType($, data.location, pointAmount, documentText, titleText)
     );
   } catch {}
 

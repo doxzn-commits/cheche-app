@@ -1,5 +1,19 @@
 # 체체 작업 이력
 
+## 2026-04-27 (11차)
+- 작업자: Codex CLI (OpenAI)
+- 변경 파일:
+  - types/parsed-campaign.ts (수정) — campaignType: 'visit'|'delivery'|'reward'로 변경
+  - lib/parsers/dinnerqueen.ts (수정) — reward 통합 로직, 오탐 방지 보정
+  - lib/parsers/dinnerqueen.test.ts (수정) — payback/reporter → reward, visit-insta benefit 검증 추가
+- 변경 내용:
+  - campaignType payback/reporter → reward로 통합
+  - visit-insta 케이스 benefit/location/campaignType 파싱 수정
+  - 실URL 1331244 검증: "아구찜 소 사이즈 제공", visit 확인
+  - 테스트 9개 통과
+- 다음 작업: [Claude Code 인계] campaignType UI 레이블 변경 + 계정 정보 카카오 provider 표시 수정
+
+
 ## 2026-04-27 (10차)
 - 작업자: 도유진 - 윈도우 (via Claude Code)
 - 변경 파일:
