@@ -19,6 +19,9 @@ interface CalEvent {
   dday: string;
   amount?: string;
   guideline?: string;
+  benefit?: string;
+  campaignType?: string;
+  pointAmount?: number;
   channels?: string[];
 }
 
@@ -99,7 +102,7 @@ export default function CalendarPage() {
         setDoneSet(new Set());
         return;
       }
-      const raw: Array<{ id: string; date: string; type: string; label?: string; name: string; plat: string; location: string; amount?: string | null; guideline?: string | null; channels?: string[] | null; done?: boolean }>
+      const raw: Array<{ id: string; date: string; type: string; label?: string; name: string; plat: string; location: string; amount?: string | null; guideline?: string | null; benefit?: string | null; campaignType?: string | null; pointAmount?: number | null; channels?: string[] | null; done?: boolean }>
         = await res.json();
       const today = getTodayStr();
       const hydrated: CalEvent[] = raw
@@ -115,6 +118,9 @@ export default function CalendarPage() {
           dday: calcDday(e.date, today),
           amount: e.amount ?? undefined,
           guideline: e.guideline ?? undefined,
+          benefit: e.benefit ?? undefined,
+          campaignType: e.campaignType ?? undefined,
+          pointAmount: e.pointAmount ?? undefined,
           channels: e.channels && e.channels.length ? e.channels : undefined,
         }));
       setEvents(hydrated);
@@ -169,6 +175,9 @@ export default function CalendarPage() {
   const [manualDeadline, setManualDeadline]   = useState('');
   const [manualExpDate, setManualExpDate]     = useState('');
   const [manualAmount, setManualAmount]       = useState('');
+  const [manualBenefit, setManualBenefit]     = useState('');
+  const [manualCampaignType, setManualCampaignType] = useState('');
+  const [manualPointAmount, setManualPointAmount]   = useState('');
   const [manualLocation, setManualLocation]   = useState('');
   const [manualMemo, setManualMemo]           = useState('');
   const [manualChannels, setManualChannels]   = useState<Set<string>>(new Set());
@@ -256,6 +265,9 @@ export default function CalendarPage() {
     setManualDeadline('');
     setManualExpDate('');
     setManualAmount('');
+    setManualBenefit('');
+    setManualCampaignType('');
+    setManualPointAmount('');
     setManualLocation('');
     setManualMemo('');
     setManualChannels(new Set());
@@ -318,15 +330,16 @@ export default function CalendarPage() {
   }
 
   // ── URL 자동완성 ③ — /api/parse-url 호출 + 폼 자동 채움 ──
-  // ParsedCampaign 필드 → 기존 manual* state 매핑
+  // ParsedCampaign 필드 → manual* state 매핑
   // - title         → setManualName
   // - reviewDeadline→ setManualDeadline
   // - guideline     → setGuidelineText
   // - location      → setManualLocation
   // - platform      → setManualPlatform ('dinnerqueen' → '디너의여왕', 'revu' → '레뷰')
   // - channels      → setManualChannels (영문 → 한글 매핑)
-  // - pointAmount   → setManualAmount (숫자 → 문자열)
-  // benefit·campaignType 은 폼에 매칭되는 setter 가 없어 매핑 생략 (보고)
+  // - pointAmount   → setManualAmount + setManualPointAmount (양쪽 모두 — 수익 추적용 + DB 별도 필드)
+  // - benefit       → setManualBenefit
+  // - campaignType  → setManualCampaignType
   // 추후 Capacitor 빌드 시 BASE_URL env 분기 필요 — 현재는 상대 경로 사용
   async function parseUrlAuto(targetUrl: string) {
     if (!targetUrl || !/^https?:\/\//.test(targetUrl)) {
@@ -376,7 +389,10 @@ export default function CalendarPage() {
         }
         if (typeof parsed.pointAmount === 'number' && parsed.pointAmount > 0) {
           setManualAmount(String(parsed.pointAmount));
+          setManualPointAmount(String(parsed.pointAmount));
         }
+        if (parsed.benefit) setManualBenefit(parsed.benefit);
+        if (parsed.campaignType) setManualCampaignType(parsed.campaignType);
 
         const isPartial = data.isPartial;
         setParseStatus(isPartial ? 'partial' : 'success');
@@ -522,6 +538,9 @@ export default function CalendarPage() {
     // manualAmount 는 onChange 에서 raw digits 만 유지하지만, URL 파서가 String(Number) 로 채울 수도 있으니 한번 더 strip.
     const amount = manualAmount.replace(/[^0-9]/g, '') || null;
     const guideline = guidelineText.trim() || null;
+    const benefit = manualBenefit.trim() || null;
+    const campaignType = manualCampaignType || null;
+    const pointAmount = manualPointAmount ? parseInt(manualPointAmount) : null;
 
     const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -532,7 +551,7 @@ export default function CalendarPage() {
       headers: jsonHeaders,
       body: JSON.stringify({
         date: manualDeadline, type: 'r', name, plat, location,
-        amount, guideline, channels: ch,
+        amount, guideline, benefit, campaignType, pointAmount, channels: ch,
       }),
     });
     if (deadlineRes.ok) {
@@ -550,7 +569,7 @@ export default function CalendarPage() {
         headers: jsonHeaders,
         body: JSON.stringify({
           date: manualExpDate, type: 'g', name, plat, location,
-          amount, guideline, channels: ch,
+          amount, guideline, benefit, campaignType, pointAmount, channels: ch,
         }),
       });
     }
@@ -821,11 +840,23 @@ export default function CalendarPage() {
               {/* 협찬 정보 */}
               <div style={{fontSize:10,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:8}}>협찬 정보</div>
               <div style={{background:'var(--bg-card-inner)',border:'1px solid var(--border)',borderRadius:'var(--r-md)',overflow:'hidden',marginBottom:14}}>
-                {/* 협찬 품목 — DB Event 모델에 benefit 필드 없음. Phase 2 에서 스키마 추가 시 복원. */}
+                {/* 협찬 품목 — benefit 필드 */}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px',borderBottom:'1px solid var(--border)'}}>
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>협찬 품목</span>
-                  <span style={{fontSize:12,fontWeight:600,color:'var(--text-muted)'}}>—</span>
+                  <span style={{fontSize:12,fontWeight:600,color:sheetEvent?.benefit?'var(--text-primary)':'var(--text-muted)',textAlign:'right',maxWidth:'55%'}}>
+                    {sheetEvent?.benefit ?? '—'}
+                  </span>
                 </div>
+                {/* 포인트 금액 — pointAmount 필드 (페이백·기자단 케이스) */}
+                {sheetEvent?.pointAmount != null && (
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px',borderBottom:'1px solid var(--border)'}}>
+                    <span style={{fontSize:12,color:'var(--text-muted)'}}>포인트 금액</span>
+                    <div style={{display:'flex',alignItems:'center',gap:4}}>
+                      <span style={{fontSize:13,fontWeight:800,color:'var(--brand-text)',fontFamily:'var(--font-mono)'}}>{sheetEvent.pointAmount.toLocaleString('ko-KR')}</span>
+                      <span style={{fontSize:11,color:'var(--brand-text)',fontWeight:600}}>원</span>
+                    </div>
+                  </div>
+                )}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px'}}>
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>협찬 금액</span>
                   {!editMode ? (
@@ -860,6 +891,17 @@ export default function CalendarPage() {
               {/* 방문 정보 */}
               <div style={{fontSize:10,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:8}}>방문 정보</div>
               <div style={{background:'var(--bg-card-inner)',border:'1px solid var(--border)',borderRadius:'var(--r-md)',overflow:'hidden',marginBottom:14}}>
+                {/* 체험 유형 — campaignType 필드 */}
+                {(() => {
+                  const CAMPAIGN_LABEL: Record<string, string> = { visit:'방문형', delivery:'배송형', payback:'페이백', reporter:'기자단' };
+                  const lbl = sheetEvent?.campaignType ? CAMPAIGN_LABEL[sheetEvent.campaignType] : null;
+                  return (
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px',borderBottom:'1px solid var(--border)'}}>
+                      <span style={{fontSize:12,color:'var(--text-muted)'}}>체험 유형</span>
+                      <span style={{fontSize:12,fontWeight:700,color:lbl?'var(--text-primary)':'var(--text-muted)'}}>{lbl ?? '—'}</span>
+                    </div>
+                  );
+                })()}
                 {/* F-08A 예약 여부 — DB Event 모델에 reservation 필드 없음. Phase 2 에서 스키마 추가 시 복원. */}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px',borderBottom:'1px solid var(--border)'}}>
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>예약 여부</span>
@@ -872,8 +914,9 @@ export default function CalendarPage() {
                     <span style={{fontSize:12,fontWeight:600,color:'var(--text-muted)'}}>—</span>
                   ) : (
                     <div style={{display:'flex',gap:6}}>
-                      {['가능','불가'].map(v => (
-                        <span key={v} style={{fontSize:11,fontWeight:600,padding:'4px 12px',borderRadius:'var(--r-full)',background:'var(--bg-card)',border:'1px solid var(--border-mid)',color:'var(--text-secondary)',cursor:'pointer'}}>{v}</span>
+                      {(['가능','불가'] as const).map(v => (
+                        <button key={v} type="button" onClick={() => setWkndToggle(prev => prev === v ? null : v)}
+                          style={{fontSize:11,fontWeight:700,padding:'4px 12px',borderRadius:'var(--r-full)',background:wkndToggle===v?'var(--brand-light)':'var(--bg-card)',border:wkndToggle===v?'1.5px solid var(--brand)':'1px solid var(--border-mid)',color:wkndToggle===v?'var(--brand-text)':'var(--text-secondary)',cursor:'pointer',fontFamily:'var(--font-body)'}}>{v}</button>
                       ))}
                     </div>
                   )}
@@ -1135,6 +1178,12 @@ export default function CalendarPage() {
                     </div>
                   </div>
 
+                  {/* 협찬 품목 */}
+                  <div style={{marginBottom:16}}>
+                    <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>협찬 품목 <span style={{fontSize:10,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(선택)</span></label>
+                    <input value={manualBenefit} onChange={e => setManualBenefit(e.target.value)} placeholder="제공 상품명 또는 서비스명" style={{width:'100%',padding:'12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:13,color:'var(--text-primary)',background:'var(--bg-input)',outline:'none',height:44,fontFamily:'var(--font-body)',boxSizing:'border-box'}} />
+                  </div>
+
                   {/* 협찬 금액 */}
                   <div style={{marginBottom:16}}>
                     <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>협찬 금액 <span style={{fontSize:10,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(선택)</span></label>
@@ -1186,10 +1235,10 @@ export default function CalendarPage() {
                     <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>주말 방문 <span style={{fontSize:10,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(선택)</span></label>
                     <div style={{display:'flex',gap:8}}>
                       {(['가능','불가'] as const).map(v => (
-                        <div key={v} onClick={() => setWkndToggle(prev => prev === v ? null : v)}
-                          style={{flex:1,height:44,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'var(--r-md)',border:wkndToggle===v?'1.5px solid var(--brand)':'1px solid var(--border-mid)',background:wkndToggle===v?'var(--brand-light)':'var(--bg-card)',color:wkndToggle===v?'var(--brand-text)':'var(--text-secondary)',fontSize:13,fontWeight:wkndToggle===v?700:600,cursor:'pointer',transition:'all 0.15s'}}>
+                        <button key={v} type="button" onClick={() => setWkndToggle(prev => prev === v ? null : v)}
+                          style={{flex:1,height:44,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'var(--r-md)',border:wkndToggle===v?'1.5px solid var(--brand)':'1px solid var(--border-mid)',background:wkndToggle===v?'var(--brand-light)':'var(--bg-card)',color:wkndToggle===v?'var(--brand-text)':'var(--text-secondary)',fontSize:13,fontWeight:wkndToggle===v?700:600,cursor:'pointer',transition:'all 0.15s',fontFamily:'var(--font-body)'}}>
                           {v}
-                        </div>
+                        </button>
                       ))}
                     </div>
                     <div style={{fontSize:11,color:'var(--text-muted)',marginTop:5}}>미선택 시 캘린더에 — 으로 표시돼요</div>

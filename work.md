@@ -1,5 +1,93 @@
 # 체체 작업 이력
 
+## 2026-04-27 (8차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — 수기 입력 폼 협찬 품목 추가 + 주말 방문 버튼 버그 수정
+- 변경 내용:
+  - **수정 1 — 수기 입력 탭에 협찬 품목 입력 칸 추가**
+    · 협찬 금액 바로 위에 "협찬 품목 (선택)" label + input 추가
+    · 기존 `manualBenefit` / `setManualBenefit` state 연결 (7차에서 추가, setState 있었으나 UI 없었음)
+    · placeholder: "제공 상품명 또는 서비스명"
+    · 이제 수기 입력 탭에서 입력 → handleAddManual POST body benefit 필드에 포함 → DB 저장 → 상세 시트 표시 전 사이클 완성
+  - **수정 2 — 주말 방문 버튼 버그 수정**
+    · 근본 원인 A (addCalSheet 수기 입력 탭): `<div onClick>` → `<button type="button" onClick>` 으로 교체
+      — `<button>` 은 native click event를 확실히 받아 overflowY:auto 컨테이너 안에서도 포인터 이벤트 보장
+      — `fontFamily: 'var(--font-body)'` 추가 (button default serif 폰트 override)
+    · 근본 원인 B (calSheet 편집 모드): `<span>` 태그에 onClick이 **전혀 없었음** — cursor:pointer 만 있고 이벤트 없음
+      — `<button type="button" onClick>` 으로 교체
+      — `wkndToggle` state에 연결하여 visual 피드백(brand/border 색상 토글) 동작
+      — ⚠️ wkndToggle 은 현재 DB 저장 안 됨 (weekendVisit 필드 미구현). 버튼 UI 인터랙션만 동작.
+- Capacitor 호환성:
+  - `<button type="button">` — 폼 submit 차단 위해 type 명시. 웹/네이티브 동일.
+  - localStorage 사용 없음
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 0)
+  - Prisma client 필드 확인: id/userId/date/type/label/name/plat/location/amount/guideline/benefit/campaignType/pointAmount/channels/done/createdAt/updatedAt 모두 포함 ✓
+  - dev 서버 핫리로드 ✓ (Compiled in 162-852ms, jest-worker 크래시 0)
+  - ⚠️ 도유진 본인이 로그인된 브라우저에서 다음 검증 필요:
+    1. 수기 입력 탭 → 협찬 품목 칸 표시 / 입력 후 등록 → 상세 시트에서 표시 확인
+    2. 주말 방문 가능/불가 버튼 클릭 → 활성화 토글 (파란 테두리/배경) 정상 동작
+    3. 편집 모드에서 주말 방문 버튼도 토글 동작
+- 발견 이슈 / 남은 이슈:
+  - 주말 방문 toggle 값이 DB에 저장되지 않음 — weekendVisit(Boolean?) 필드 추가 시 handleAddManual + handleSaveEdit 에 연동 필요
+  - 예약 여부(resToggle) 도 DB 미저장 동일 상태
+- 다음 작업: '플랫폼에서 확인하기' 버튼 URL 연결 + URL 없을 때 알럿
+
+## 2026-04-27 (7차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - prisma/schema.prisma (수정) — Event 모델에 benefit / campaignType / pointAmount 3개 필드 추가
+  - prisma/migrations/20260427075807_add_benefit_campaigntype_pointamount/migration.sql (신규) — ALTER TABLE 실 마이그레이션
+  - prisma/migrations/20260427075817_add_benefit_campaigntype_pointamount/migration.sql (신규) — 중복 실행으로 생성된 빈 마이그레이션 (무해, 삭제 불가)
+  - app/api/events/route.ts (수정) — POST handler에 benefit / campaignType / pointAmount 저장 추가
+  - app/calendar/page.tsx (수정) — CalEvent 인터페이스 / raw 타입 / hydration / state / parseUrlAuto / handleAddManual / calSheet 표시 전반 수정
+- 변경 내용:
+  - **1. prisma/schema.prisma** — Event 모델에 필드 3개 추가:
+    · `benefit String?` — 협찬 품목 (파서 추출값)
+    · `campaignType String?` — visit / delivery / payback / reporter
+    · `pointAmount Int?` — 페이백·기자단 포인트 금액 (원)
+  - **2. 마이그레이션**
+    · `npx dotenv -e .env.local -- prisma migrate dev --name add-benefit-campaigntype-pointamount --create-only` 실행
+    · --create-only 의도였으나 먼저 생성된 파일 `20260427075807_...` 이 DB에 적용됨 → **마이그레이션이 Supabase에 실제 반영됨**
+    · DB에 컬럼 3개(benefit TEXT, campaignType TEXT, pointAmount INTEGER) 추가 완료
+    · 빈 마이그레이션 `20260427075817_...` 도 DB _prisma_migrations 테이블에 기록 → 파일 삭제 불가(불일치 발생)
+    · `npx prisma generate` → Prisma 클라이언트 타입 재생성 완료 (EPERM 경고는 dev 서버가 DLL 점유해서 발생한 것, 이후 migrate dev 과정에서 재생성됨)
+  - **3. app/api/events/route.ts POST**
+    · `benefit: sanitizeString(body.benefit, 200)` 추가
+    · `campaignType: sanitizeString(body.campaignType, 50)` 추가
+    · `pointAmount: typeof body.pointAmount === 'number' && body.pointAmount > 0 ? Math.floor(body.pointAmount) : null` 추가
+  - **4. app/calendar/page.tsx**
+    · CalEvent 인터페이스: benefit?, campaignType?, pointAmount? 필드 추가
+    · refreshEvents raw 타입: 3개 필드 추가
+    · hydration map: `benefit/campaignType/pointAmount: e.xxx ?? undefined` 추가
+    · 신규 state: `manualBenefit`, `manualCampaignType`, `manualPointAmount` (각 useState(''))
+    · closeSheet: 3개 state 리셋 추가
+    · parseUrlAuto: `parsed.benefit → setManualBenefit`, `parsed.campaignType → setManualCampaignType`, `parsed.pointAmount → setManualPointAmount(String(...))` 매핑 추가
+      (기존 setManualAmount(String(parsed.pointAmount)) 는 수익 추적용으로 보존 — 양쪽 모두 set)
+    · handleAddManual POST body: benefit / campaignType / `pointAmount: parseInt(manualPointAmount)` 추가 (r+g 두 이벤트 모두)
+    · calSheet 협찬 정보 섹션:
+      - 협찬 품목 행: `sheetEvent?.benefit ?? '—'` 로 변경 (실 DB 값 표시)
+      - 포인트 금액 행 신규 추가: `sheetEvent?.pointAmount != null` 일 때만 렌더링, toLocaleString 포맷
+    · calSheet 방문 정보 섹션:
+      - 체험 유형 행 신규 추가 (campaignType → 방문형/배송형/페이백/기자단 한글 레이블)
+      - 예약 여부 행 위에 삽입
+- Capacitor 호환성:
+  - 서버 렌더링 없음, useState/fetch 클라이언트 사이드만 사용
+  - localStorage 사용 없음
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 0)
+  - Prisma 클라이언트 재생성 완료 (타입 오류 없음)
+  - dev 서버 핫리로드 ✓ Compiled in 199-320ms (jest-worker 크래시 0)
+  - GET /calendar 200 정상
+  - ⚠️ 마이그레이션이 이미 Supabase에 적용되었으므로 유진이 별도로 `prisma migrate dev` 재실행 불필요
+  - ⚠️ Vercel 환경변수에 DB 연결 정보가 이미 있으므로 배포 시 자동 반영. 신규 데이터 등록 후 benefit/campaignType/pointAmount 표시 검증 필요.
+- 발견 이슈 / 남은 이슈:
+  - 빈 마이그레이션 `20260427075817_...` — DB _prisma_migrations 테이블에 기록되어 파일 삭제 불가. 무해.
+  - handleSaveEdit (편집 모드 저장) 에는 benefit/campaignType/pointAmount 수정 로직 미추가 — 편집 UI 없으므로 현재 범위 외. 필요 시 editBenefit/editCampaignType state 추가 후 처리.
+  - 수기 입력 탭(addCalSheet)에도 benefit/campaignType/pointAmount 입력 UI 없음 — URL 파서 자동 채움 또는 추후 폼 필드 추가 필요.
+- 다음 작업: 유진이 npx prisma migrate dev 실행 → Vercel Supabase 반영 필요 (이미 적용 완료이므로 불필요) / '플랫폼에서 확인하기' 버튼 URL 연결 + URL 없을 때 알럿
+
 ## 2026-04-27 (6차)
 - 작업자: 도유진 - 윈도우 (via Claude Code)
 - 변경 파일:
