@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Claude worktrees
 .claude/worktrees/
+
+# Codex CLI юс╫ц ╨Т╣Е
+.codex-tmp-tests/

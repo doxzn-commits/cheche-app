@@ -669,3 +669,14 @@
 - 변경 파일: 전체 프로젝트 초기 생성
 - 변경 내용: Next.js 뼈대 생성, 폴더 구조, 디자인 토큰, CLAUDE.md 전체
 - 다음 작업: 각 화면 HTML → JSX 변환 시작 (캘린더 SCR-012 우선)
+## 2026-04-27 (1차)
+- 작업자: Codex CLI (OpenAI)
+- 변경 파일:
+  - types/parsed-campaign.ts (수정) - dinnerqueen 플랫폼, campaignType 확장, pointAmount 필드 추가
+  - lib/parsers/dinnerqueen.ts (신규) - 디너의여왕 HTML 파서와 URL 검증 유틸 추가
+  - lib/parsers/dinnerqueen.test.ts (신규) - dinnerqueen URL/파싱 단위 테스트 추가
+- 변경 내용:
+  - dinnerqueen 샘플 5건을 분석해 일정 블록, 제공내역, 키워드/해시태그, 지도 주소, 포인트 배지 기반 추출 로직 구현
+  - og:title 우선 제목 정리, 리뷰 기간 종료일 파싱, 방문/배송/페이백/기자단 판별, 채널/포인트 금액 추출 추가
+  - 방문형, 배송형, 페이백, 기자단, 부분 성공, 빈 HTML 케이스를 포함한 테스트 작성
+- 다음 작업: [Claude Code 인계] app/api/parse-url/route.ts 수정 — 도메인 라우팅(dinnerqueen.net → parseDinnerqueenCampaign), revu 플랫폼은 'TIER_2_REQUIRED' 응답 반환, /tmp/dq-samples 정리

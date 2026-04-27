@@ -1,35 +1,37 @@
 /**
- * 레뷰 캠페인 페이지 파싱 결과
- * 모든 필드 optional — 부분 성공 케이스 지원
+ * Campaign page parsing result.
+ * All fields stay optional so partial extraction can still succeed.
  */
 export interface ParsedCampaign {
-  /** F-01 체험명 */
+  /** F-01 campaign title */
   title?: string;
-  /** F-02 플랫폼 — revu 고정 */
-  platform: 'revu';
-  /** F-03 리뷰 마감일 (ISO date string YYYY-MM-DD) */
+  /** F-02 source platform */
+  platform: 'revu' | 'dinnerqueen';
+  /** F-03 review deadline (ISO date string YYYY-MM-DD) */
   reviewDeadline?: string;
-  /** F-04 협찬 품목 */
+  /** F-04 sponsored item / reward */
   benefit?: string;
-  /** F-06 채널 — 블로그/인스타/유튜브/클립 (복수 가능) */
+  /** F-06 channels - blog/instagram/youtube/clip */
   channels?: ('blog' | 'instagram' | 'youtube' | 'clip')[];
-  /** F-07 가이드라인 (해시태그·필수 문구 포함 원문) */
+  /** F-07 campaign guideline body */
   guideline?: string;
-  /** 위치 (방문형일 경우) — 도로명 주소 또는 지명 */
+  /** Store address or visit location */
   location?: string;
-  /** 방문형/배송형 구분 */
-  campaignType?: 'visit' | 'delivery';
+  /** Campaign type */
+  campaignType?: 'visit' | 'delivery' | 'payback' | 'reporter';
+  /** Point amount for payback/reporter campaigns */
+  pointAmount?: number;
 }
 
 /**
- * 파싱 메타 정보
+ * Parser metadata.
  */
 export interface ParseResult {
   data: ParsedCampaign;
-  /** 어느 필드를 성공적으로 추출했는지 */
+  /** Fields extracted successfully */
   extractedFields: (keyof ParsedCampaign)[];
-  /** 어느 필드 추출에 실패했는지 */
+  /** Fields that could not be extracted */
   missingFields: (keyof ParsedCampaign)[];
-  /** 부분 성공 여부 */
+  /** Whether extraction partially succeeded */
   isPartial: boolean;
 }
