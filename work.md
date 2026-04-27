@@ -1,5 +1,25 @@
 # 체체 작업 이력
 
+## 2026-04-27
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/api/parse-url/route.ts (수정) — 도메인별 라우팅 추가 (URL 자동완성 ②.5 단계)
+- 변경 내용:
+  - URL hostname 추출 후 도메인 화이트리스트 분기 도입
+  - 공개 플랫폼 라우팅: dinnerqueen.net / www.dinnerqueen.net → parseDinnerqueenCampaign(html) 호출
+    · TODO: Phase 1.5 — 강남맛집/서울오빠/리뷰플레이스 정확한 도메인 검증 후 파서 추가
+  - 비공개 플랫폼(revu/reviewnote/mible) → 새 에러 코드 'TIER_2_REQUIRED' (HTTP 400) + platform 필드 응답
+    · TODO: 리뷰노트 정확한 도메인 확인 필요 (현재는 reviewnote.co.kr 가정)
+  - 그 외 도메인 → 새 에러 코드 'UNSUPPORTED_PLATFORM' (HTTP 400)
+  - 기존 캐시(5분 TTL) · Rate Limit(1초/유저·IP) · 8초 timeout · User-Agent 'ChecheApp/1.0' · gzip 모두 유지
+  - revu 의존성 제거 (revu.ts 파일은 보존 — 추후 deprecate 별도 작업)
+  - URL 패턴 검증을 도메인별 validate 함수로 이양 (dinnerqueen은 isDinnerqueenCampaignUrl 사용)
+- 검증:
+  - 4가지 분기 케이스 모두 의도대로 분기 (dinnerqueen: WILL_FETCH / revu: TIER_2_REQUIRED+platform='revu' / example.com: UNSUPPORTED_PLATFORM / not-a-url: INVALID_URL)
+  - 디너의여왕 실 fetch 200, 9개 중 8개 필드 추출 (title/platform/reviewDeadline/benefit/channels/guideline/location/campaignType, pointAmount만 누락 — visit 캠페인이라 정상)
+  - ⚠️ proxy.ts 미들웨어 매처가 /api/parse-url 을 보호 경로로 잡아 비인증 curl은 모두 307 → /login 리다이렉트 (라우트 코드는 인증 선택적이지만 미들웨어가 강제). 본 검증은 분기 로직을 별도 스크립트로 우회 검증 후 정리. 추후 정책 결정 필요 (matcher 예외 처리 vs 클라이언트는 항상 로그인 후 호출)
+- 다음 작업: [다음 단계 ③] SCR-008C 또는 SCR-012B URL 자동완성 UI 통합 — 공개/TIER_2/UNSUPPORTED 분기 처리
+
 ## 2026-04-25 (2차)
 - 작업자: 도유진 - 맥북 (via Claude Code)
 - 변경 파일:
