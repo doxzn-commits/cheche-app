@@ -597,7 +597,8 @@ export default function CalendarPage() {
     if (!sheetEvent) return;
     setEditName(sheetEvent.name);
     setEditLocation(sheetEvent.location);
-    setEditAmount(sheetEvent.amount ?? '');
+    // 기존 데이터(쉼표 포함) → raw digits 로 정규화하여 입력 input 의 toLocaleString 포맷팅과 호환되게.
+    setEditAmount((sheetEvent.amount ?? '').replace(/[^0-9]/g, ''));
     setEditGuideline(sheetEvent.guideline ?? '');
     setEditDeadlineDate(sheetDeadlineEv?.date ?? '');
     setEditExpDate(sheetExpEv?.date ?? '');
@@ -611,7 +612,8 @@ export default function CalendarPage() {
     const ch = editChannels.size > 0 ? [...editChannels] : [];
     const nameTrim = editName.trim() || sheetEvent.name;
     const locTrim  = editLocation.trim() || '—';
-    const amtTrim  = editAmount.trim() || null;
+    // editAmount 은 onChange 에서 raw digits 만 보유하지만, 예전 데이터가 hydrate 되었을 수도 있으니 한번 더 strip.
+    const amtTrim  = editAmount.replace(/[^0-9]/g, '') || null;
     const gdTrim   = editGuideline.trim() || null;
     const plat     = sheetEvent.plat;
     const jsonHeaders = { 'Content-Type': 'application/json' };
@@ -819,28 +821,36 @@ export default function CalendarPage() {
               {/* 협찬 정보 */}
               <div style={{fontSize:10,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:8}}>협찬 정보</div>
               <div style={{background:'var(--bg-card-inner)',border:'1px solid var(--border)',borderRadius:'var(--r-md)',overflow:'hidden',marginBottom:14}}>
+                {/* 협찬 품목 — DB Event 모델에 benefit 필드 없음. Phase 2 에서 스키마 추가 시 복원. */}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px',borderBottom:'1px solid var(--border)'}}>
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>협찬 품목</span>
-                  {!editMode ? (
-                    <span style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',textAlign:'right',maxWidth:'55%'}}>음료 2잔 + 디저트 1개</span>
-                  ) : (
-                    <input defaultValue="음료 2잔 + 디저트 1개" style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-body)',outline:'none',width:160,textAlign:'right'}} />
-                  )}
+                  <span style={{fontSize:12,fontWeight:600,color:'var(--text-muted)'}}>—</span>
                 </div>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px'}}>
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>협찬 금액</span>
                   {!editMode ? (
-                    sheetEvent?.amount ? (
-                      <div style={{display:'flex',alignItems:'center',gap:4}}>
-                        <span style={{fontSize:13,fontWeight:800,color:'var(--s-selected)',fontFamily:'var(--font-mono)'}}>{sheetEvent.amount}</span>
-                        <span style={{fontSize:11,color:'var(--s-selected)',fontWeight:600}}>원</span>
-                      </div>
-                    ) : (
-                      <span style={{fontSize:12,fontWeight:600,color:'var(--text-muted)'}}>—</span>
-                    )
+                    (() => {
+                      // 기존 데이터(쉼표 포함) 와 신규 데이터(raw digits) 모두 호환되도록 strip 후 format.
+                      const amtRaw = (sheetEvent?.amount ?? '').replace(/[^0-9]/g, '');
+                      return amtRaw ? (
+                        <div style={{display:'flex',alignItems:'center',gap:4}}>
+                          <span style={{fontSize:13,fontWeight:800,color:'var(--s-selected)',fontFamily:'var(--font-mono)'}}>{Number(amtRaw).toLocaleString('ko-KR')}</span>
+                          <span style={{fontSize:11,color:'var(--s-selected)',fontWeight:600}}>원</span>
+                        </div>
+                      ) : (
+                        <span style={{fontSize:12,fontWeight:600,color:'var(--text-muted)'}}>—</span>
+                      );
+                    })()
                   ) : (
                     <div style={{display:'flex',alignItems:'center',gap:4}}>
-                      <input type="text" inputMode="numeric" value={editAmount} onChange={e => setEditAmount(e.target.value)} style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-mono)',outline:'none',width:100,textAlign:'right'}} />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        // 표시값은 천단위 쉼표 포맷, state 는 raw digits 만 유지.
+                        value={editAmount ? Number(editAmount).toLocaleString('ko-KR') : ''}
+                        onChange={e => setEditAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                        style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-mono)',outline:'none',width:100,textAlign:'right'}}
+                      />
                       <span style={{fontSize:12,color:'var(--text-muted)'}}>원</span>
                     </div>
                   )}
@@ -850,18 +860,10 @@ export default function CalendarPage() {
               {/* 방문 정보 */}
               <div style={{fontSize:10,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:8}}>방문 정보</div>
               <div style={{background:'var(--bg-card-inner)',border:'1px solid var(--border)',borderRadius:'var(--r-md)',overflow:'hidden',marginBottom:14}}>
-                {/* F-08A 예약 여부 (v1.1) */}
+                {/* F-08A 예약 여부 — DB Event 모델에 reservation 필드 없음. Phase 2 에서 스키마 추가 시 복원. */}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px',borderBottom:'1px solid var(--border)'}}>
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>예약 여부</span>
-                  {!editMode ? (
-                    <span style={{fontSize:12,fontWeight:700,color:'var(--s-applied)'}}>예정</span>
-                  ) : (
-                    <div style={{display:'flex',gap:5}}>
-                      {['예정','완료','불필요'].map(v => (
-                        <span key={v} style={{fontSize:11,fontWeight:700,padding:'4px 10px',borderRadius:'var(--r-full)',background:v==='예정'?'var(--brand-light)':'var(--bg-card)',border:v==='예정'?'1.5px solid var(--brand)':'1px solid var(--border-mid)',color:v==='예정'?'var(--brand-text)':'var(--text-secondary)',cursor:'pointer'}}>{v}</span>
-                      ))}
-                    </div>
-                  )}
+                  <span style={{fontSize:12,fontWeight:600,color:'var(--text-muted)'}}>—</span>
                 </div>
                 {/* F-08 주말 방문 (v1.1: 기본값 없음, 미선택 허용) */}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px',borderBottom:'1px solid var(--border)'}}>
@@ -876,17 +878,10 @@ export default function CalendarPage() {
                     </div>
                   )}
                 </div>
-                {/* 업주 전화번호 */}
+                {/* 업주 전화번호 — DB Event 모델에 phoneNumber 필드 없음. Phase 2 에서 스키마 추가 시 복원. */}
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 12px'}}>
                   <span style={{fontSize:12,color:'var(--text-muted)'}}>업주 전화번호</span>
-                  {!editMode ? (
-                    <a href="tel:02-1234-5678" style={{fontSize:12,fontWeight:700,color:'var(--brand-text)',fontFamily:'var(--font-mono)',textDecoration:'none',display:'flex',alignItems:'center',gap:4}}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8 19.79 19.79 0 01.1 2.2 2 2 0 012.08 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.46-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
-                      02-1234-5678
-                    </a>
-                  ) : (
-                    <input type="tel" defaultValue="02-1234-5678" style={{fontSize:12,padding:'5px 8px',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',background:'var(--bg-input)',color:'var(--text-primary)',fontFamily:'var(--font-mono)',outline:'none',width:140}} />
-                  )}
+                  <span style={{fontSize:12,fontWeight:600,color:'var(--text-muted)'}}>—</span>
                 </div>
               </div>
 

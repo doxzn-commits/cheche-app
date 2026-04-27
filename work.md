@@ -1,5 +1,47 @@
 # 체체 작업 이력
 
+## 2026-04-27 (6차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — SCR-012B 상세 시트 mockup 텍스트 제거 + 협찬 금액 표시 포맷
+- 변경 내용:
+  - **수정 1 — 협찬 품목 mockup 제거**
+    · 하드코딩 "음료 2잔 + 디저트 1개" 제거 (view + edit 양쪽)
+    · DB Event 모델에 benefit 필드 없음 → 항상 "—" 표시, 편집 모드 input 도 제거
+    · "Phase 2 에서 스키마 추가 시 복원" 주석으로 의도 명시
+  - **수정 2 — 업주 전화번호 mockup 제거**
+    · 하드코딩 "02-1234-5678" 제거 (tel: 링크 + edit input 모두)
+    · DB phoneNumber 필드 없음 → 항상 "—" 표시
+  - **수정 3 — 예약 여부 mockup 제거 (F-08A)**
+    · 하드코딩 "예정" 배지 제거 (view + 3종 토글 edit 모두)
+    · DB reservation 필드 없음 → 항상 "—" 표시
+    · 주말 방문(F-08) 행은 이미 view 에서 "—" 표시 중이라 spec 범위 외로 그대로 유지
+  - **수정 4 — 협찬 금액 표시 포맷 (5차 후속)**
+    · view 모드: `(sheetEvent?.amount ?? '').replace(/[^0-9]/g, '')` 로 strip 후 `Number(...).toLocaleString('ko-KR')` 적용
+      → 신규 데이터(raw digits)와 기존 데이터(쉼표 포함 문자열) 모두 호환되어 "28,500" 형식으로 통일 표시
+    · edit 모드 input: 등록 시트 manualAmount 와 동일 패턴 — value 는 toLocaleString 포맷, onChange 는 strip
+    · `enterEditMode`: `setEditAmount((sheetEvent.amount ?? '').replace(/[^0-9]/g, ''))` 로 hydrate 시 raw digits 로 정규화
+    · `handleSaveEdit`: `editAmount.replace(/[^0-9]/g, '') || null` → DB 에는 항상 raw digits 만 저장
+- Capacitor 호환성:
+  - `Number(...).toLocaleString('ko-KR')` 은 ECMA-402 표준 — Capacitor WebView/iOS/Android 모두 지원
+  - 외부 패키지 추가 없음, localStorage 사용 없음
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 없음)
+  - dev 서버 핫리로드 모든 컴파일 성공 (✓ Compiled in 176-200ms, jest-worker 크래시 0회)
+  - GET /calendar 200 응답 정상
+  - mockup 문자열 grep 결과: "음료 2잔" / "02-1234" / `defaultValue="음료/02-` 모두 0건 (완전 제거 확인)
+  - ⚠️ 도유진 본인이 로그인된 브라우저에서 다음 검증 필요:
+    1. 일정 상세 시트(SCR-012B) 협찬 품목 → "—" / 업주 전화번호 → "—" / 예약 여부 → "—"
+    2. 협찬 금액 28500 저장된 일정 → "28,500 원" 표시
+    3. 편집 모드 진입 → 금액 input 도 28,500 표시 / 입력 시 쉼표 자동 적용
+    4. 편집 모드 저장 후 다시 view 모드 → 금액 포맷 유지
+- 발견 이슈 / 남은 이슈:
+  - 메모(F-12) 영역 (line 905) 도 `defaultValue="주차 가능 · 사전 예약 필수 · 음료 선택 가능"` 하드코딩 잔존.
+    spec 범위 외라 그대로 두었으나 추후 정리 필요. (DB 에 memo 필드 자체가 없음 — Phase 2 에서 함께 처리 권장)
+  - 주말 방문(F-08) 편집 모드 토글도 저장처 없음 (DB 필드 없음). 현재는 노출만 되고 무시됨 — 동일 정리 대상.
+  - 5차에서 manualAmount 를 raw digits 로 변경한 직후 등록한 신규 데이터는 이번 fix 로 calSheet 에서도 포맷 표시됨.
+- 다음 작업: '플랫폼에서 확인하기' 버튼 URL 연결 + URL 없을 때 알럿
+
 ## 2026-04-27 (5차)
 - 작업자: 도유진 - 윈도우 (via Claude Code)
 - 변경 파일:
