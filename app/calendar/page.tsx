@@ -152,6 +152,17 @@ export default function CalendarPage() {
   const [resToggle, setResToggle]     = useState<'예정' | '완료' | '불필요'>('예정');
   const [wkndToggle, setWkndToggle]   = useState<'가능' | '불가' | null>(null);
 
+  // URL 자동완성 ③ — /api/parse-url 연동 상태
+  const [url, setUrl]                 = useState('');
+  const [parseStatus, setParseStatus] = useState<
+    'idle' | 'loading' | 'success' | 'partial' | 'tier2' | 'unsupported' | 'error'
+  >('idle');
+  const [parseMessage, setParseMessage] = useState<string>('');
+  const [tier2Platform, setTier2Platform] = useState<string | null>(null);
+
+  // 토스트 — 작은 안내 메시지 (URL 미입력 안내, 등록 완료 등)
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   // 수기 입력 폼 state
   const [manualName, setManualName]           = useState('');
   const [manualPlatform, setManualPlatform]   = useState('');
@@ -257,7 +268,18 @@ export default function CalendarPage() {
     setEditGuideline('');
     setEditDeadlineDate('');
     setEditExpDate('');
+    setUrl('');
+    setParseStatus('idle');
+    setParseMessage('');
+    setTier2Platform(null);
   }
+
+  // 토스트 — 2.2초 후 자동 사라짐. setTimeout 으로 처리 (Capacitor 호환).
+  useEffect(() => {
+    if (!toastMessage) return;
+    const t = setTimeout(() => setToastMessage(null), 2200);
+    return () => clearTimeout(t);
+  }, [toastMessage]);
 
   // ── 슬라이드 네비 ─────────────────────────────────────
   function slide(dir: 'left' | 'right', action: () => void) {
@@ -294,6 +316,121 @@ export default function CalendarPage() {
     await refreshEvents();
     closeSheet();
   }
+
+  // ── URL 자동완성 ③ — /api/parse-url 호출 + 폼 자동 채움 ──
+  // ParsedCampaign 필드 → 기존 manual* state 매핑
+  // - title         → setManualName
+  // - reviewDeadline→ setManualDeadline
+  // - guideline     → setGuidelineText
+  // - location      → setManualLocation
+  // - platform      → setManualPlatform ('dinnerqueen' → '디너의여왕', 'revu' → '레뷰')
+  // - channels      → setManualChannels (영문 → 한글 매핑)
+  // - pointAmount   → setManualAmount (숫자 → 문자열)
+  // benefit·campaignType 은 폼에 매칭되는 setter 가 없어 매핑 생략 (보고)
+  // 추후 Capacitor 빌드 시 BASE_URL env 분기 필요 — 현재는 상대 경로 사용
+  async function parseUrlAuto(targetUrl: string) {
+    if (!targetUrl || !/^https?:\/\//.test(targetUrl)) {
+      setParseStatus('idle');
+      setParseMessage('');
+      return;
+    }
+
+    setParseStatus('loading');
+    setParseMessage('체험단 정보를 불러오는 중...');
+
+    const PLATFORM_LABEL: Record<string, string> = {
+      revu: '레뷰',
+      dinnerqueen: '디너의여왕',
+      reviewnote: '리뷰노트',
+      mrblog: '미블',
+    };
+    const CHANNEL_LABEL: Record<string, string> = {
+      blog: '블로그',
+      instagram: '인스타그램',
+      youtube: '유튜브',
+      clip: '클립',
+    };
+
+    try {
+      const res = await fetch('/api/parse-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: targetUrl }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        const parsed = data.data;
+        if (parsed.title)            setManualName(parsed.title);
+        if (parsed.reviewDeadline)   setManualDeadline(parsed.reviewDeadline);
+        if (parsed.guideline)        setGuidelineText(parsed.guideline);
+        if (parsed.location)         setManualLocation(parsed.location);
+        if (parsed.platform && PLATFORM_LABEL[parsed.platform]) {
+          setManualPlatform(PLATFORM_LABEL[parsed.platform]);
+        }
+        if (Array.isArray(parsed.channels) && parsed.channels.length) {
+          const mapped = parsed.channels
+            .map((c: string) => CHANNEL_LABEL[c])
+            .filter(Boolean);
+          if (mapped.length) setManualChannels(new Set(mapped));
+        }
+        if (typeof parsed.pointAmount === 'number' && parsed.pointAmount > 0) {
+          setManualAmount(String(parsed.pointAmount));
+        }
+
+        const isPartial = data.isPartial;
+        setParseStatus(isPartial ? 'partial' : 'success');
+        setParseMessage(
+          isPartial
+            ? '불러올 수 있는 값을 모두 불러왔어요!'
+            : '체험단 정보를 모두 불러왔어요!'
+        );
+        setUrlParsed(true);
+        return;
+      }
+
+      switch (data.code) {
+        case 'TIER_2_REQUIRED':
+          setParseStatus('tier2');
+          setTier2Platform(data.platform ?? null);
+          setParseMessage(data.message);
+          break;
+        case 'UNSUPPORTED_PLATFORM':
+          setParseStatus('unsupported');
+          setParseMessage(data.message);
+          break;
+        case 'INVALID_URL':
+        case 'FETCH_FAILED':
+        case 'TIMEOUT':
+        case 'PARSE_FAILED':
+        case 'RATE_LIMIT':
+          setParseStatus('error');
+          setParseMessage(data.message);
+          break;
+        default:
+          setParseStatus('error');
+          setParseMessage('알 수 없는 오류가 발생했어요.');
+      }
+    } catch {
+      setParseStatus('error');
+      setParseMessage('네트워크 오류가 발생했어요. 다시 시도해주세요.');
+    }
+  }
+
+  // URL 입력 debounce (500ms) — URL 탭 활성 + URL 입력 시에만 자동 호출
+  useEffect(() => {
+    if (addTab !== 'url') return;
+    if (!url) {
+      setParseStatus('idle');
+      setParseMessage('');
+      return;
+    }
+    const timer = setTimeout(() => {
+      parseUrlAuto(url);
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, addTab]);
 
   // ── Calendar Cells ────────────────────────────────────
   const cells = useMemo(() => {
@@ -382,13 +519,15 @@ export default function CalendarPage() {
     const name = manualName.trim();
     const plat = manualPlatform;
     const location = manualLocation.trim() || '—';
-    const amount = manualAmount.trim() || null;
+    // manualAmount 는 onChange 에서 raw digits 만 유지하지만, URL 파서가 String(Number) 로 채울 수도 있으니 한번 더 strip.
+    const amount = manualAmount.replace(/[^0-9]/g, '') || null;
     const guideline = guidelineText.trim() || null;
 
     const jsonHeaders = { 'Content-Type': 'application/json' };
 
-    // 리뷰 마감 이벤트
-    await fetch('/api/events', {
+    // 리뷰 마감 이벤트 — 응답에서 created.id 추출하여 등록 후 상세 시트 자동 열기에 사용
+    let newEventId: string | null = null;
+    const deadlineRes = await fetch('/api/events', {
       method: 'POST',
       headers: jsonHeaders,
       body: JSON.stringify({
@@ -396,6 +535,14 @@ export default function CalendarPage() {
         amount, guideline, channels: ch,
       }),
     });
+    if (deadlineRes.ok) {
+      try {
+        const created = await deadlineRes.json();
+        if (created && typeof created.id === 'string') newEventId = created.id;
+      } catch {
+        // 본문 파싱 실패 시 newEventId null 유지 — 등록은 성공했으나 자동 열기만 생략됨
+      }
+    }
     // 체험 기간 이벤트 (있으면)
     if (manualExpDate) {
       await fetch('/api/events', {
@@ -435,6 +582,14 @@ export default function CalendarPage() {
     setMonth(dateObj.getMonth());
     setSelDate(manualDeadline);
     closeSheet();
+
+    // 등록 완료 → 방금 등록한 일정의 SCR-012B 상세 시트 자동 열기.
+    // closeSheet() 가 setOpenSheet(null) + 폼 state 리셋을 끝낸 다음 짧은 딜레이로
+    // calSheet 시트 애니메이션이 자연스럽게 이어지도록 50ms 후 showCalSheet 호출.
+    if (newEventId) {
+      setToastMessage('일정을 등록했어요!');
+      setTimeout(() => showCalSheet(newEventId!), 50);
+    }
   }
 
   // ── 상세 시트 편집 진입 ────────────────────────────────
@@ -829,15 +984,27 @@ export default function CalendarPage() {
                   <div style={{flex:1,position:'relative'}}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',pointerEvents:'none'}}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
                     <input
+                      type="url"
+                      value={url}
+                      onChange={e => setUrl(e.target.value)}
                       placeholder="선정된 체험단 공고 URL 붙여넣기"
                       disabled={addTab === 'manual'}
                       style={{width:'100%',padding:'12px 14px 12px 34px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:13,color:'var(--text-primary)',background:addTab==='manual'?'var(--bg-chip)':'var(--bg-input)',outline:'none',height:44,fontFamily:'var(--font-body)',opacity:addTab==='manual'?0.4:1,boxSizing:'border-box'}}
                     />
                   </div>
                   {addTab === 'url' && (
-                    <button onClick={() => setUrlParsed(true)}
-                      style={{height:44,padding:'0 16px',background:'var(--brand)',color:'#fff',border:'none',borderRadius:'var(--r-md)',fontSize:13,fontWeight:700,cursor:'pointer',whiteSpace:'nowrap',fontFamily:'var(--font-body)',boxShadow:'var(--brand-shadow)',flexShrink:0}}>
-                      불러오기
+                    <button
+                      onClick={() => {
+                        if (!url.trim()) {
+                          // URL 미입력 시 parseStatus 변경 없이 토스트만 띄움
+                          setToastMessage('공고 URL을 먼저 입력해주세요!');
+                          return;
+                        }
+                        parseUrlAuto(url);
+                      }}
+                      disabled={parseStatus === 'loading'}
+                      style={{height:44,padding:'0 16px',background:'var(--brand)',color:'#fff',border:'none',borderRadius:'var(--r-md)',fontSize:13,fontWeight:700,cursor:parseStatus === 'loading' ? 'not-allowed' : 'pointer',whiteSpace:'nowrap',fontFamily:'var(--font-body)',boxShadow:'var(--brand-shadow)',flexShrink:0,opacity:parseStatus === 'loading' ? 0.55 : 1}}>
+                      {parseStatus === 'loading' ? '불러오는 중...' : '불러오기'}
                     </button>
                   )}
                 </div>
@@ -845,6 +1012,52 @@ export default function CalendarPage() {
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   레뷰·강남맛집·미블 등 18개 플랫폼 URL 지원해요
                 </div>
+
+                {/* 분석 결과 메시지 (URL 탭 한정) */}
+                {addTab === 'url' && parseStatus !== 'idle' && (
+                  <div style={{marginTop:12}}>
+                    {parseStatus === 'loading' && (
+                      <div style={{padding:'10px 12px',borderRadius:'var(--r-md)',fontSize:12,fontWeight:600,color:'var(--text-secondary)',background:'var(--bg-chip)',border:'1px solid var(--border-mid)',display:'flex',alignItems:'center',gap:8}}>
+                        <span style={{display:'inline-block',width:10,height:10,borderRadius:'50%',border:'2px solid var(--text-muted)',borderTopColor:'transparent',animation:'parseSpin 0.8s linear infinite',flexShrink:0}} />
+                        {parseMessage}
+                      </div>
+                    )}
+                    {parseStatus === 'success' && (
+                      <div style={{padding:'10px 12px',borderRadius:'var(--r-md)',fontSize:12,fontWeight:700,color:'var(--s-selected)',background:'var(--s-selected-bg)',border:'1px solid var(--s-selected)',lineHeight:1.5}}>
+                        ✨ {parseMessage}
+                      </div>
+                    )}
+                    {parseStatus === 'partial' && (
+                      <div style={{padding:'10px 12px',borderRadius:'var(--r-md)',fontSize:12,fontWeight:700,color:'var(--brand-text)',background:'var(--brand-light)',border:'1px solid var(--brand)',lineHeight:1.5}}>
+                        📋 {parseMessage}
+                      </div>
+                    )}
+                    {parseStatus === 'tier2' && (
+                      <div style={{padding:'10px 12px',borderRadius:'var(--r-md)',fontSize:12,fontWeight:700,color:'var(--s-deadline)',background:'var(--s-deadline-bg)',border:'1px solid var(--s-deadline)',lineHeight:1.5}}>
+                        <div style={{marginBottom:8}}>🔒 {parseMessage}</div>
+                        <button onClick={() => setAddTab('manual')}
+                          style={{height:32,padding:'0 14px',background:'var(--bg-card)',color:'var(--brand-text)',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'var(--font-body)'}}>
+                          직접 입력하기
+                        </button>
+                      </div>
+                    )}
+                    {parseStatus === 'unsupported' && (
+                      <div style={{padding:'10px 12px',borderRadius:'var(--r-md)',fontSize:12,fontWeight:600,color:'var(--text-secondary)',background:'var(--s-not-sel-bg)',border:'1px solid var(--s-not-sel)',lineHeight:1.5}}>
+                        <div style={{marginBottom:8}}>ℹ️ {parseMessage}</div>
+                        <button onClick={() => setAddTab('manual')}
+                          style={{height:32,padding:'0 14px',background:'var(--bg-card)',color:'var(--brand-text)',border:'1.5px solid var(--brand)',borderRadius:'var(--r-sm)',fontSize:12,fontWeight:700,cursor:'pointer',fontFamily:'var(--font-body)'}}>
+                          직접 입력하기
+                        </button>
+                      </div>
+                    )}
+                    {parseStatus === 'error' && (
+                      <div style={{padding:'10px 12px',borderRadius:'var(--r-md)',fontSize:12,fontWeight:700,color:'var(--s-overdue)',background:'var(--s-overdue-bg)',border:'1px solid var(--s-overdue)',lineHeight:1.5}}>
+                        ⚠️ {parseMessage}
+                      </div>
+                    )}
+                    <style>{`@keyframes parseSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+                  </div>
+                )}
               </div>
 
               {/* 탭 전환 (URL입력 / 수기입력) */}
@@ -931,7 +1144,15 @@ export default function CalendarPage() {
                   <div style={{marginBottom:16}}>
                     <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>협찬 금액 <span style={{fontSize:10,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(선택)</span></label>
                     <div style={{position:'relative'}}>
-                      <input type="text" inputMode="numeric" value={manualAmount} onChange={e => setManualAmount(e.target.value)} placeholder="예) 50,000" style={{width:'100%',padding:'12px 36px 12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:13,color:'var(--text-primary)',background:'var(--bg-input)',outline:'none',height:44,fontFamily:'var(--font-mono)',letterSpacing:'-0.3px',boxSizing:'border-box'}} />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        // 표시값은 천단위 쉼표 포맷, state 는 raw digits 만 유지.
+                        value={manualAmount ? Number(manualAmount).toLocaleString('ko-KR') : ''}
+                        onChange={e => setManualAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                        placeholder="예) 50,000"
+                        style={{width:'100%',padding:'12px 36px 12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:13,color:'var(--text-primary)',background:'var(--bg-input)',outline:'none',height:44,fontFamily:'var(--font-mono)',letterSpacing:'-0.3px',boxSizing:'border-box'}}
+                      />
                       <span style={{position:'absolute',right:14,top:'50%',transform:'translateY(-50%)',fontSize:13,color:'var(--text-muted)',pointerEvents:'none'}}>원</span>
                     </div>
                     <div style={{fontSize:11,color:'var(--text-muted)',marginTop:5}}>협찬 상품 시가 기준으로 입력해요</div>
@@ -980,56 +1201,41 @@ export default function CalendarPage() {
                   </div>
 
                   {/* 메모 (F-12) */}
-                  <div style={{marginBottom:16}}>
+                  <div style={{marginBottom:20}}>
                     <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>메모 <span style={{fontSize:10,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(선택)</span></label>
                     <textarea rows={3} value={manualMemo} onChange={e => setManualMemo(e.target.value)} placeholder="주차 가능 여부, 사전 예약 방법, 유의사항 등 자유롭게 입력해요 (최대 200자)"
                       style={{width:'100%',padding:'12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:12,color:'var(--text-primary)',background:'var(--bg-input)',outline:'none',resize:'none',lineHeight:1.7,fontFamily:'var(--font-body)',boxSizing:'border-box'}} />
                   </div>
 
-                  {/* 가이드라인 (F-guide) */}
-                  <div style={{marginBottom:20}}>
-                    <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>가이드라인 <span style={{fontSize:10,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(선택)</span></label>
-                    <textarea rows={3}
-                      value={guidelineText} onChange={e => setGuidelineText(e.target.value)}
-                      placeholder={'예) 음료 2잔 + 디저트 1개 무료 제공\n#해시태그 필수\n포스팅 후 URL 제출'}
-                      style={{width:'100%',padding:'12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:12,color:'var(--text-primary)',background:'var(--bg-input)',outline:'none',resize:'none',lineHeight:1.7,fontFamily:'var(--font-body)',boxSizing:'border-box'}} />
-                    <div style={{fontSize:11,color:'var(--text-muted)',marginTop:5,display:'flex',alignItems:'center',gap:4}}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                      해시태그·제공 내역·포스팅 조건 등을 자유롭게 적어요
-                    </div>
-                  </div>
+                  {/* 가이드라인 입력은 제거 — 등록 후 SCR-012B 상세 시트 편집 모드에서 입력. */}
+                  {/* URL 자동 채워진 guidelineText 는 state 로만 유지되어 등록 시 그대로 POST 됨. */}
                 </>
               )}
 
-              {/* URL 탭: 빈 상태 힌트 + 가이드라인 입력 */}
+              {/* URL 탭: 빈 상태 힌트만 표시. 가이드라인 입력은 등록 후 SCR-012B 편집 모드에서. */}
               {addTab === 'url' && (
-                <>
-                  <div style={{padding:'28px 0 20px',textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
-                    <div style={{fontSize:36,opacity:0.35,marginBottom:2}}>🔗</div>
-                    <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>URL을 붙여넣어 보세요</div>
-                    <div style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.7,maxWidth:240}}>선정된 공고 URL을 입력하면<br/>마감일·캠페인명·제공상품·위치<br/>채널·가이드라인을 자동으로 채워드려요</div>
-                  </div>
-                  {/* 가이드라인 (URL 불러오기 완료 후에만 표시) */}
-                  {urlParsed && (
-                    <div style={{marginBottom:20}}>
-                      <label style={{fontSize:11,fontFamily:'var(--font-mono)',fontWeight:600,color:'var(--text-muted)',letterSpacing:'0.06em',textTransform:'uppercase',display:'block',marginBottom:8}}>가이드라인 <span style={{fontSize:10,color:'var(--text-disabled)',fontWeight:400,textTransform:'none'}}>(선택)</span></label>
-                      <textarea rows={3}
-                        value={guidelineText} onChange={e => setGuidelineText(e.target.value)}
-                        placeholder={'예) 음료 2잔 + 디저트 1개 무료 제공\n#해시태그 필수\n포스팅 후 URL 제출'}
-                        style={{width:'100%',padding:'12px 14px',border:'1.5px solid var(--border-mid)',borderRadius:'var(--r-md)',fontSize:12,color:'var(--text-primary)',background:'var(--bg-input)',outline:'none',resize:'none',lineHeight:1.7,fontFamily:'var(--font-body)',boxSizing:'border-box'}} />
-                      <div style={{fontSize:11,color:'var(--text-muted)',marginTop:5,display:'flex',alignItems:'center',gap:4}}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        해시태그·제공 내역·포스팅 조건 등을 자유롭게 적어요
-                      </div>
-                    </div>
-                  )}
-                </>
+                <div style={{padding:'28px 0 20px',textAlign:'center',display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+                  <div style={{fontSize:36,opacity:0.35,marginBottom:2}}>🔗</div>
+                  <div style={{fontSize:15,fontWeight:700,color:'var(--text-primary)'}}>URL을 붙여넣어 보세요</div>
+                  <div style={{fontSize:12,color:'var(--text-muted)',lineHeight:1.7,maxWidth:240}}>선정된 공고 URL을 입력하면<br/>마감일·캠페인명·제공상품·위치<br/>채널·가이드라인을 자동으로 채워드려요</div>
+                </div>
               )}
 
               {/* CTA */}
-              <button onClick={addTab === 'manual' ? handleAddManual : closeSheet} style={{width:'100%',padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:'var(--brand)',color:'#fff',border:'none',cursor:'pointer',boxShadow:'var(--brand-shadow)',marginTop:4,opacity:addTab==='manual'&&(!manualName.trim()||!manualPlatform||!manualDeadline)?0.5:1}}>
-                등록할게요
-              </button>
+              {(() => {
+                const urlParsedOk = addTab === 'url' && (parseStatus === 'success' || parseStatus === 'partial');
+                const canSubmit = addTab === 'manual' || urlParsedOk;
+                const manualReady = manualName.trim() && manualPlatform && manualDeadline;
+                const disabled = canSubmit && !manualReady;
+                return (
+                  <button
+                    onClick={canSubmit ? handleAddManual : closeSheet}
+                    disabled={disabled}
+                    style={{width:'100%',padding:'13px 22px',borderRadius:'var(--r-md)',fontSize:15,fontWeight:700,background:'var(--brand)',color:'#fff',border:'none',cursor:disabled?'not-allowed':'pointer',boxShadow:'var(--brand-shadow)',marginTop:4,opacity:disabled?0.5:1}}>
+                    {canSubmit ? '등록할게요' : '닫기'}
+                  </button>
+                );
+              })()}
             </div>
           )}
         </div>
@@ -1245,6 +1451,35 @@ export default function CalendarPage() {
             style={{position:'absolute',bottom:72,right:20,width:52,height:52,background:'var(--brand)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 16px rgba(28,60,130,0.38)',cursor:'pointer',zIndex:10,border:'none'}}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" width="22" height="22"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
+        </div>
+      )}
+
+      {/* 토스트 — 시트보다 위, BottomNav 보다 위에 표시. 2.2초 후 자동 사라짐 (useEffect). */}
+      {toastMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position:'fixed',
+            bottom:96,
+            left:'50%',
+            transform:'translateX(-50%)',
+            background:'var(--brand)',
+            color:'#fff',
+            padding:'12px 20px',
+            borderRadius:'var(--r-full)',
+            fontSize:13,
+            fontWeight:700,
+            fontFamily:'var(--font-body)',
+            zIndex:300,
+            boxShadow:'var(--brand-shadow)',
+            animation:'toastIn 0.22s var(--ease-out, ease-out)',
+            whiteSpace:'nowrap',
+            maxWidth:'calc(100% - 40px)',
+            textAlign:'center',
+          }}>
+          {toastMessage}
+          <style>{`@keyframes toastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}`}</style>
         </div>
       )}
     </div>

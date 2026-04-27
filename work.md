@@ -1,5 +1,83 @@
 # 체체 작업 이력
 
+## 2026-04-27 (5차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — 일정 등록 UX 미세 수정 2건
+- 변경 내용:
+  - **수정 1 — 일정 등록 시트(addCalSheet)에서 가이드라인 섹션 완전 제거**
+    · URL 탭: `urlParsed && (...)` collapsible 가이드라인 토글 블록 전체 삭제 (직전 4차에서 추가했던 헤더+토글 UI)
+    · 수기 입력 탭(manual): F-guide 가이드라인 textarea 블록 전체 삭제
+    · 신규 state `urlGuideOpen` 및 `setUrlGuideOpen` 선언/사용/closeSheet 리셋 모두 제거 (사용처 0)
+    · `guidelineText` state 는 보존 — URL 파서가 자동 채워주는 값 유지하여 handleAddManual 에서 그대로 POST 됨
+    · 등록 후 SCR-012B 상세 시트 편집 모드(editGuideline)에서 가이드라인 입력/수정 가능
+  - **수정 2 — 협찬 금액 입력 시 천단위 쉼표 자동 포맷**
+    · `manualAmount` state 의미 재정의: 항상 raw digits 문자열만 보유 (예: "28500")
+    · input value: `manualAmount ? Number(manualAmount).toLocaleString('ko-KR') : ''` → 화면엔 "28,500" 표시
+    · input onChange: `e.target.value.replace(/[^0-9]/g, '')` 로 숫자 외 문자(쉼표 포함) 즉시 제거하여 setManualAmount
+    · handleAddManual 의 amount 추출도 `manualAmount.replace(/[^0-9]/g, '') || null` 로 변경 — DB 에는 raw digits 만 전달 (URL 파서가 String(Number) 로 채운 케이스도 안전)
+    · 기존 amountNum 추출(line 561) 은 이미 strip 로직 포함 → 변경 불필요
+- Capacitor 호환성:
+  - localStorage 사용 없음, 모든 state 는 useState
+  - `Number(...).toLocaleString('ko-KR')` 은 ECMA-402 표준 — Capacitor WebView/iOS/Android 모두 지원
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 없음)
+  - dev 서버 핫리로드 모든 컴파일 성공 (✓ Compiled in 100-168ms)
+  - GET /calendar 200 응답 정상
+  - urlGuideOpen 관련 grep 결과 0건 (완전 제거 확인)
+  - addCalSheet 영역 내 가이드라인 입력 UI 0건 (주석만 남음)
+  - ⚠️ 도유진 본인이 로그인된 브라우저에서 다음 검증 필요:
+    1. 일정 등록 시트에서 가이드라인 섹션이 URL/수기 입력 탭 모두 안 보이는지
+    2. 협찬 금액 칸에 28500 입력 → 28,500 표시 / 50000 → 50,000
+    3. 등록 완료 후 상세 시트(SCR-012B) 가이드라인 영역 정상 표시 (URL 자동 채워진 값 또는 — )
+- 발견 이슈 / 남은 이슈:
+  - **calSheet 상세 시트의 amount 표시는 raw digits 그대로** (line 837 부근). 이번 변경 후 신규 등록한 항목은
+    DB 에 "28500" 으로 저장되므로 calSheet 에서도 "28500" 으로 보임. 기존 데이터(쉼표 포함 문자열)와 표시 형식이
+    혼재될 수 있음. 명세는 "저장 시 amount 에는 쉼표 제거한 순수 숫자만 전달" 을 명시했으므로 그대로 따름 —
+    calSheet 표시도 포맷팅하려면 별도 fix 필요 (display 시 toLocaleString 적용).
+  - editAmount(상세 시트 편집 모드)는 이번 작업 범위 외 — 그대로 유지. 추후 동일 패턴 적용 검토 가능.
+- 다음 작업: [그룹 2] SCR-012B mockup 텍스트 제거 — 협찬 품목, 업주 전화번호 빈 값으로, placeholder 텍스트로 교체
+
+## 2026-04-27 (4차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — SCR-008C / SCR-012B UX 개선 그룹 1 (3건)
+- 변경 내용:
+  - **수정 1 — URL 분석 후 가이드라인 자동 펼치기 제거**
+    · 신규 state `urlGuideOpen` (기본 false) 추가
+    · URL 탭 가이드라인 섹션을 collapsible 토글 헤더로 변경 — 분석 성공/부분성공해도 자동 펼침 X
+    · 헤더 라벨에 `(자동 입력됨)` / `(선택)` 분기 표시 → 자동 채워졌는지 한눈에 확인
+    · 토글 화살표 회전 애니메이션 (▶ → ▼, transform rotate 0.15s)
+    · `closeSheet()` 가 `setUrlGuideOpen(false)` 도 리셋하도록 확장
+  - **수정 2 — URL 빈 값에서 "불러오기" 클릭 방어 + 토스트 시스템 신규**
+    · "불러오기" 버튼 disabled 조건을 `parseStatus === 'loading'` 만 남김 (기존 `|| !url` 제거)
+    · onClick 핸들러에서 `!url.trim()` 체크 → `setToastMessage('공고 URL을 먼저 입력해주세요!')` 호출
+    · `parseStatus` 는 변경하지 않음 — idle 유지하여 분석 결과 메시지 박스 안 뜨게 함
+    · 신규 state `toastMessage: string | null` + 2.2초 후 자동 dismiss `useEffect`
+    · 토스트 컴포넌트는 메인 return 최하단에 fixed bottom:96 + brand 컬러 캡슐 + slide-up 애니메이션 (`@keyframes toastIn`)
+    · `role="status" aria-live="polite"` 접근성 속성 포함
+  - **수정 3 — 등록 완료 후 SCR-012B 상세 시트 자동 열기**
+    · `handleAddManual` 에서 리뷰 마감 이벤트 POST 응답 파싱 → `newEventId` 추출
+    · `closeSheet()` 후 `setTimeout(() => showCalSheet(newEventId!), 50)` 로 50ms 후 calSheet 열기
+    · 동시에 `setToastMessage('일정을 등록했어요!')` 토스트 표시 — 사용자에게 등록 성공 명시적 피드백
+    · 응답 파싱 실패 시 newEventId null 유지 → 등록은 성공하지만 자동 열기만 생략 (graceful degradation)
+- Capacitor 호환성:
+  - `setTimeout` 으로 시트 전환 — 브라우저/Capacitor 양쪽 동일 동작
+  - localStorage 사용 없음 — 모든 신규 state 는 useState
+  - `role/aria-live` 는 표준 HTML 속성, 네이티브 영향 없음
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 없음)
+  - dev 서버 핫리로드 모든 컴파일 성공 (✓ Compiled in 131-384ms 반복, jest-worker 크래시 0회)
+  - GET /calendar 200 응답 정상
+  - ⚠️ 도유진 본인이 로그인된 브라우저에서 다음 3가지 시나리오 직접 검증 필요:
+    1. URL 빈 채로 "불러오기" 클릭 → "공고 URL을 먼저 입력해주세요!" 토스트
+    2. 디너의여왕 URL → 분석 → 가이드라인 섹션 헤더만 보이고 펼쳐지지 않음 → 헤더 클릭 시 펼쳐짐
+    3. 수기 입력 후 "등록할게요" 클릭 → 토스트 + 캘린더 점프 + SCR-012B 상세 시트 자동 열림
+- 발견 이슈:
+  - 작업 중 도유진이 로그인된 브라우저에서 일정 삭제(DELETE /api/events/...) 정상 200 응답 확인됨
+    → 직전 (3차) 의 500 에러 수정도 실사용 검증 완료
+- 다음 작업: [그룹 2] SCR-012B mockup 텍스트 제거 — 협찬 품목, 업주 전화번호 빈 값으로, placeholder 텍스트로 교체
+
 ## 2026-04-27 (3차)
 - 작업자: 도유진 - 윈도우 (via Claude Code)
 - 변경 파일:
