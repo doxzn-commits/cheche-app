@@ -1,5 +1,47 @@
 # 체체 작업 이력
 
+## 2026-04-27 (3차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - next.config.ts (수정) — `serverExternalPackages: ['@prisma/client', '@auth/prisma-adapter']` 추가
+- 변경 내용:
+  - 콘솔에서 보고된 두 가지 500 에러를 동일 근본 원인으로 진단·수정
+    · 에러 1: `/api/auth/session` 가 HTML(`<!DOCTYPE`) 응답 → ClientFetchError "Unexpected token '<'"
+    · 에러 2: `/api/events/[id]` DELETE 500 → 일정 삭제 실패
+  - 실제 dev 서버 로그(.next/dev/logs/next-development.log) 확인 결과 두 에러 모두 동일 메시지:
+    `⨯ Error: Jest worker encountered 2 child process exceptions, exceeding retry limit`
+    → Turbopack 컴파일 워커가 라우트 컴파일 도중 크래시 → Next.js 가 HTML 500 페이지를 반환
+    → 라우트 핸들러 코드는 한 번도 실행되지 않음 (auth.ts·route.ts 로직은 정상)
+  - 1차 처치: 죽어 있던 dev 서버(PID 17644) 종료 + `.next/` 캐시 전체 삭제 + 재시작 → 즉시 200 응답 복구 확인
+  - 2차 처치(영구 완화): next.config.ts 에 `serverExternalPackages` 추가
+    · Prisma · NextAuth Adapter 는 Node-only 네이티브 의존성. Turbopack 이 매 라우트 컴파일마다
+      이걸 재번들하면 워커 메모리 압박이 누적되어 jest-worker 가 child process exception → retry limit
+      초과로 죽음.
+    · `serverExternalPackages` 로 지정하면 require() 직접 로드 → 컴파일 비용·OOM 위험 모두 제거.
+  - 코드 레벨 결함은 발견되지 않음:
+    · auth.ts: NextAuth v5 + JWT strategy + PrismaAdapter 정상 구성, callbacks 모두 정상
+    · app/api/events/[id]/route.ts: DELETE 핸들러는 deleteMany({ id, userId }) + count 0 시 404 — userId 격리 원칙 준수
+    · proxy.ts: `/api/auth` 매처 제외 정상 작동
+    · 환경변수 .env.local 9개 키(AUTH_SECRET, DATABASE_URL, DIRECT_URL, GOOGLE/KAKAO/NAVER × 2, NEXTAUTH_URL) 모두 설정됨
+- 검증:
+  - 깨끗한 재시작 후 (`✓ Ready in 1785ms`):
+    · `/api/auth/session` → HTTP 200, `null` (정상 — 미로그인)
+    · `/api/auth/csrf` → HTTP 200, csrfToken JSON
+    · `/api/auth/providers` → HTTP 200, kakao/naver/google 3종 정상 반환
+    · `DELETE /api/events/abc` → HTTP 307 → /login (정상 — proxy.ts 가드)
+    · `GET /api/events` → HTTP 307 → /login (정상)
+  - dev 서버 신규 로그에 jest-worker 크래시 0회
+  - ⚠️ 인증된 상태에서의 실제 DELETE 동작은 도유진 본인이 로그인 후 캘린더 화면에서 수동 검증 필요
+    (curl 로 인증 쿠키 흉내내기 불가 — OAuth 콜백 필요)
+- Capacitor 호환성:
+  - `serverExternalPackages` 는 정적 빌드(`output: 'export'`) 영향 없음 — dev/SSR 컴파일 최적화 옵션
+  - localStorage 사용 없음
+- 발견 이슈:
+  - Vercel 프로덕션에서도 같은 500 이 보고됐는지 미확인. 만약 프로덕션에서도 발생했다면
+    배포 환경변수(AUTH_SECRET·NEXTAUTH_URL) 점검 필요 — 본 fix 는 dev 서버 turbopack 크래시 한정.
+    프로덕션 빌드는 turbopack 미사용이므로 동일 원인은 아닐 가능성 높음.
+- 다음 작업: [다음 그룹 1] SCR-012B UX 개선 - 등록 후 자동 상세 시트 열기, 가이드라인 자동 펼치기 제거
+
 ## 2026-04-27 (2차)
 - 작업자: 도유진 - 윈도우 (via Claude Code)
 - 변경 파일:
