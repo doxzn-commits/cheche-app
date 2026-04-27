@@ -20,6 +20,19 @@ function normalizeText(value?: string | null): string {
   return (value ?? '').replace(/\s+/g, ' ').trim();
 }
 
+function dedupeStrings(values: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    if (!value || seen.has(value)) continue;
+    seen.add(value);
+    result.push(value);
+  }
+
+  return result;
+}
+
 function cleanTitle(value?: string | null): string | undefined {
   const normalized = normalizeText(value);
   if (!normalized) return undefined;
@@ -63,6 +76,81 @@ function getMetaContent($: cheerio.CheerioAPI, property: string): string {
   );
 }
 
+function getCollapseSectionByHeader(
+  $: cheerio.CheerioAPI,
+  headerText: string
+): cheerio.Cheerio<any> {
+  return $('.qz-collapse.qz-row').filter((_, element) => {
+    const header = normalizeText(
+      $(element)
+        .find('h5 strong.qz-h6-kr, h5 strong.qz-h6-kr--line')
+        .first()
+        .text()
+    );
+
+    return header === headerText;
+  });
+}
+
+function extractTextWithBreaks(
+  $: cheerio.CheerioAPI,
+  element: any
+): string {
+  const parts: string[] = [];
+
+  const visit = (node: any): void => {
+    if (node.type === 'text') {
+      parts.push(node.data ?? '');
+      return;
+    }
+
+    if (node.type !== 'tag') {
+      return;
+    }
+
+    if (node.tagName === 'br') {
+      parts.push('\n');
+      return;
+    }
+
+    const blockTags = new Set([
+      'p',
+      'li',
+      'ul',
+      'ol',
+      'div',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+    ]);
+
+    if (blockTags.has(node.tagName)) {
+      parts.push('\n');
+    }
+
+    for (const child of node.children ?? []) {
+      visit(child);
+    }
+
+    if (blockTags.has(node.tagName)) {
+      parts.push('\n');
+    }
+  };
+
+  visit(element);
+
+  return parts
+    .join('')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((line) => normalizeText(line))
+    .filter(Boolean)
+    .join('\n');
+}
+
 function extractTitle($: cheerio.CheerioAPI): string | undefined {
   return (
     cleanTitle(getMetaContent($, 'og:title')) ||
@@ -93,9 +181,12 @@ function extractReviewDeadline($: cheerio.CheerioAPI, html: string): string | un
 }
 
 function extractBenefit($: cheerio.CheerioAPI): string | undefined {
-  const title = normalizeText($('.qz-collapse__content strong.w-600').first().text());
+  const section = getCollapseSectionByHeader($, '제공 내역').first();
+  const content = section.find('.qz-collapse__content').first();
+  const title = normalizeText(content.find('strong.w-600').first().text());
   const extra = normalizeText(
-    $('.qz-wrap.qz-container.layer-primary-dq-o p.qz-body-kr.mb-qz-body2-kr.color-title')
+    content
+      .find('.qz-wrap.qz-container.layer-primary-dq-o p.qz-body-kr.mb-qz-body2-kr.color-title')
       .first()
       .text()
   );
@@ -124,11 +215,28 @@ function extractChannels($: cheerio.CheerioAPI, titleText: string): ChannelValue
 }
 
 function extractGuideline($: cheerio.CheerioAPI): string | undefined {
-  const section = $('#SubKeyword').length
-    ? $('#SubKeyword').closest('.qz-collapse__content')
-    : $('#MainKeyword').closest('.qz-collapse__content');
+  const section = getCollapseSectionByHeader($, '리뷰어 미션').first();
+  const content = section.find('.qz-collapse__content').first();
+  if (!content.length) return undefined;
 
-  return section.length ? normalizeText(section.text()) || undefined : undefined;
+  const blocks: string[] = [];
+
+  content.find('.layer-red').first().find('p, li').each((_, element) => {
+    const text = extractTextWithBreaks($, element);
+    if (text) blocks.push(text);
+  });
+
+  content.children('p.qz-body-kr').each((_, element) => {
+    const text = extractTextWithBreaks($, element);
+    if (text) blocks.push(text);
+  });
+
+  content.find('.layer-tertiary').first().find('li').each((_, element) => {
+    const text = extractTextWithBreaks($, element);
+    if (text) blocks.push(text);
+  });
+
+  return dedupeStrings(blocks).join('\n') || undefined;
 }
 
 function extractLocation($: cheerio.CheerioAPI): string | undefined {

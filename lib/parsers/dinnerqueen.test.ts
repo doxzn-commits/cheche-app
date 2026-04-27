@@ -22,15 +22,15 @@ test('parseDinnerqueenCampaign parses a visit blog campaign', () => {
   const html = `
     <html>
       <head>
-        <title>Dinnerqueen - [Seoul Gangnam] Erba 23rd</title>
-        <meta property="og:title" content="Dinnerqueen - [Seoul Gangnam] Erba 23rd" />
+        <title>디너의여왕 - [서울 강남] 에르바 23차</title>
+        <meta property="og:title" content="디너의여왕 - [서울 강남] 에르바 23차" />
       </head>
       <body>
         <div class="qz-row mb-dis-none">
           <div class="qz-col pc3">
-            <h6><strong>Apply</strong></h6>
-            <h6><strong>Notice</strong></h6>
-            <h6><strong>Review</strong></h6>
+            <h6><strong>신청 기간</strong></h6>
+            <h6><strong>발표 날짜</strong></h6>
+            <h6><strong>리뷰 기간</strong></h6>
           </div>
           <div class="qz-col pc9">
             <p><strong>26.04.27 - 26.05.05</strong></p>
@@ -38,18 +38,39 @@ test('parseDinnerqueenCampaign parses a visit blog campaign', () => {
             <p>26.05.07 - 26.05.21</p>
           </div>
         </div>
-        <div class="qz-collapse__content">
-          <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">Meal voucher 60,000 KRW</strong></p>
-          <div class="qz-wrap qz-container layer-primary-dq-o">
-            <p class="qz-body-kr mb-qz-body2-kr color-title">Extra menu cost at your expense, 1 team of 2</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">제공 내역</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">2만원 식사체험권</strong></p>
+            <div class="qz-wrap qz-container layer-primary-dq-o">
+              <p class="qz-body-kr mb-qz-body2-kr color-title">음료 2잔 + 디저트 1개</p>
+            </div>
           </div>
         </div>
-        <div class="qz-collapse__content">
-          <p id="MainKeyword">Apgujeong restaurant, Sinsa restaurant</p>
-          <p>Blog keyword must be included.</p>
-          <ul><li>Keyword mismatch can trigger an edit request.</li></ul>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">블로그 키워드</strong></h5>
+          <div class="qz-collapse__content">
+            <p id="MainKeyword">압구정 맛집, 신사동 맛집</p>
+            <p>네이버 블로그는 아래 키워드를 반드시 필수로 포함해야 합니다.</p>
+          </div>
         </div>
-        <p>Visit location: 564-3 Sinsa-dong, Gangnam-gu, Seoul</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">리뷰어 미션</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr tb-mr-b0 dis-inline-block">
+              캠페인 홍보로 체험하는 만큼 책임감 가지고 성의 있는 리뷰 부탁드립니다.<br />
+              <br />
+              ▶제목에 브랜드명 포함 부탁드립니다.<br />
+              ※ 해시태그 자유롭게 작성해주세요.
+            </p>
+            <div class="qz-wrap qz-container layer-tertiary mr-t3">
+              <ul class="qz-wrap__list">
+                <li class="qz-body-kr mb-qz-body2-kr"><span class="color-subtitle"><strong>블로그 작성의 경우 사진 15장 이상</strong> 부탁드립니다.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <p>방문 위치: 서울 강남구 신사동 564-3</p>
         <div id="map-canvas"></div>
       </body>
     </html>
@@ -58,27 +79,31 @@ test('parseDinnerqueenCampaign parses a visit blog campaign', () => {
   const result = parseDinnerqueenCampaign(html);
 
   assert.equal(result.data.platform, 'dinnerqueen');
-  assert.equal(result.data.title, '[Seoul Gangnam] Erba 23rd');
+  assert.equal(result.data.title, '[서울 강남] 에르바 23차');
   assert.equal(result.data.reviewDeadline, '2026-05-21');
-  assert.equal(result.data.benefit, 'Meal voucher 60,000 KRW / Extra menu cost at your expense, 1 team of 2');
+  assert.equal(result.data.benefit, '2만원 식사체험권 / 음료 2잔 + 디저트 1개');
   assert.deepEqual(result.data.channels, ['blog']);
   assert.equal(result.data.campaignType, 'visit');
-  assert.equal(result.data.location, '564-3 Sinsa-dong, Gangnam-gu, Seoul');
-  assert.match(result.data.guideline ?? '', /edit request/u);
+  assert.equal(result.data.location, '서울 강남구 신사동 564-3');
+  assert.match(
+    result.data.guideline ?? '',
+    /^캠페인 홍보로 체험하는 만큼 책임감 가지고 성의 있는 리뷰 부탁드립니다\./u
+  );
+  assert.match(result.data.guideline ?? '', /\n▶제목에 브랜드명 포함 부탁드립니다\./u);
 });
 
 test('parseDinnerqueenCampaign parses a delivery campaign', () => {
   const html = `
     <html>
       <head>
-        <meta property="og:title" content="Dinnerqueen - [JarYeonNuri] Smoked Duck 4th" />
+        <meta property="og:title" content="디너의여왕 - [자연누리] 훈제오리 4차" />
       </head>
       <body>
         <div class="qz-row mb-dis-none">
           <div class="qz-col pc3">
-            <h6><strong>Apply</strong></h6>
-            <h6><strong>Notice</strong></h6>
-            <h6><strong>Review</strong></h6>
+            <h6><strong>신청 기간</strong></h6>
+            <h6><strong>발표 날짜</strong></h6>
+            <h6><strong>리뷰 기간</strong></h6>
           </div>
           <div class="qz-col pc9">
             <p><strong>26.04.27 - 26.05.03</strong></p>
@@ -86,40 +111,51 @@ test('parseDinnerqueenCampaign parses a delivery campaign', () => {
             <p>26.05.05 - 26.05.19</p>
           </div>
         </div>
-        <div class="qz-collapse__content">
-          <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">JarYeonNuri smoked duck 400g</strong></p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">제공 내역</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">자연누리 훈제오리 400g</strong></p>
+          </div>
         </div>
-        <div class="qz-collapse__content">
-          <p id="MainKeyword">smoked duck, sliced duck, jaryeonnuri</p>
-          <p>Blog keyword must be included.</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">블로그 키워드</strong></h5>
+          <div class="qz-collapse__content">
+            <p id="MainKeyword">훈제오리고기, 오리슬라이스, 자연누리</p>
+          </div>
         </div>
-        <p id="detailProductLink">https://smartstore.naver.com/example/products/1</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">리뷰어 미션</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr">1. 정성 있게 리뷰 작성해주세요.</p>
+          </div>
+        </div>
       </body>
     </html>
   `;
 
   const result = parseDinnerqueenCampaign(html);
 
-  assert.equal(result.data.title, '[JarYeonNuri] Smoked Duck 4th');
+  assert.equal(result.data.title, '[자연누리] 훈제오리 4차');
   assert.equal(result.data.reviewDeadline, '2026-05-19');
-  assert.equal(result.data.benefit, 'JarYeonNuri smoked duck 400g');
+  assert.equal(result.data.benefit, '자연누리 훈제오리 400g');
   assert.deepEqual(result.data.channels, ['blog']);
   assert.equal(result.data.campaignType, 'delivery');
   assert.equal(result.data.location, undefined);
+  assert.match(result.data.guideline ?? '', /정성 있게 리뷰/u);
 });
 
 test('parseDinnerqueenCampaign parses a payback campaign and point amount', () => {
   const html = `
     <html>
       <head>
-        <meta property="og:title" content="Dinnerqueen - [Purchase Review][SUKSAN] Whole Bean 20th" />
+        <meta property="og:title" content="디너의여왕 - [구매평][SUKSAN] 홀빈 원두 20차" />
       </head>
       <body>
         <div class="qz-row mb-dis-none">
           <div class="qz-col pc3">
-            <h6><strong>Apply</strong></h6>
-            <h6><strong>Notice</strong></h6>
-            <h6><strong>Review</strong></h6>
+            <h6><strong>신청 기간</strong></h6>
+            <h6><strong>발표 날짜</strong></h6>
+            <h6><strong>리뷰 기간</strong></h6>
           </div>
           <div class="qz-col pc9">
             <p><strong>26.04.24 - 26.05.05</strong></p>
@@ -127,24 +163,43 @@ test('parseDinnerqueenCampaign parses a payback campaign and point amount', () =
             <p>26.05.07 - 26.05.21</p>
           </div>
         </div>
-        <aside id="DetailPointBadge">+28,500</aside>
-        <div class="qz-collapse__content">
-          <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">Ethiopian whole bean</strong></p>
-          <div class="qz-wrap qz-container layer-primary-dq-o">
-            <p class="qz-body-kr mb-qz-body2-kr color-title">Whole bean / 200g / 25,000 KRW</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">제공 내역</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">에티오피아 시다마 홀빈 원두</strong></p>
+            <div class="qz-wrap qz-container layer-primary-dq-o">
+              <p class="qz-body-kr mb-qz-body2-kr color-title">구매평 원두타입: 홀빈 원두 / 200g / 25,000원</p>
+            </div>
           </div>
         </div>
-        <div class="qz-collapse__content">
-          <p id="MainKeyword">drip bag, coffee bean</p>
-          <p>Blog keyword must be included.</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">포인트 지급</strong></h5>
+          <div class="qz-collapse__content"><h5>+28,500</h5></div>
         </div>
-        <p id="detailProductLink">https://smartstore.naver.com/example/products/2</p>
+        <aside id="DetailPointBadge">+28,500</aside>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">구매 링크</strong></h5>
+          <div class="qz-collapse__content"><p id="detailProductLink">https://smartstore.naver.com/example/products/2</p></div>
+        </div>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">블로그 키워드</strong></h5>
+          <div class="qz-collapse__content">
+            <p id="MainKeyword">드립백, 커피 원두</p>
+          </div>
+        </div>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">리뷰어 미션</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr">캠페인 홍보로 체험하는 만큼 책임감 가지고 성의 있는 리뷰 부탁드립니다.</p>
+          </div>
+        </div>
       </body>
     </html>
   `;
 
   const result = parseDinnerqueenCampaign(html);
 
+  assert.equal(result.data.benefit, '에티오피아 시다마 홀빈 원두 / 구매평 원두타입: 홀빈 원두 / 200g / 25,000원');
   assert.equal(result.data.campaignType, 'payback');
   assert.equal(result.data.pointAmount, 28500);
   assert.deepEqual(result.data.channels, ['blog']);
@@ -155,14 +210,14 @@ test('parseDinnerqueenCampaign parses a reporter campaign', () => {
   const html = `
     <html>
       <head>
-        <meta property="og:title" content="Dinnerqueen - [Reporter] Blau Pool Villa 2nd" />
+        <meta property="og:title" content="디너의여왕 - [기자단] 블라우풀빌라 2차" />
       </head>
       <body>
         <div class="qz-row mb-dis-none">
           <div class="qz-col pc3">
-            <h6><strong>Apply</strong></h6>
-            <h6><strong>Notice</strong></h6>
-            <h6><strong>Review</strong></h6>
+            <h6><strong>신청 기간</strong></h6>
+            <h6><strong>발표 날짜</strong></h6>
+            <h6><strong>리뷰 기간</strong></h6>
           </div>
           <div class="qz-col pc9">
             <p><strong>26.04.24 - 26.05.05</strong></p>
@@ -170,13 +225,33 @@ test('parseDinnerqueenCampaign parses a reporter campaign', () => {
             <p>26.05.07 - 26.05.21</p>
           </div>
         </div>
-        <aside id="DetailPointBadge">+5,000</aside>
-        <div class="qz-collapse__content">
-          <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">5,000 point payout</strong></p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">제공 내역</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">★5,000 포인트 지급</strong></p>
+          </div>
         </div>
-        <div class="qz-collapse__content">
-          <p id="MainKeyword">yeosu villa, ocean view pension</p>
-          <p>Write it as an introduction based on the guideline.</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">포인트 지급</strong></h5>
+          <div class="qz-collapse__content"><h5>+5,000</h5></div>
+        </div>
+        <aside id="DetailPointBadge">+5,000</aside>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">블로그 키워드</strong></h5>
+          <div class="qz-collapse__content">
+            <p id="MainKeyword">여수 풀빌라 독채, 여수 오션뷰 펜션</p>
+          </div>
+        </div>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">리뷰어 미션</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr">가이드에 맞게 문맥이 매끄럽도록 정성스러운 리뷰 부탁 드립니다.</p>
+            <div class="qz-wrap qz-container layer-tertiary mr-t3">
+              <ul class="qz-wrap__list">
+                <li class="qz-body-kr mb-qz-body2-kr"><span class="color-subtitle">직접 체험한 것처럼 보여지는 표현은 사용불가합니다.</span></li>
+              </ul>
+            </div>
+          </div>
         </div>
       </body>
     </html>
@@ -184,23 +259,88 @@ test('parseDinnerqueenCampaign parses a reporter campaign', () => {
 
   const result = parseDinnerqueenCampaign(html);
 
-  assert.equal(result.data.title, '[Reporter] Blau Pool Villa 2nd');
+  assert.equal(result.data.title, '[기자단] 블라우풀빌라 2차');
+  assert.equal(result.data.benefit, '★5,000 포인트 지급');
   assert.equal(result.data.campaignType, 'reporter');
   assert.equal(result.data.pointAmount, 5000);
   assert.deepEqual(result.data.channels, ['blog']);
-  assert.match(result.data.guideline ?? '', /guideline/u);
+  assert.match(result.data.guideline ?? '', /직접 체험한 것처럼/u);
+});
+
+test('parseDinnerqueenCampaign uses reviewer mission instead of keyword guide', () => {
+  const html = `
+    <html>
+      <head>
+        <meta property="og:title" content="디너의여왕 - [경기 부천][릴스] 아구아구 11차" />
+      </head>
+      <body>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">제공 내역</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr"><strong class="w-600">아구찜 소 사이즈 제공</strong></p>
+          </div>
+        </div>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">인스타 해시태그</strong></h5>
+          <div class="qz-collapse__content">
+            <p id="SubKeyword">#협찬 #부천아구찜</p>
+            <p>인스타그램은 아래 해시태그를 반드시 필수로 포함해야 합니다.</p>
+          </div>
+        </div>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">리뷰어 미션</strong></h5>
+          <div class="qz-collapse__content">
+            <div class="qz-wrap mr-b2 qz-container layer-red">
+              <p class="qz-body-kr mb-qz-body2-kr color-title"><strong>- 릴스 촬영/편집 미션</strong></p>
+              <div class="pd-l2 mb-pd-l1">
+                <ol class="qz-wrap__list">
+                  <li class="qz-body-kr mb-qz-body2-kr color-title"><span>분량: 30초~50초 내외</span></li>
+                  <li class="qz-body-kr mb-qz-body2-kr color-title">나레이션 OR 자막 필수</li>
+                </ol>
+              </div>
+            </div>
+            <p class="qz-body-kr mb-qz-body2-kr tb-mr-b0 dis-inline-block">
+              영수증(방문자리뷰) 필수인 캠페인 입니다.<br />
+              릴스 체험단 리뷰어 미션<br />
+              ★해시태그(아구아구)필수
+            </p>
+            <div class="qz-wrap qz-container layer-tertiary mr-t3">
+              <ul class="qz-wrap__list">
+                <li class="qz-body-kr mb-qz-body2-kr"><span class="color-subtitle"><strong>콘텐츠 미션을 꼭 준수하여 제작</strong>해 주시길 부탁드립니다.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const result = parseDinnerqueenCampaign(html);
+
+  assert.equal(result.data.benefit, '아구찜 소 사이즈 제공');
+  assert.deepEqual(result.data.channels, ['instagram']);
+  assert.equal(result.data.campaignType, 'delivery');
+  assert.match(result.data.guideline ?? '', /^- 릴스 촬영\/편집 미션/u);
+  assert.match(result.data.guideline ?? '', /\n분량: 30초~50초 내외/u);
+  assert.match(result.data.guideline ?? '', /\n★해시태그\(아구아구\)필수/u);
+  assert.doesNotMatch(
+    result.data.guideline ?? '',
+    /인스타그램은 아래 해시태그를 반드시 필수로 포함해야 합니다\./u
+  );
 });
 
 test('parseDinnerqueenCampaign supports partial success when some fields are missing', () => {
   const html = `
     <html>
       <head>
-        <meta property="og:title" content="Dinnerqueen - [Bucheon][Reels] AguAgu 11th" />
+        <meta property="og:title" content="디너의여왕 - [경기 부천][릴스] 아구아구 11차" />
       </head>
       <body>
-        <div class="qz-collapse__content">
-          <p id="SubKeyword">#ad #bucheon</p>
-          <p>Instagram hashtag must be included.</p>
+        <div class="qz-collapse qz-row">
+          <h5><strong class="qz-h6-kr">리뷰어 미션</strong></h5>
+          <div class="qz-collapse__content">
+            <p class="qz-body-kr mb-qz-body2-kr">리뷰어 미션 본문</p>
+          </div>
         </div>
       </body>
     </html>
@@ -208,8 +348,8 @@ test('parseDinnerqueenCampaign supports partial success when some fields are mis
 
   const result = parseDinnerqueenCampaign(html);
 
-  assert.equal(result.data.title, '[Bucheon][Reels] AguAgu 11th');
-  assert.deepEqual(result.data.channels, ['instagram']);
+  assert.equal(result.data.title, '[경기 부천][릴스] 아구아구 11차');
+  assert.equal(result.data.guideline, '리뷰어 미션 본문');
   assert.equal(result.data.reviewDeadline, undefined);
   assert.equal(result.isPartial, true);
   assert.ok(result.extractedFields.includes('title'));

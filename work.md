@@ -1,5 +1,41 @@
 # 체체 작업 이력
 
+## 2026-04-27 (2차)
+- 작업자: 도유진 - 윈도우 (via Claude Code)
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — SCR-008C URL 자동완성 UI 통합 (URL 자동완성 ③ 단계 / 마지막)
+- 변경 내용:
+  - addCalSheet 시트 안 URL 탭에 /api/parse-url 호출 동작 연결
+  - 신규 state: url / parseStatus(7-state union) / parseMessage / tier2Platform
+  - 기존 URL 입력 input 에 value/onChange 연결, "불러오기" 버튼이 parseUrlAuto(url) 호출하도록 전환
+  - useEffect 500ms debounce — addTab==='url' && url 입력 시 자동 분석 트리거
+  - parseUrlAuto: 응답 ok면 ParsedCampaign → 기존 manual* setter 매핑 + setUrlParsed(true) + success/partial 분기
+    · title→setManualName, reviewDeadline→setManualDeadline, guideline→setGuidelineText, location→setManualLocation
+    · platform→setManualPlatform ('dinnerqueen'→'디너의여왕' / 'revu'→'레뷰' / reviewnote / mrblog 매핑)
+    · channels→setManualChannels (영문 'blog/instagram/youtube/clip' → '블로그/인스타그램/유튜브/클립')
+    · pointAmount→setManualAmount (숫자 → 문자열)
+    · benefit / campaignType 은 폼에 매칭되는 setter 가 없어 매핑 생략
+  - 응답 ok=false 분기 처리: TIER_2_REQUIRED / UNSUPPORTED_PLATFORM / INVALID_URL / FETCH_FAILED / TIMEOUT / PARSE_FAILED / RATE_LIMIT / 네트워크 오류
+  - URL 입력 영역 아래에 분석 결과 메시지 박스 6종 추가 (loading/success/partial/tier2/unsupported/error)
+    · 디자인 토큰만 사용 (--s-selected/-bg, --brand/-light, --s-deadline/-bg, --s-not-sel/-bg, --s-overdue/-bg, --bg-chip)
+    · HEX 직접 사용 없음
+    · tier2 / unsupported 메시지 박스 안에 "직접 입력하기" 버튼 → setAddTab('manual')
+    · loading 상태에 회전 스피너 (CSS keyframes parseSpin)
+  - closeSheet() 가 url / parseStatus / parseMessage / tier2Platform 도 리셋하도록 확장
+  - 시트 하단 CTA 버튼 로직 갱신: URL 탭에서 success/partial 일 때 handleAddManual 실행 (기존엔 closeSheet 만 함), 그 외엔 "닫기"
+- Capacitor 호환성:
+  - 'use client' 디렉티브 유지 (기존)
+  - localStorage 사용 없음 — 모든 state 는 useState
+  - fetch URL 은 상대 경로 '/api/parse-url' (Capacitor 빌드 시 BASE_URL env 분기 필요 — 주석으로만 표시)
+- 검증:
+  - `npx tsc --noEmit` 통과 (에러 없음)
+  - Next.js 16 dev 서버에서 calendar 페이지 ✓ Compiled (1580ms)
+  - ⚠️ 5케이스(A 디너의여왕 / B 레뷰 TIER_2 / C example.com / D not-a-url / 추가 RATE_LIMIT) 브라우저 직접 검증은 인증 게이트(proxy.ts matcher) 때문에 도유진 본인 로그인 후 수동 확인 필요
+- 발견 이슈:
+  - benefit (협찬 품목) · campaignType · 메모(F-12) 필드는 ParsedCampaign 에 있지만 매뉴얼 폼에 직접 매칭되는 setter 가 없어 매핑 생략 — 필요 시 추후 manualMemo 에 합치거나 신규 필드 추가 검토
+  - in-flight fetch abort 처리 미구현 (debounce 만으로 race 방지) — MVP 수용 가능, 추후 AbortController 추가 검토
+- 다음 작업: URL 자동완성 MVP 완성. 다음: SCR-016 AI 리뷰 초안 바텀시트 또는 Phase 1.5 (강남맛집/서울오빠/리뷰플레이스 파서 추가)
+
 ## 2026-04-27
 - 작업자: 도유진 - 윈도우 (via Claude Code)
 - 변경 파일:
@@ -700,3 +736,14 @@
   - og:title 우선 제목 정리, 리뷰 기간 종료일 파싱, 방문/배송/페이백/기자단 판별, 채널/포인트 금액 추출 추가
   - 방문형, 배송형, 페이백, 기자단, 부분 성공, 빈 HTML 케이스를 포함한 테스트 작성
 - 다음 작업: [Claude Code 인계] app/api/parse-url/route.ts 수정 — 도메인 라우팅(dinnerqueen.net → parseDinnerqueenCampaign), revu 플랫폼은 'TIER_2_REQUIRED' 응답 반환, /tmp/dq-samples 정리
+## 2026-04-27 (3차)
+- 작업자: Codex CLI (OpenAI)
+- 변경 파일:
+  - lib/parsers/dinnerqueen.ts (수정) - 제공 내역/리뷰어 미션 섹션 기준 추출 로직으로 정확도 개선
+  - lib/parsers/dinnerqueen.test.ts (수정) - benefit/guideline/줄바꿈 보존 검증 포함하도록 테스트 갱신
+  - work.md (수정) - 작업 이력 추가
+- 변경 내용:
+  - /tmp/dq-samples 5건을 재분석해 `제공 내역`, `리뷰어 미션`, 일정 블록의 공통 `qz-collapse` 구조를 기준으로 셀렉터 재정의
+  - guideline을 키워드 안내문이 아닌 리뷰어 미션 본문에서 추출하도록 변경하고, `br`/`p`/`li` 기반 줄바꿈 보존 처리 추가
+  - benefit을 제공 내역 섹션의 대표 문구와 추가 제공 문구에서 추출하도록 보정
+- 다음 작업: [Claude Code 인계] SCR-008C URL 분석 완료 후 UX 개선 - 가이드라인 자동 펼치기 X, 정보 확인하기 버튼으로 SCR-012B 상세 이동
