@@ -83,10 +83,13 @@ model Event {
   label     String   // '리뷰 마감' | '체험 기간'
   name      String
   plat      String
-  location  String   @default("—")
-  amount    String?
-  guideline String?
-  channels  String[] @default([])
+  location      String   @default("—")
+  amount        String?
+  guideline     String?
+  benefit       String?  // 협찬 품목 (파서 추출값)
+  campaignType  String?  // visit / delivery / payback / reporter
+  pointAmount   Int?     // 페이백·기자단 포인트 금액 (원)
+  channels      String[] @default([])
   done      Boolean  @default(false)
 
   createdAt DateTime @default(now())
