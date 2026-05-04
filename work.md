@@ -14,6 +14,17 @@
   - 실제 예시 페이지 구조(`textArea`, `cmp_info`, `tab_01`) 기준으로 DOM 파싱 로직 구성
 - 다음 작업: 실제 등록 바텀시트에서 예시 URL 자동 채움 모바일 시각 검증
 
+## 2026-05-04 (13차)
+- 작업자: Codex CLI (OpenAI)
+- 변경 파일:
+  - app/calendar/page.tsx (수정) — URL 자동완성 파싱값 보관 후 등록 시 benefit/guideline/location 폴백 적용, 상세 편집 저장 시 benefit 보존
+  - app/api/events/[id]/route.ts (수정) — Event PATCH에서 benefit/campaignType/pointAmount 업데이트 지원
+- 변경 내용:
+  - URL 파서 결과를 parsedCampaignDraft로 보관해 숨겨진 입력값이 비어 있어도 디너의여왕 협찬 품목/가이드라인/위치/체험 유형/포인트 금액이 저장되도록 보강
+  - 상세 시트 편집 저장이 benefit, campaignType, pointAmount를 누락하지 않도록 재생성 payload 보완
+  - Event 단건 PATCH 경로도 동일 필드를 처리하도록 맞춤
+- 다음 작업: 디너의여왕 URL 자동완성 등록 플로우 실기기 검증 — 등록 직후 상세 시트의 협찬 품목/체험 유형/포인트 금액 표시 확인
+
 ## 2026-04-27 (11차)
 - 작업자: Codex CLI (OpenAI)
 - 변경 파일:

@@ -2,6 +2,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { calcDday } from '@/lib/dday';
+import type { ParsedCampaign } from '@/types/parsed-campaign';
 
 // ── Types ──────────────────────────────────────────────
 type EventType = 'r' | 'g';
@@ -40,6 +41,12 @@ const DOW_LABELS = ['일','월','화','수','목','금','토'];
 const ACTIVE_TYPES = new Set<string>(['r','g']);
 const TYPE_COLOR: Record<string, string> = {r:'var(--s-overdue)', g:'var(--s-selected)'};
 const TYPE_BG:    Record<string, string> = {r:'var(--s-overdue-bg)', g:'var(--s-selected-bg)'};
+const PARSED_CHANNEL_LABEL: Record<string, string> = {
+  blog: '블로그',
+  instagram: '인스타그램',
+  youtube: '유튜브',
+  clip: '클립',
+};
 
 // ── Helpers ────────────────────────────────────────────
 function mkDateStr(y: number, m: number, d: number) {
@@ -154,6 +161,7 @@ export default function CalendarPage() {
   // 일정 등록 탭 ('url' | 'manual')
   const [addTab, setAddTab]           = useState<'url' | 'manual'>('url');
   const [urlParsed, setUrlParsed]     = useState(false);
+  const [parsedCampaignDraft, setParsedCampaignDraft] = useState<ParsedCampaign | null>(null);
   const [guidelineText, setGuidelineText] = useState('');
   const [resToggle, setResToggle]     = useState<'예정' | '완료' | '불필요'>('예정');
   const [wkndToggle, setWkndToggle]   = useState<'가능' | '불가' | null>(null);
@@ -259,6 +267,7 @@ export default function CalendarPage() {
     setEditMode(false);
     setAddTab('url');
     setUrlParsed(false);
+    setParsedCampaignDraft(null);
     setGuidelineText('');
     setManualName('');
     setManualPlatform('');
@@ -345,11 +354,14 @@ export default function CalendarPage() {
     if (!targetUrl || !/^https?:\/\//.test(targetUrl)) {
       setParseStatus('idle');
       setParseMessage('');
+      setParsedCampaignDraft(null);
       return;
     }
 
     setParseStatus('loading');
     setParseMessage('체험단 정보를 불러오는 중...');
+
+    setParsedCampaignDraft(null);
 
     const PLATFORM_LABEL: Record<string, string> = {
       revu: '레뷰',
@@ -374,7 +386,8 @@ export default function CalendarPage() {
       const data = await res.json();
 
       if (data.ok) {
-        const parsed = data.data;
+        const parsed: ParsedCampaign = data.data;
+        setParsedCampaignDraft(parsed);
         if (parsed.title)            setManualName(parsed.title);
         if (parsed.reviewDeadline)   setManualDeadline(parsed.reviewDeadline);
         if (parsed.guideline)        setGuidelineText(parsed.guideline);
@@ -409,11 +422,13 @@ export default function CalendarPage() {
       switch (data.code) {
         case 'TIER_2_REQUIRED':
           setParseStatus('tier2');
+          setParsedCampaignDraft(null);
           setTier2Platform(data.platform ?? null);
           setParseMessage(data.message);
           break;
         case 'UNSUPPORTED_PLATFORM':
           setParseStatus('unsupported');
+          setParsedCampaignDraft(null);
           setParseMessage(data.message);
           break;
         case 'INVALID_URL':
@@ -422,14 +437,17 @@ export default function CalendarPage() {
         case 'PARSE_FAILED':
         case 'RATE_LIMIT':
           setParseStatus('error');
+          setParsedCampaignDraft(null);
           setParseMessage(data.message);
           break;
         default:
           setParseStatus('error');
+          setParsedCampaignDraft(null);
           setParseMessage('알 수 없는 오류가 발생했어요.');
       }
     } catch {
       setParseStatus('error');
+      setParsedCampaignDraft(null);
       setParseMessage('네트워크 오류가 발생했어요. 다시 시도해주세요.');
     }
   }
@@ -440,6 +458,7 @@ export default function CalendarPage() {
     if (!url) {
       setParseStatus('idle');
       setParseMessage('');
+      setParsedCampaignDraft(null);
       return;
     }
     const timer = setTimeout(() => {
@@ -532,16 +551,25 @@ export default function CalendarPage() {
   // ── 수기 등록 핸들러 — /api/events 및 /api/revenues 로 POST ──
   async function handleAddManual() {
     if (!manualName.trim() || !manualPlatform || !manualDeadline) return;
-    const ch = manualChannels.size > 0 ? [...manualChannels] : [];
+    const parsedChannels = Array.isArray(parsedCampaignDraft?.channels)
+      ? parsedCampaignDraft.channels
+          .map(channel => PARSED_CHANNEL_LABEL[channel])
+          .filter((channel): channel is string => Boolean(channel))
+      : [];
+    const ch = manualChannels.size > 0 ? [...manualChannels] : parsedChannels;
     const name = manualName.trim();
     const plat = manualPlatform;
-    const location = manualLocation.trim() || '—';
+    const location = manualLocation.trim() || parsedCampaignDraft?.location?.trim() || '—';
     // manualAmount 는 onChange 에서 raw digits 만 유지하지만, URL 파서가 String(Number) 로 채울 수도 있으니 한번 더 strip.
     const amount = manualAmount.replace(/[^0-9]/g, '') || null;
-    const guideline = guidelineText.trim() || null;
-    const benefit = manualBenefit.trim() || null;
-    const campaignType = manualCampaignType || null;
-    const pointAmount = manualPointAmount ? parseInt(manualPointAmount) : null;
+    const guideline = guidelineText.trim() || parsedCampaignDraft?.guideline?.trim() || null;
+    const benefit = manualBenefit.trim() || parsedCampaignDraft?.benefit?.trim() || null;
+    const campaignType = manualCampaignType || parsedCampaignDraft?.campaignType || null;
+    const pointAmount = manualPointAmount
+      ? parseInt(manualPointAmount)
+      : typeof parsedCampaignDraft?.pointAmount === 'number'
+        ? parsedCampaignDraft.pointAmount
+        : null;
 
     const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -635,6 +663,9 @@ export default function CalendarPage() {
     // editAmount 은 onChange 에서 raw digits 만 보유하지만, 예전 데이터가 hydrate 되었을 수도 있으니 한번 더 strip.
     const amtTrim  = editAmount.replace(/[^0-9]/g, '') || null;
     const gdTrim   = editGuideline.trim() || null;
+    const benefit  = sheetEvent.benefit ?? null;
+    const campaignType = sheetEvent.campaignType ?? null;
+    const pointAmount = sheetEvent.pointAmount ?? null;
     const plat     = sheetEvent.plat;
     const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -650,7 +681,7 @@ export default function CalendarPage() {
         headers: jsonHeaders,
         body: JSON.stringify({
           date: editDeadlineDate, type: 'r', name: nameTrim, plat, location: locTrim,
-          amount: amtTrim, guideline: gdTrim, channels: ch,
+          amount: amtTrim, guideline: gdTrim, benefit, campaignType, pointAmount, channels: ch,
         }),
       });
     }
@@ -660,7 +691,7 @@ export default function CalendarPage() {
         headers: jsonHeaders,
         body: JSON.stringify({
           date: editExpDate, type: 'g', name: nameTrim, plat, location: locTrim,
-          amount: amtTrim, guideline: gdTrim, channels: ch,
+          amount: amtTrim, guideline: gdTrim, benefit, campaignType, pointAmount, channels: ch,
         }),
       });
     }

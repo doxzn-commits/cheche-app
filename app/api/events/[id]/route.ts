@@ -32,6 +32,14 @@ export async function PATCH(req: NextRequest, { params }: RouteCtx) {
   if (typeof body.location === 'string') data.location = body.location.slice(0, 100) || '—';
   if ('amount' in body) data.amount = sanitizeString(body.amount, 30);
   if ('guideline' in body) data.guideline = sanitizeString(body.guideline, 2000);
+  if ('benefit' in body) data.benefit = sanitizeString(body.benefit, 200);
+  if ('campaignType' in body) data.campaignType = sanitizeString(body.campaignType, 50);
+  if ('pointAmount' in body) {
+    data.pointAmount =
+      typeof body.pointAmount === 'number' && body.pointAmount > 0
+        ? Math.floor(body.pointAmount)
+        : null;
+  }
   if (Array.isArray(body.channels)) {
     data.channels = body.channels.map((c) => String(c).slice(0, 30)).slice(0, 10);
   }
