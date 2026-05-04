@@ -91,12 +91,17 @@ export default function RevenuePage() {
     }
   }
   useEffect(() => {
-    refreshRevenues();
+    const initialLoad = window.setTimeout(() => {
+      void refreshRevenues();
+    }, 0);
     // 캘린더에서 캠페인 삭제 후 복귀했을 때 집계가 즉시 재계산되도록 포커스/복귀 시 재조회.
-    const onFocus = () => refreshRevenues();
+    const onFocus = () => {
+      void refreshRevenues();
+    };
     window.addEventListener('focus', onFocus);
     window.addEventListener('pageshow', onFocus);
     return () => {
+      window.clearTimeout(initialLoad);
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('pageshow', onFocus);
     };

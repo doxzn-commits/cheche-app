@@ -158,7 +158,7 @@ export default function MapPage() {
               </div>
             </div>
             <button
-              onClick={() => router.push('/explore/1')}
+              onClick={() => router.push(`/explore/${selected.id}`)}
               style={{ width: '100%', marginTop: 10, padding: 11, background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 'var(--r-lg)', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-body)', boxShadow: 'var(--brand-shadow)' }}
             >
               상세 보기

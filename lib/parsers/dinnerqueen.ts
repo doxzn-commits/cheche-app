@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import type { AnyNode } from 'domhandler';
 
 import type { ParsedCampaign, ParseResult } from '../../types/parsed-campaign.js';
 
@@ -79,7 +80,7 @@ function getMetaContent($: cheerio.CheerioAPI, property: string): string {
 function getCollapseSectionByHeader(
   $: cheerio.CheerioAPI,
   headerText: string
-): cheerio.Cheerio<any> {
+): cheerio.Cheerio<AnyNode> {
   return $('.qz-collapse.qz-row').filter((_, element) => {
     const header = normalizeText(
       $(element)
@@ -94,11 +95,11 @@ function getCollapseSectionByHeader(
 
 function extractTextWithBreaks(
   $: cheerio.CheerioAPI,
-  element: any
+  element: AnyNode
 ): string {
   const parts: string[] = [];
 
-  const visit = (node: any): void => {
+  const visit = (node: AnyNode): void => {
     if (node.type === 'text') {
       parts.push(node.data ?? '');
       return;

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 const CODE_LEN = 6;
+const RESEND_SECONDS = 60;
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -14,8 +15,6 @@ export default function VerifyPage() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>(Array(CODE_LEN).fill(null));
 
   const startCountdown = useCallback(() => {
-    setCountdown(60);
-    setCanResend(false);
     const t = setInterval(() => {
       setCountdown((c) => {
         if (c <= 1) { clearInterval(t); setCanResend(true); return 0; }
@@ -58,6 +57,8 @@ export default function VerifyPage() {
   const handleResend = () => {
     if (!canResend) return;
     setCode(Array(CODE_LEN).fill(''));
+    setCountdown(RESEND_SECONDS);
+    setCanResend(false);
     const t = startCountdown();
     inputRefs.current[0]?.focus();
     return () => clearInterval(t);

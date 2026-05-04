@@ -1,3 +1,10 @@
-export default function CampaignPage() {
-  return <main><h1>체험단 상세 SCR-006</h1></main>;
+import { redirect } from 'next/navigation';
+
+export default async function CampaignPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string }>;
+}) {
+  const { id } = await searchParams;
+  redirect(id ? `/explore/${id}` : '/explore');
 }
