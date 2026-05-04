@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { auth } from '@/auth';
 import { isDinnerqueenCampaignUrl, parseDinnerqueenCampaign } from '@/lib/parsers/dinnerqueen';
+import { isGangnamCampaignUrl, parseGangnamCampaign } from '@/lib/parsers/gangnam';
 import type { ParseResult } from '@/types/parsed-campaign';
 
 export const dynamic = 'force-dynamic';
@@ -54,6 +55,8 @@ const PUBLIC_PARSERS: Record<
 > = {
   'dinnerqueen.net': { parse: parseDinnerqueenCampaign, validate: isDinnerqueenCampaignUrl },
   'www.dinnerqueen.net': { parse: parseDinnerqueenCampaign, validate: isDinnerqueenCampaignUrl },
+  'xn--939au0g4vj8sq.net': { parse: parseGangnamCampaign, validate: isGangnamCampaignUrl },
+  'www.xn--939au0g4vj8sq.net': { parse: parseGangnamCampaign, validate: isGangnamCampaignUrl },
 };
 
 function errorResponse(code: ErrorCode, status: number, extra?: Record<string, unknown>) {

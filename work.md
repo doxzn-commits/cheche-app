@@ -1,5 +1,19 @@
 # 체체 작업 이력
 
+## 2026-05-04 (14차)
+- 작업자: Codex (OpenAI)
+- 변경 파일:
+  - lib/parsers/gangnam.ts (신규) — 강남맛집 캠페인 상세 HTML 파서 추가
+  - lib/parsers/gangnam.test.ts (신규) — 강남맛집 URL 검증 및 핵심 필드 추출 테스트 추가
+  - app/api/parse-url/route.ts (수정) — 강남맛집 공개 파서 도메인 연결
+  - app/calendar/page.tsx (수정) — URL 파싱 플랫폼 라벨에 강남맛집 추가
+  - types/parsed-campaign.ts (수정) — ParsedCampaign platform에 gangnam 추가
+- 변경 내용:
+  - `https://xn--939au0g4vj8sq.net/cp/?id=...` 형태의 강남맛집 URL을 공개 파싱 대상으로 등록
+  - 캠페인명, 리뷰 마감일, 제공내역, 채널, 가이드라인, 방문 위치, 체험 유형 추출
+  - 실제 예시 페이지 구조(`textArea`, `cmp_info`, `tab_01`) 기준으로 DOM 파싱 로직 구성
+- 다음 작업: 실제 등록 바텀시트에서 예시 URL 자동 채움 모바일 시각 검증
+
 ## 2026-04-27 (11차)
 - 작업자: Codex CLI (OpenAI)
 - 변경 파일:

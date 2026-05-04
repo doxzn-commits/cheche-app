@@ -6,7 +6,7 @@ export interface ParsedCampaign {
   /** F-01 campaign title */
   title?: string;
   /** F-02 source platform */
-  platform: 'revu' | 'dinnerqueen';
+  platform: 'revu' | 'dinnerqueen' | 'gangnam';
   /** F-03 review deadline (ISO date string YYYY-MM-DD) */
   reviewDeadline?: string;
   /** F-04 sponsored item / reward */

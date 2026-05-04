@@ -354,6 +354,7 @@ export default function CalendarPage() {
     const PLATFORM_LABEL: Record<string, string> = {
       revu: '레뷰',
       dinnerqueen: '디너의여왕',
+      gangnam: '강남맛집',
       reviewnote: '리뷰노트',
       mrblog: '미블',
     };
